@@ -152,7 +152,7 @@ Add to `ai_system_prompts.yaml`:
 
 ## TODOs & Gaps
 
-None currently identified.
+- **Claude Bridge has no recovery mechanism** — If `todo.claude_bridge` service is unavailable, Claude-to-HA communication is completely blocked with no timeout or watchdog. (Failure Mode Report 2026-03-06)
 
 ---
 
@@ -160,6 +160,7 @@ None currently identified.
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-03-25 | — | Added Claude Bridge recovery gap to TODOs (from Failure Mode Report 2026-03-06) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format |
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-03-25*

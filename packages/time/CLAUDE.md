@@ -27,7 +27,7 @@ Manages all time-related infrastructure including real-time date/time sensors, E
 
 ### Alarm/Timer Active Detection (`alarm_time.yaml`)
 
-`alarm_or_timer_active` binary sensor checks 20 sensors across 10 Echo devices (both `_next_alarm` and `_next_timer` variants).
+`alarm_or_timer_active` binary sensor checks 21 sensors across 10+ Echo devices (both `_next_alarm` and `_next_timer` variants).
 
 **Devices referenced:** Echo Show 5, Echo Show 8, Echo Show 15, Echo 3G White Dot, Echo 4G Matter Hub, Echo Flex 01, Echo Flex 02, 4G White Dot, Alexa App for PC, "this_device"
 
@@ -106,6 +106,7 @@ None currently identified.
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-03-25 | — | Corrected Alexa sensor count: 20→21 |
 | 2026-02-24 | `b350903` | Restructured to 8-section format |
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-03-25*

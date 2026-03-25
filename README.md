@@ -173,4 +173,4 @@ The `.claude/` directory provides session persistence for cross-device continuit
 
 ---
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-03-25*

@@ -134,7 +134,7 @@ action:
 
 ## TODOs & Gaps
 
-None currently identified.
+- **WhatsApp silent message loss** — Unread counters are cleared before delivery confirmation. If integration is offline, messages are lost silently with no error feedback to the user. (Failure Mode Report 2026-03-06, highest risk finding)
 
 ---
 
@@ -142,8 +142,9 @@ None currently identified.
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-03-25 | — | Added WhatsApp silent message loss to TODOs (from Failure Mode Report 2026-03-06) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format; all existing content preserved |
 
 ---
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-03-25*

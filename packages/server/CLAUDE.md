@@ -16,7 +16,7 @@ The server domain provides system-level infrastructure including git-based backu
 
 | File | Purpose |
 |------|---------|
-| `github_sync.yaml` | Shell command + sensor for git backup; fires `notify_e_or_c` event on completion |
+| `github_sync.yaml` | Shell command + sensor for git backup; shows toast notification and fires `notify_e_or_c` event on completion |
 | `ha_snapshot_sensor.yaml` | Pre-formatted HA server snapshot for prompt manager inject button; static sections read from `sensor.ha_system_context` |
 | `frontend/advanced_camera_card_backend.yaml` | Camera main/secondary view selectors with mirror-previous automation |
 | `frontend/bubble_modules.yaml` | Event-driven storage for Bubble Card module config |

@@ -91,7 +91,7 @@ Includes battery level + charging indicator (lightning bolt) and colour coding:
 
 ## TODOs & Gaps
 
-None currently identified.
+- **`map.yaml` unguarded state access** — Three `states[variable].last_updated` calls at lines 63, 88, 125 without `default` filters or `is not none` guards. If a travel/target sensor entity is removed or temporarily unavailable, template throws `AttributeError`. (Intel Report I-03, 2026-03-15)
 
 ---
 
@@ -99,6 +99,7 @@ None currently identified.
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-03-25 | — | Added map.yaml unguarded state access to TODOs (from Intel Report I-03) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format |
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-03-25*

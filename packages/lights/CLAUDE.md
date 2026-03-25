@@ -134,6 +134,7 @@ No special commands or test procedures are documented. Key workflow consideratio
 
 - ~~Floor 01 lacks startup recovery~~ — Resolved 2026-03-05. Both floors now have startup recovery.
 - Floor 01 bypasses occupancy abstraction, creating a fragile raw-sensor coupling that could be migrated to use `binary_sensor.presence_floor_01`.
+- **Office lighting has no startup trigger** — Unlike Floor 01 and Floor 02 which recover state on HA restart, office lighting requires manual intervention after restart. (Failure Mode Report 2026-03-06)
 
 ---
 
@@ -141,7 +142,8 @@ No special commands or test procedures are documented. Key workflow consideratio
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-03-25 | — | Added office lighting startup recovery gap to TODOs (from Failure Mode Report 2026-03-06) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format |
 | 2026-03-05 | — | Added startup recovery to Floor 01 (matches Floor 02 pattern) |
 
-*Last Updated: 2026-03-05*
+*Last Updated: 2026-03-25*

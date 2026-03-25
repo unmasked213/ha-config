@@ -131,6 +131,7 @@ conditions:
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-03-25 | — | Verified: expand() claim now correctly states "Reduced to 17" (Intel Report I-01 noted prior wording was misleading) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format |
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-03-25*

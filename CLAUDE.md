@@ -2,7 +2,7 @@
 
 ## Summary
 
-Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~2,943 runtime entities across 14 domain packages, 36 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
+Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~3,098 runtime entities (3,927 in registry) across 14 domain packages, 36 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
 
 ---
 
@@ -11,8 +11,8 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | Path | Description |
 |------|-------------|
 | `configuration.yaml` | Core HA loader — minimal, delegates to packages via `!include_dir_named` |
-| `automations.yaml` | Root automations (~36 top-level, ~110 with nested aliases) |
-| `scripts.yaml` | 48 reusable service-call sequences |
+| `automations.yaml` | Root automations (~35 top-level, ~110 with nested aliases) |
+| `scripts.yaml` | 48 reusable service-call sequences (68 in registry incl. UI/integration-created) |
 | `scenes.yaml` | Named scene snapshots |
 | `frigate.yml` | Frigate NVR config (C11 camera, MQTT, go2rtc) |
 | `secrets.yaml` | Credentials store (gitignored, `!secret` references only) |
@@ -23,14 +23,15 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `pyscript/` | Python automations (12 files) — CV detection, calendar ops, logging, system context, action extraction |
 | `themes/` | Theme definitions — Material You (active), Catppuccin, VisionOS, Olympus (legacy) |
 | `ui/` | Dashboard config — lovelace resources, views, templates, extra modules |
-| `.storage/` | HA internal storage — dashboards (JSON), auth, registries (~29 MB, never modify) |
+| `.storage/` | HA internal storage — dashboards (JSON), auth, registries (~32 MB, never modify) |
 | `.claude/` | AI session management — session.md, rules/, hooks/, mcp.json |
 | `docs/` | Reports (config-intel, failure-mode, meta-insights, shared-ui-audit) and reference docs |
 | `addons/` | Local HA add-ons (ha-config-ai-agent) |
 | `ai_adversarial_system/` | Same-model collaboration pattern documentation and workspace |
 | `media/` | AI-generated images, recordings, transcripts |
-| `ARCHITECTURE.md` | System architecture documentation (v10.0) |
-| `README.md` | Quick reference (71 lines) |
+| `ARCHITECTURE.md` | System architecture documentation (v10.4) |
+| `README.md` | Quick reference with auto-generated metrics (snapshot injected by `git_sync.sh` at commit time) |
+| `readme_snapshot.j2` | Jinja2 template for README metrics — rendered via HA template API during git sync |
 | `git_sync.sh` | Git synchronisation script |
 | `extract_js.py` | JavaScript extraction utility |
 | `ip_bans.yaml` | IP ban list |
@@ -66,13 +67,13 @@ Each domain has its own `CLAUDE.md` at `packages/<domain>/CLAUDE.md`, auto-loade
 
 ### UI Design System (`www/base/`)
 
-Token-driven design system with 15 JS files. `foundation.js` is **READ-ONLY** (single source of truth for tokens). Governed by `www/base/docs/CLAUDE.md`.
+Token-driven design system with 16 JS files. `foundation.js` is **READ-ONLY** (single source of truth for tokens). Governed by `www/base/docs/CLAUDE.md`.
 
 ### Custom Cards (`www/cards/`)
 
 | Card | Files | Purpose |
 |------|-------|---------|
-| `prompt-manager/` | 8 | AI prompt CRUD, scoring, versioning, HA backend sync |
+| `prompt-manager/` | 9 | AI prompt CRUD, scoring, versioning, HA backend sync |
 | `report-viewer-card/` | 2 | Dynamic markdown report display |
 | `presence-activity-card/` | 3 | Presence visualisation |
 | `ui-catalogue-card/` | 7 | Dev-time component showcase |
@@ -103,7 +104,7 @@ These paths are equivalent. `A:\packages\` and `/config/packages/` refer to the 
 
 ### Setup
 
-- **HA version:** 2026.2.3 on HA OS 17.1
+- **HA version:** 2026.3.4 on HA OS 17.1
 - **No CI/CD pipeline** — local development only
 - **IDE config:** `.vscode/`, `.cursor/` present
 
@@ -277,7 +278,7 @@ For discussions outside these paths, read the relevant CLAUDE.md manually.
 
 ## TODOs & Gaps
 
-- **173 unavailable entities** (5.9% of runtime) — trend: 979→751→152→251→**173** (recovering)
+- **281 unavailable entities** (9.1% of runtime) — trend: 979→751→152→251→173→**281** (regressed)
 - **Floor 01 raw sensor coupling** — bypasses occupancy abstraction, fragile to sensor renames
 - **Health domain duplicate sensors** — `health.yaml` and `weight.yaml` define overlapping sensors; last-loaded wins
 - ~~**Health domain division-by-zero**~~ — resolved 2026-03-05: availability guards added
@@ -285,7 +286,7 @@ For discussions outside these paths, read the relevant CLAUDE.md manually.
 - **Confidence tier unconsumed** — 6-level presence scoring, zero automation readers
 - **Room transition events fire into void** — `floor02_travel_tracking.yaml` events have no listeners
 - **Mixed automation alias styles** — ~55% compliant with naming convention
-- **Dashboard JS residual rgba()** — 73.6% var-vs-rgba token adoption (improving)
+- **Dashboard JS residual rgba()** — 73.7% var-vs-rgba token adoption (stable)
 - **tesco_sensors.yaml misnomer** — actually tracks Sainsbury's Local, not Tesco
 - **No automated test suite** — validation is manual (HA logs, traces, template tester)
 
@@ -295,9 +296,10 @@ For discussions outside these paths, read the relevant CLAUDE.md manually.
 
 | Date | Commit | Change |
 |------|--------|--------|
+| 2026-03-25 | — | Full metrics sweep: HA 2026.2.3→2026.3.4, entities 2,943→3,098, unavailable 173→281, ARCHITECTURE.md v10.0→v10.4, token adoption 73.6%→73.7%, www/base 15→16 JS files, .storage ~29→~32 MB, prompt-manager file count 8→9 (highlight.js module added) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format; added Structure, Key Components, Development Workflows, TODOs & Gaps sections; preserved session continuity protocol, safety rails, and quick reference |
 | 2026-02-22 | — | Previous version: pruned operational guide (~189 lines) |
 
 ---
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-03-25*
