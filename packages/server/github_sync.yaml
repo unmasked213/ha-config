@@ -52,10 +52,11 @@ automation:
              and trigger.from_state.state != trigger.to_state.state }}
 
     action:
-      - service: persistent_notification.create
+      - action: script.show_toast_notification
         data:
-          title: Git Sync Result
           message: "{{ states('sensor.git_sync_result') }}"
+          icon: line-md:github-loop
+          border_color: "{{ 'var(--success-color)' if 'Success' in states('sensor.git_sync_result') else 'var(--error-color)' }}"
       - event: notify_e_or_c
         event_data:
           title: Git Sync Result
