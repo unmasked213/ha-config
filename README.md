@@ -56,17 +56,9 @@ Personal Home Assistant configuration for a two-person household (Cam and Enhy),
 
 ---
 
-## Key Metrics
-
-| Metric | Count |
-|--------|-------|
-| Runtime entities | ~3,420 |
-| Registry entities | ~4,519 |
-| Package domains | 13 |
-| Custom integrations | 42 |
-| Root automations | ~36 (+~94 in packages/registry) |
-| Scripts | 48 |
-| Configuration lines | ~320,000 (51K YAML + 251K dashboard JSON) |
+<!-- SNAPSHOT:START -->
+<!-- populated by git_sync.sh from readme_snapshot.j2 -->
+<!-- SNAPSHOT:END -->
 
 ---
 
