@@ -1,0 +1,31 @@
+
+# | START: dir_tree.yaml
+# |  PATH: /config/packages/server/dir_tree.yaml
+
+
+
+# ── SHELL COMMAND ──────────────────────────────────────────────────────────────
+shell_command:
+
+# ➔ GENERATE CONFIG TREE
+#   Runs the HA-tailored directory tree script. Produces config_dir_tree.md
+#   with full detail on authored content and collapsed summaries for runtime dirs.
+  generate_config_tree: "python3 /config/ha_dir_tree.py"
+
+
+
+
+# ── AUTOMATION ─────────────────────────────────────────────────────────────────
+automation:
+
+# ➔ DAILY CONFIG TREE REFRESH
+#   Regenerates config_dir_tree.md at 03:00 daily. Keeps the tree current
+#   without manual intervention.
+  - alias: "Server - Generate config directory tree"
+    id: generate_config_tree_daily
+    description: "Refreshes config_dir_tree.md at 03:00 daily"
+    trigger:
+      - platform: time
+        at: "03:00:00"
+    action:
+      - action: shell_command.generate_config_tree

@@ -1,58 +1,57 @@
 # Home Assistant Configuration
 
-Personal Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS 17.1 with Home Assistant 2026.2.2.
+This is the working config for a mature, architecture-driven Home Assistant system.
 
-**This is not a template repository.** It's a living configuration maintained with assistance from AI coding tools. Not intended for reuse or contribution.
+System logic is organised into package-scoped domains, each with its own localised AI context. `configuration.yaml` acts only as a bootstrap layer, all substantive beaviour resides within the domain structure. 
+
+The system operates at a non-trivial scale, with purposeful complexity and . Metrics are derived from live sensor data.
+
+
 
 ---
 
 ## Repository Structure
 
+<!-- TREE:START -->
+
 ```
 /config/
-├── configuration.yaml        # Core HA config (minimal loader, delegates to packages)
-├── automations.yaml          # Root automations (~36 top-level)
-├── scripts.yaml              # 48 reusable scripts
+├── configuration.yaml        # HA bootstrap (delegates to packages)
+├── automations.yaml          # Root automations
+├── scripts.yaml              # Reusable service-call sequences
 ├── scenes.yaml               # Scene snapshots
-├── frigate.yml               # Frigate NVR config (camera C11)
 │
-├── packages/                 # Primary configuration (13 domains, 60 YAML files)
-│   ├── ai/                   # AI text/image generation, prompts, Claude bridge
-│   ├── communication/        # WhatsApp, notifications, transcript pipeline
-│   ├── dashboard/            # Report viewer backend
-│   ├── device/               # Cameras, covers, PC state, pet devices
-│   ├── health/               # Body composition, weight (Withings)
-│   ├── lights/               # Per-floor lighting automation
-│   ├── network/              # Device scanning, MAC mapping
-│   ├── occupancy/            # Presence detection, doors, bed state
-│   ├── server/               # Frontend, git sync, server stats
-│   ├── shopping/             # Shopping lists, store busyness
-│   ├── time/                 # Alarms, calendar, hourly triggers
-│   ├── travel/               # Location tracking, ETA, railway
-│   └── weather/              # Forecasts, AI clothing suggestions
+├── packages/                 # 14 domain packages, 63 YAML files
+│   ├── ai/                       # AI text/image generation, system prompts, Alexa TTS, prompt management
+│   ├── communication/            # WhatsApp messaging, AI text generation, notifications
+│   ├── dashboard/                # Report viewer backend sensors for the report-viewer-card
+│   ├── device/                   # Hardware device control, camera feeds, covers/blinds, mobile phones, PC state, pet devices, Sonos, Govee heater, driveway car detection
+│   ├── health/                   # Body composition metrics from Withings smart scale for two people
+│   ├── lights/                   # Light automation, manual override, brightness scheduling, color space conversion
+│   ├── network/                  # Network device scanning, MAC address mapping
+│   ├── occupancy/                # Presence detection, door sensors, bed state, room transitions
+│   ├── server/                   # Git sync, frontend helpers, server statistics, dashboard infrastructure, theme management, TTS setup
+│   ├── shopping/                 # Shopping list management, text sanitisation, supermarket busyness tracking
+│   ├── time/                     # Time/date sensors, alarm management, hourly automations, calendar event creation, dashboard timers
+│   ├── travel/                   # Location tracking, Google Travel Time ETA, map display, railway information
+│   ├── weather/                  # Pirate Weather integration, AI clothing suggestions, forecast data aggregation
+│   └── work/                     # Meeting action extraction pipeline — automated work obligation tracking
 │
-├── custom_components/        # 42 third-party integrations
-├── www/                      # Web-accessible assets
-│   ├── base/                 # Token-driven UI design system (14 JS files)
-│   ├── cards/                # Custom card implementations (4 modular cards + standalone)
+├── pyscript/                 # 12 Python automations
+├── custom_components/        # 36 third-party integrations
+├── www/                      # Web assets
+│   ├── base/                 # UI design system (16 JS files)
+│   ├── cards/                 # Custom card implementations
 │   └── community/            # Third-party card library
 │
-├── pyscript/                 # Python automations (9 files — CV, calendar, logging)
-├── themes/                   # Theme definitions (Material You active, Catppuccin, VisionOS)
-├── ui/                       # Dashboard config (lovelace resources, views, templates)
+├── themes/                   # Material You, Catppuccin, VisionOS
+├── ui/                       # Dashboard views, templates, resources
+├── templates/                # Custom button card templates
 ├── docs/                     # Reports and reference documentation
-├── addons/                   # Local HA add-ons (ha-config-ai-agent)
-├── ai_adversarial_system/    # Same-model collaboration workspace
-│
-└── .claude/                  # AI assistant tooling
-    ├── session.md            # Current task snapshot
-    ├── session_history.md    # Rolling task archive (20 entries)
-    ├── rules/                # Path-based domain rule auto-injection
-    ├── hooks/                # SessionStart hooks
-    ├── skills/               # Reusable workflows
-    ├── haq                   # HA Query CLI wrapper
-    └── mcp.json              # MCP connection config
+├── addons/                   # Local add-ons (ha-config-ai-agent)
+└── .claude/                  # AI session management
 ```
+<!-- TREE:END -->
 
 ---
 
