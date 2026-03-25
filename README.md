@@ -57,7 +57,87 @@ Personal Home Assistant configuration for a two-person household (Cam and Enhy),
 ---
 
 <!-- SNAPSHOT:START -->
-<!-- populated by git_sync.sh from readme_snapshot.j2 -->
+
+## Key Metrics
+
+> Auto-generated from live sensor data at each git sync. Source: [`readme_snapshot.j2`](readme_snapshot.j2)
+
+### Platform
+
+| Component | Version |
+|-----------|---------|
+| HA Core | 2026.3.4 |
+| HA OS | 17.1 |
+| Supervisor | 2026.03.2 |
+| Installed | 2023-03-30 |
+
+### Hardware
+
+| Spec | Value |
+|------|-------|
+| CPU | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz |
+| Threads | 8 |
+| RAM | 32.0 GB |
+| Disk | 139.7 GB used / 938.2 GB total |
+
+### Entities
+
+3098 total, 281 unavailable
+
+| Domain | Count |
+|--------|------:|
+| Sensors | 1453 |
+| Binary sensors | 171 |
+| Automations | 82 |
+| Scripts | 68 |
+| Scenes | 147 |
+| Lights | 45 |
+| Switches | 210 |
+| Covers | 11 |
+| Climate | 0 |
+| Media players | 6 |
+| Cameras | 31 |
+| Helpers | 341 |
+| Updates | 128 |
+| Zones | 37 |
+
+### Infrastructure
+
+| Resource | Count |
+|----------|------:|
+| Custom integrations | 36 |
+| HACS integrations | 82 |
+| Add-ons | 16 |
+| Lovelace resources | 64 |
+
+### Dashboard
+
+| Metric | Value |
+|--------|------:|
+| Views | 122 |
+| Total cards | 10036 |
+| Custom | 5502 |
+| Standard | 4534 |
+
+### Config Scale
+
+| Metric | Lines |
+|--------|------:|
+| Total | 320,872 |
+| YAML | 52,067 |
+| Dashboard JSON | 250,264 |
+
+### Storage
+
+| Metric | Value |
+|--------|-------|
+| DB engine | SQLite |
+| Retention | 7 days |
+| DB size | 3.4 GB |
+
+---
+
+*Snapshot taken: 2026-03-25 03:56 UTC*
 <!-- SNAPSHOT:END -->
 
 ---
