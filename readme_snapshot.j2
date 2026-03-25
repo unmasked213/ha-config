@@ -5,83 +5,24 @@
 {%- set clb = 'sensor.config_line_breakdown' -%}
 {%- set dbc = 'sensor.database_configuration' -%}
 {%- set sdb = 'sensor.storage_directory_breakdown' -%}
+{%- set helpers = (state_attr(edb, 'input_booleans') | int(0)) + (state_attr(edb, 'input_numbers') | int(0)) + (state_attr(edb, 'input_selects') | int(0)) + (state_attr(edb, 'input_texts') | int(0)) + (state_attr(edb, 'input_datetimes') | int(0)) + (state_attr(edb, 'timers') | int(0)) + (state_attr(edb, 'counters') | int(0)) -%}
 ## Key Metrics
 
 > Auto-generated from live sensor data at each git sync. Source: [`readme_snapshot.j2`](readme_snapshot.j2)
 
-### Platform
+| | |
+|--|--|
+| **Platform** | HA Core {{ state_attr('update.home_assistant_core_update', 'installed_version') | default('?') }} · OS {{ state_attr('update.home_assistant_operating_system_update', 'installed_version') | default('?') }} · Supervisor {{ state_attr('update.home_assistant_supervisor_update', 'installed_version') | default('?') }} |
+| **Hardware** | {{ state_attr('sensor.cpu_speed', 'brand') | default('?') }} · {{ states('sensor.cpu_thread_count') | default('?') }} threads · {{ states('sensor.memory_total_gb') | default('?') }} GB RAM · {{ states('sensor.disk_use') | default('?') }} / {{ states('sensor.home_assistant_host_disk_total') | default('?') }} GB disk |
+| **Storage** | {{ states(dbc) | default('?') }} · {{ state_attr(dbc, 'purge_keep_days') | default('?') }} day retention · {{ (state_attr(sdb, 'config_db_mb') | float(0) / 1024) | round(1) }} GB |
+| **Config** | {{ '{:,}'.format(states(clb) | int(0)) }} lines ({{ '{:,}'.format(state_attr(clb, 'yaml') | int(0)) }} YAML · {{ '{:,}'.format(state_attr(clb, 'dashboards') | int(0)) }} dashboard JSON) |
+| **Integrations** | {{ states('sensor.custom_components_count') | default('?') }} custom · {{ states('sensor.integrations_frontend_count') | default('?') }} HACS · {{ states('sensor.addons_frontend_count') | default('?') }} add-ons · {{ states('sensor.lovelace_resources_count') | default('?') }} lovelace resources |
+| **Dashboard** | {{ state_attr(dc, 'views') | default('?') }} views · {{ '{:,}'.format(state_attr(dc, 'total_cards') | int(0)) }} cards ({{ '{:,}'.format(state_attr(dc, 'custom_cards') | int(0)) }} custom / {{ '{:,}'.format(state_attr(dc, 'standard_cards') | int(0)) }} standard) |
+| | |
+| **Entities** | **{{ '{:,}'.format(states(edb) | int(0)) }} total** ({{ state_attr(edb, 'unavailable') | default('?') }} unavailable) |
+| Sensors | {{ '{:,}'.format(state_attr(edb, 'sensors') | int(0)) }} sensor · {{ state_attr(edb, 'binary_sensors') | default('?') }} binary |
+| Automation | {{ state_attr(edb, 'automations') | default('?') }} automations · {{ state_attr(edb, 'scripts') | default('?') }} scripts · {{ state_attr(edb, 'scenes') | default('?') }} scenes |
+| Hardware | {{ state_attr(edb, 'lights') | default('?') }} lights · {{ state_attr(edb, 'switches') | default('?') }} switches · {{ state_attr(edb, 'covers') | default('?') }} covers · {{ state_attr(edb, 'media_players') | default('?') }} media players |
+| Other | {{ state_attr(edb, 'cameras') | default('?') }} cameras · {{ helpers }} helpers · {{ state_attr(edb, 'updates') | default('?') }} updates · {{ state_attr(edb, 'zones') | default('?') }} zones |
 
-| Component | Version |
-|-----------|---------|
-| HA Core | {{ state_attr('update.home_assistant_core_update', 'installed_version') | default('?') }} |
-| HA OS | {{ state_attr('update.home_assistant_operating_system_update', 'installed_version') | default('?') }} |
-| Supervisor | {{ state_attr('update.home_assistant_supervisor_update', 'installed_version') | default('?') }} |
-| Installed | 2023-03-30 |
-
-### Hardware
-
-| Spec | Value |
-|------|-------|
-| CPU | {{ state_attr('sensor.cpu_speed', 'brand') | default('Unknown') }} |
-| Threads | {{ states('sensor.cpu_thread_count') | default('?') }} |
-| RAM | {{ states('sensor.memory_total_gb') | default('?') }} GB |
-| Disk | {{ states('sensor.disk_use') | default('?') }} GB used / {{ states('sensor.home_assistant_host_disk_total') | default('?') }} GB total |
-
-### Entities
-
-{{ states(edb) | default('?') }} total, {{ state_attr(edb, 'unavailable') | default('?') }} unavailable
-
-| Domain | Count |
-|--------|------:|
-| Sensors | {{ state_attr(edb, 'sensors') | default('?') }} |
-| Binary sensors | {{ state_attr(edb, 'binary_sensors') | default('?') }} |
-| Automations | {{ state_attr(edb, 'automations') | default('?') }} |
-| Scripts | {{ state_attr(edb, 'scripts') | default('?') }} |
-| Scenes | {{ state_attr(edb, 'scenes') | default('?') }} |
-| Lights | {{ state_attr(edb, 'lights') | default('?') }} |
-| Switches | {{ state_attr(edb, 'switches') | default('?') }} |
-| Covers | {{ state_attr(edb, 'covers') | default('?') }} |
-| Climate | {{ state_attr(edb, 'climates') | default('?') }} |
-| Media players | {{ state_attr(edb, 'media_players') | default('?') }} |
-| Cameras | {{ state_attr(edb, 'cameras') | default('?') }} |
-| Helpers | {{ (state_attr(edb, 'input_booleans') | int(0)) + (state_attr(edb, 'input_numbers') | int(0)) + (state_attr(edb, 'input_selects') | int(0)) + (state_attr(edb, 'input_texts') | int(0)) + (state_attr(edb, 'input_datetimes') | int(0)) + (state_attr(edb, 'timers') | int(0)) + (state_attr(edb, 'counters') | int(0)) }} |
-| Updates | {{ state_attr(edb, 'updates') | default('?') }} |
-| Zones | {{ state_attr(edb, 'zones') | default('?') }} |
-
-### Infrastructure
-
-| Resource | Count |
-|----------|------:|
-| Custom integrations | {{ states('sensor.custom_components_count') | default('?') }} |
-| HACS integrations | {{ states('sensor.integrations_frontend_count') | default('?') }} |
-| Add-ons | {{ states('sensor.addons_frontend_count') | default('?') }} |
-| Lovelace resources | {{ states('sensor.lovelace_resources_count') | default('?') }} |
-
-### Dashboard
-
-| Metric | Value |
-|--------|------:|
-| Views | {{ state_attr(dc, 'views') | default('?') }} |
-| Total cards | {{ state_attr(dc, 'total_cards') | default('?') }} |
-| Custom | {{ state_attr(dc, 'custom_cards') | default('?') }} |
-| Standard | {{ state_attr(dc, 'standard_cards') | default('?') }} |
-
-### Config Scale
-
-| Metric | Lines |
-|--------|------:|
-| Total | {{ '{:,}'.format(states(clb) | int(0)) }} |
-| YAML | {{ '{:,}'.format(state_attr(clb, 'yaml') | int(0)) }} |
-| Dashboard JSON | {{ '{:,}'.format(state_attr(clb, 'dashboards') | int(0)) }} |
-
-### Storage
-
-| Metric | Value |
-|--------|-------|
-| DB engine | {{ states(dbc) | default('?') }} |
-| Retention | {{ state_attr(dbc, 'purge_keep_days') | default('?') }} days |
-| DB size | {{ (state_attr(sdb, 'config_db_mb') | float(0) / 1024) | round(1) }} GB |
-
----
-
-*Snapshot taken: {{ utcnow().strftime('%Y-%m-%d %H:%M') }} UTC*
+*Snapshot taken: {{ now().strftime('%Y-%m-%d %H:%M %Z') }}*
