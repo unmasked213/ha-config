@@ -1,0 +1,68 @@
+
+# | START: github_sync.yaml
+# |  PATH: /config/packages/server/github_sync.yaml
+
+
+
+# ── SHELL COMMAND ──────────────────────────────────────────────────────────────
+shell_command:
+
+# ➔ GIT SYNC TO GITHUB
+#   Automates git synchronization to GitHub repository. Executes shell script
+#   that handles git add, commit, and push operations for configuration backup
+  git_sync_config: /bin/sh /config/git_sync.sh
+
+
+
+
+# ── COMMAND LINE SENSOR ────────────────────────────────────────────────────────
+command_line:
+
+# ➔ GIT SYNC RESULT
+#   Monitors git sync operations by reading result output file. Provides feedback
+#   on sync status and any errors encountered during the process.
+  - sensor:
+      name: Git Sync Result
+      unique_id: git_sync_result
+      command: >
+        sh -c 'cat /config/git_sync_result.txt 2>/dev/null || echo "No sync run yet."'
+      scan_interval: 5
+      icon: mdi:git
+
+
+
+
+# ── AUTOMATION ─────────────────────────────────────────────────────────────────
+automation:
+
+# ➔ GIT SYNC FEEDBACK
+#   Provides user feedback when git sync completes. Creates persistent notification
+#   and fires event for external notification handlers.
+  - alias: Git Sync Feedback
+    id: git_sync_feedback
+    trigger:
+      - platform: state
+        entity_id: sensor.git_sync_result
+
+    condition:
+      - condition: template
+        value_template: >
+          {{ trigger.from_state is not none
+             and trigger.to_state is not none
+             and trigger.from_state.state != trigger.to_state.state }}
+
+    action:
+      - service: persistent_notification.create
+        data:
+          title: Git Sync Result
+          message: "{{ states('sensor.git_sync_result') }}"
+      - event: notify_e_or_c
+        event_data:
+          title: Git Sync Result
+          message: "{{ states('sensor.git_sync_result') }}"
+          priority: high
+          tag: git_sync
+
+
+
+# |  END: github_sync.yaml

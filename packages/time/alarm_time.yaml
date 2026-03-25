@@ -1,0 +1,148 @@
+
+# | START: alarm_time.yaml
+# |  PATH: /config/packages/time/alarm_time.yaml
+
+
+
+#  ╔═════════════════════════════════════════════════════════════════════════╗
+#  ║     ALARMS (TIME-RELATED, NOT SECURITY)                                 ║
+#  ╚═════════════════════════════════════════════════════════════════════════╝
+
+#  • Time-based alarm related code, for things like morning alarm clocks. 
+
+
+#──────────────────────────────╮
+input_datetime:
+#──────────────────────────────╯
+
+  # ── ECHO ALARM TIME  ──────────────────────────────────────────────────────
+  #  • Displays the time of the next Echo Show alarm
+
+  echo_alarm_time:
+    name: Echo Alarm Time
+    has_date: false
+    has_time: true
+    initial: "09:00:00"
+
+
+
+
+#──────────────────────────────╮
+input_number:
+#──────────────────────────────╯
+
+  # ── ECHO TIMER MINUTES  ───────────────────────────────────────────────────
+  #  • Enter how long a timer to set via an Echo Show
+
+  echo_timer_minutes:
+    name: "Echo Timer Minutes"
+    min: 1
+    max: 480
+    step: 1
+    initial: 15
+    unit_of_measurement: "minutes"
+    mode: box
+
+
+
+
+template:
+
+    #──────────────────────────╮
+  - binary_sensor:
+    #──────────────────────────╯
+
+
+        # ── ECHO SHOW 5 ALARM EXISTS ────────────────────────────────────────
+        #  • Checks if there is an Echo Show 5 alarm
+
+      - name: "Next Echo Show 5 Alarm"
+        unique_id: echo_show_5_alarm_exists
+        state: >-
+          {{ (state_attr('sensor.cam_s_echo_show_8_next_alarm','Status') == 'ON') }}
+
+
+
+
+        # ── ALEXA ALARM OR TIMER ACTIVE ─────────────────────────────────────
+        #  • Checks if any Alexa/Echo device has atimer or alarm set. 
+
+      - name: "alarm_or_timer_active"
+        unique_id: "alarm_or_timer_active"
+        state: >
+          {% set ns = namespace(active=false) %}
+          {% set sensors = [
+            'sensor.cam_s_3g_white_dot_next_alarm',
+            'sensor.cam_s_echo_show_5_next_alarm',
+            'sensor.echo_show_15_next_alarm',
+            'sensor.cam_s_echo_show_8_next_alarm',
+            'sensor.echo_flex_01_next_alarm',
+            'sensor.echo_4g_matter_hub_next_alarm',
+            'sensor.this_device_next_alarm',
+            'sensor.cam_s_4g_white_dot_next_alarm',
+            'sensor.cam_s_alexa_app_for_pc_next_alarm',
+            'sensor.echo_flex_02_next_alarm',
+            'sensor.cam_s_3g_white_dot_next_timer',
+            'sensor.cam_s_echo_show_5_next_timer',
+            'sensor.echo_show_15_next_timer',
+            'sensor.cam_s_echo_show_8_next_timer',
+            'sensor.echo_flex_01_next_timer',
+            'sensor.echo_4g_matter_hub_next_timer',
+            'sensor.this_device_next_timer',
+            'sensor.cam_s_4g_white_dot_next_timer',
+            'sensor.cam_s_alexa_app_for_pc_next_timer',
+            'sensor.echo_flex_02_next_timer'
+          ] %}
+          {% for sensor in sensors %}
+            {% set sensor_state = states(sensor)|lower %}
+            {% if sensor_state not in ['unavailable', 'unknown', 'none', ''] %}
+              {% set ns.active = true %}
+            {% endif %}
+            {% set attr = state_attr(sensor, 'sorted_active') %}
+            {% if attr %}
+              {% if attr is string %}
+                {% set alerts = attr | from_json %}
+              {% else %}
+                {% set alerts = attr %}
+              {% endif %}
+              {% for alert in alerts %}
+                {% if 'date_time' in alert[1] or 'triggerTime' in alert[1] %}
+                  {% set ns.active = true %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.active }}
+
+
+
+
+#──────────────────────────────╮
+automation:
+#──────────────────────────────╯
+
+
+    # ── BED SHAKER:  OFF BUTTON  ────────────────────────────────────────────
+    #  • Button to turn off the vibrating bed shaker. 
+
+  - id: bed_shaker_off_button
+    alias: Bed Shaker Off Button (Hue Button B02)
+    mode: single
+    trigger:
+      - platform: event
+        event_type: zha_event
+        event_data:
+          device_ieee: !secret hue_button_b02_ieee
+          endpoint_id: 1
+          cluster_id: 6
+          command: off_with_effect
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.sonoff_usb_plug
+
+
+
+
+
+# |   END: alarm_time.yaml

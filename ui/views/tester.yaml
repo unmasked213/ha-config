@@ -1,0 +1,27 @@
+# | START: tester.yaml
+# |  PATH: /config/ui/views/tester.yaml
+
+
+
+title: 'Tester'
+path: tester
+subview: false
+type: sections
+max_columns: 1
+icon: ''
+
+
+sections:
+  - type: custom:ui-catalogue-card
+
+  - type: custom:prompt-manager-card
+    title: 'Prompt Manager'
+
+
+
+
+# | END: tester.yaml
+
+
+
+

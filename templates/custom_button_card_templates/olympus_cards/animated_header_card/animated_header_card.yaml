@@ -1,0 +1,253 @@
+# | START: animated_header_card.yaml
+# | PATH: /config/templates/custom_button_card_templates/olympus_cards/animated_header_card/animated_header_card.yaml
+
+
+
+# ── ANIMATED HEADER CARD ───────────────────────────────────────────────────────
+#   Time-based message rotation with character-by-character blur animation. Cycles
+#   through contextual messages based on time of day and can integrate dynamic
+#   content from entities. Core functionality:
+#
+#     • Time-of-day message rotation (morning, afternoon, evening, night)
+#     • Integration with entity states (train summary, weather suggestions, etc.)
+#     • Character-by-character staggered animation with blur transitions
+#     • Word-safe text wrapping with inline-block spans
+#     • Dynamic container height adjustment for variable message lengths.
+#     • Smooth crossfade between messages with configurable timing.
+
+
+
+# ── USAGE ─────────────────────────────────────────────────────────────────────
+# type: custom:button-card
+# template: animated_header_card
+# variables:
+#   morning_messages: ['Good morning!', 'Rise and shine!']
+#   afternoon_messages: ['Good afternoon!', 'Hope your day is going well!']
+#   evening_messages: ['Good evening!', 'Time to wind down and relax.']
+#   night_messages: ['Sleep tight!', 'Sweet dreams ahead.']
+#   display_time: 5000
+#   char_delay: 0.03
+#   fade_duration: 0.9
+#   fade_in_delay: 0
+
+
+
+
+animated_header_card:
+
+# ── VARIABLES ────────────────────────────────────────────────────────────────
+  variables:
+    morning_messages: []
+    afternoon_messages: []
+    evening_messages: []
+    night_messages: []
+    display_time: 5000
+    char_delay: 0.03
+    fade_duration: 0.9
+    fade_in_delay: 0
+
+
+
+# ── BASE PROPERTIES ───────────────────────────────────────────────────────────
+  show_icon: false
+  show_name: true
+  show_state: false
+  show_label: false
+  long_press: false
+  tap_action: none
+  update_timer: 1s
+
+
+
+# ── CARD MOD ─────────────────────────────────────────────────────────────────
+  card_mod:
+    style: |
+      :host {
+        --ha-card-background: none !important;
+        --ha-card-box-shadow: none !important;
+        --ha-card-border-color: none !important;
+        --ha-card-backdrop-filter: none !important;
+      }
+
+      ha-card::before {
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        background: none !important;
+      }
+
+
+
+# ── STYLES ───────────────────────────────────────────────────────────────────
+  styles:
+
+    card:
+      - background: none
+      - animation: slide 2s .8s both
+      - position: relative
+      - box-shadow: none
+      - border: none
+      - '--mdc-ripple-color': rgba(0,0,0,0)
+      - width: 100%
+      - overflow: visible
+
+    name:
+      - font-size: 1em
+      - font-weight: 300
+      - word-spacing: 0.2px
+      - letter-spacing: 0.7px
+      - line-height: 1.5
+      - font-family: Roboto, Segoe UI, Helvetica Neue, sans-serif
+      - text-rendering: optimizeLegibility
+      - '-webkit-font-smoothing': antialiased
+      - '-moz-osx-font-smoothing': grayscale
+      - font-kerning: normal
+      - hyphens: none
+      - justify-self: start
+      - align-self: start
+      - text-align: left
+      - overflow: hidden
+      - overflow-wrap: normal
+      - word-break: normal
+      - white-space: normal
+      - padding: 10px
+      - width: 450px
+      - transition: transform .3s ease-out
+
+
+
+# ── EXTRA STYLES ─────────────────────────────────────────────────────────────
+  extra_styles: |
+    @keyframes textfadeoutro {
+      0%   { transform:translateX(0)  scaleX(1); filter:blur(0); opacity:1; }
+      100% { transform:translateX(25px) scaleX(.9); filter:blur(4px); opacity:0; }
+    }
+
+    @keyframes textfadeintro {
+      0%   { transform:translateX(-25px) scaleX(.9); filter:blur(4px); opacity:0; }
+      100% { transform:translateX(0)  scaleX(1); filter:blur(0); opacity:1; }
+    }
+
+    @keyframes slide { 0% { transform:translateX(3%); opacity:0; } }
+
+
+
+# ── NAME ─────────────────────────────────────────────────────────────────────
+  name: |
+    [[[
+
+      /* ─────────── CONSTANTS ─────────── */
+      const CHARS_PER_LINE = 50;
+      const LINE_HEIGHT_MULTIPLIER = 1.5;
+      const MIN_MESSAGE_LENGTH = 8;
+
+      /* ─────────── 1. COLLECT MESSAGES  ─────────── */
+      const h = new Date().getHours();
+      const msgs = [
+        ...(h < 5 || h >= 22 ? variables.night_messages :
+            h < 12            ? variables.morning_messages :
+            h < 17            ? variables.afternoon_messages :
+                                variables.evening_messages)
+      ];
+
+      const add = v => {
+        try {
+          if (!v) return;
+          let processedValue = v;
+
+          if (Array.isArray(v)) {
+            processedValue = v.join(' ');
+          } else if (typeof v === 'object') {
+            processedValue = JSON.stringify(v);
+          }
+
+          const stringValue = String(processedValue);
+          if (stringValue.length > MIN_MESSAGE_LENGTH) {
+            msgs.push(stringValue);
+          }
+        } catch (error) {
+          console.warn('Error processing message value:', error);
+        }
+      };
+
+      // Safer entity state access
+      const trainSummary = states['input_text.train_service_summary'];
+      const weatherSuggestion = states['input_text.ai_weather_clothing_suggestion'];
+
+      if (trainSummary && typeof trainSummary.state === 'string') {
+        add(trainSummary.state);
+      }
+      if (weatherSuggestion && typeof weatherSuggestion.state === 'string') {
+        add(weatherSuggestion.state);
+      }
+
+      if (!msgs.length) return 'No messages available.';
+
+
+      /* ─────────── 2. PICK CURRENT / NEXT MESSAGE ─────────── */
+      const now = Date.now();
+      // More efficient max calculation
+      const maxAnim = msgs.reduce((max, txt) => {
+        const animTime = (variables.fade_duration + variables.char_delay * txt.length) * 1000;
+        return Math.max(max, animTime);
+      }, 0);
+      const cycle = variables.display_time + maxAnim;
+      const idx = Math.floor((now / cycle) % msgs.length);
+      const cur = msgs[idx];
+      const next = msgs[(idx + 1) % msgs.length];
+      const anim = (now % cycle) > variables.display_time;
+
+
+      /* ─────────── 3. DYNAMIC CONTAINER HEIGHT ─────────── */
+      const estLines = txt => Math.ceil(txt.length / CHARS_PER_LINE);
+      const minH_cur = estLines(cur) * LINE_HEIGHT_MULTIPLIER;
+      const minH_next = estLines(next) * LINE_HEIGHT_MULTIPLIER;
+      const minH = anim ? Math.max(minH_cur, minH_next) : minH_cur;
+
+
+      /* ─────────── 4. WORD-SAFE LETTER ANIMATOR ─────────── *
+       *  - Each WORD is wrapped in an INLINE-BLOCK span     *
+       *    so the browser can break ONLY between words.     *
+       *  - Each LETTER still gets its own inline-block span *
+       *    to keep per-character fade / transform.          *
+       *  - Spaces between word-spans are regular spaces,    *
+       *    giving the browser natural break points.         */
+      const build = (txt, incoming = false) => {
+        let globalIdx = 0;                       // keeps char-delay global across words
+
+        return txt.split(/(\s+)/).map(token => {
+          if (/^\s+$/.test(token)) {             // token = one or more spaces
+            return token;                        // leave as raw spaces (wrappable)
+          }
+
+          const letters = [...token].map(c => {
+            const delay = (incoming ? variables.fade_in_delay : 0) +
+                          globalIdx * variables.char_delay;
+            globalIdx++;
+
+            return `<span style="display:inline-block;
+                                  opacity:${incoming ? 0 : 1};
+                                  animation:${incoming ? 'textfadeintro' : 'textfadeoutro'}
+                                            ${variables.fade_duration}s cubic-bezier(.4,0,.2,1) forwards;
+                                  animation-delay:${delay}s">${c}</span>`;
+          }).join('');
+
+          /* word-wrapper prevents mid-word breaks */
+          return `<span style="display:inline-block;">${letters}</span>`;
+        }).join('');
+      };
+
+
+      /* ─────────── 5. OUTPUT HTML ─────────── */
+      return anim
+        ? `<div style="position:relative; min-height:${minH}em;">
+             <div style="position:absolute; inset:0; z-index:1;">${build(cur)}</div>
+             <div style="position:absolute; inset:0; z-index:2;">${build(next, true)}</div>
+           </div>`
+        : `<div style="position:relative; min-height:${minH}em;">
+             <div style="position:absolute; inset:0;">${cur}</div>
+           </div>`;
+    ]]]
+
+
+
+# | END: animated_header_card.yaml

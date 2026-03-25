@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(//A:/**)",
+      "Write(//A:/**)",
+      "Read(//D:/MPV/**)",
+      "Write(//D:/MPV/**)",
+      "Glob(//A:/**)",
+      "Glob(//D:/MPV/**)",
+      "Read(/config/**)",
+      "Write(/config/**)",
+      "Glob(/config/**)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "mcp__mcp-registry__search_mcp_registry",
+      "WebFetch(domain:www.home-assistant.io)",
+      "mcp__homeassistant__GetLiveContext",
+      "WebFetch(domain:draculatheme.com)",
+      "WebFetch(domain:marketplace.visualstudio.com)",
+      "WebFetch(domain:claude.com)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rm -rf:*)",
+      "Bash(ha core restart:*)"
+    ]
+  },
+  "outputStyle": "default",
+  "prefersReducedMotion": true
+}

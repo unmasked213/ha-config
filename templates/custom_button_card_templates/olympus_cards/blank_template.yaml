@@ -1,0 +1,101 @@
+
+# | START: blank_button_card_template.yaml
+# | PATH: /config/templates/custom_button_card_templates/olympus_cards/blank_button_card_template.yaml
+
+
+
+# ── BLANK BUTTON-CARD TEMPLATE ───────────────────────────────────────────────
+#   Canonical scaffold showing structure and comment layout.In real
+#   templates, replace this with the actual content for the card.
+#
+#   Example functionality:
+#     • Add a few bullet to describe the card functionality
+#     • And features of the card
+#     • Aim for 4-6 bullets but this is not a strict requirement
+#     • I'm running out of things to write as example bullets so you get the idea
+
+
+
+# ── USAGE ────────────────────────────────────────────────────────────────────
+# type: custom:button-card
+# template: blank_button_card_template
+# variables:
+#   colors:
+#     primary: var(--primary-color)
+#     text: var(--primary-text-color)
+#   dimensions:
+#     min_height: 120px
+#     border_radius: 18px
+#     padding: 12px
+
+
+
+blank_button_card_template:
+
+
+
+# ── VARIABLES ────────────────────────────────────────────────────────────────
+  variables:
+    colors:                                                                        # Example of inline comments
+      primary: var(--primary-color)                                                # For info, all inline comments should be indented like this
+      text: var(--primary-text-color)                                              # This is another comment
+    dimensions:                                                                    # Example dimensions block
+      min_height: 120px                                                            # Example dimension value
+      border_radius: 18px
+      padding: 12px
+
+
+
+# ── BASE CARD PROPERTIES ─────────────────────────────────────────────────────
+  entity: '[[[ return variables?.entities?.primary || null; ]]]'                   # Example of inline comments
+  update_timer: 60s                                                             # Example... you get the idea
+  show_icon: false                                                                 # Try to add plenty of comments to explain the code
+  show_name: false                                                                 # Do not infer versioning in comments
+  show_state: false                                                                # Do write them in concise, simple English
+
+
+
+# ── ACTIONS ──────────────────────────────────────────────────────────────────
+  tap_action: none
+  hold_action: none
+  double_tap_action: none
+
+
+
+# ── STYLES ───────────────────────────────────────────────────────────────────
+  styles:
+
+    grid:
+      - grid-template-areas: '"main"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: auto
+
+    card:
+      - padding: '[[[ return variables?.dimensions?.padding || "12px"; ]]]'
+      - border-radius: '[[[ return variables?.dimensions?.border_radius || "16px"; ]]]'
+      - height: '[[[ return variables?.dimensions?.min_height || "120px"; ]]]'
+
+    custom_fields:
+      main:
+        - align-self: stretch
+        - justify-self: stretch
+
+
+
+# ── CUSTOM FIELDS ────────────────────────────────────────────────────────────
+  custom_fields:
+
+    main: |
+      <!-- Place minimal content here in real templates.
+           Keep this file free of JS logic and complex HTML. -->
+
+
+
+# ── EXTRA STYLES ─────────────────────────────────────────────────────────────
+  extra_styles: |
+    /* Add scoped CSS or keyframes in real templates.
+       Keep this blank in the scaffold. */
+
+
+
+# | END: blank_button_card_template.yaml

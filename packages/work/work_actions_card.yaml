@@ -1,0 +1,121 @@
+# | START: work_actions_card.yaml
+# |  PATH: /config/packages/work/work_actions_card.yaml
+
+
+
+#  ╔═════════════════════════════════════════════════════════════════════════╗
+#  ║     WORK ACTIONS CARD - SETTINGS HELPERS                               ║
+#  ╚═════════════════════════════════════════════════════════════════════════╝
+
+#  Settings persistence for the work-actions-card custom component.
+#  These helpers allow card settings to survive browser refreshes and be
+#  readable by automations.
+#
+#  The card reads these values on load and writes them when changed via
+#  the settings drawer. All helpers use the 'wac_' prefix for namespacing.
+#
+#  USAGE IN CARD CONFIG:
+#    The card automatically binds to these helpers if they exist.
+#    No additional configuration required in the card YAML.
+
+
+
+#────────────────────────────────────────────────────────────────────────────╮
+#  LAYOUT SETTINGS                                                           │
+#────────────────────────────────────────────────────────────────────────────╯
+
+input_number:
+
+  # ── MAX HEIGHT ──────────────────────────────────────────────────────────
+  #  Maximum card height in pixels. Controls the CSS max-height property.
+  #  The card scrolls internally when content exceeds this height.
+  #  Range: 200-5000px, Default: 600
+
+  wac_max_height:
+    name: "WAC: Max Height"
+    icon: mdi:arrow-expand-vertical
+    min: 200
+    max: 5000
+    step: 50
+    unit_of_measurement: "px"
+    mode: box
+
+
+  # ── NEW INDICATOR EXPIRY ─────────────────────────────────────────────
+  #  Hours before a new-item indicator auto-expires.
+  #  Range: 1-168 (1 hour to 1 week), Default: 48
+
+  wac_new_indicator_hours:
+    name: "WAC: New Indicator Hours"
+    icon: mdi:clock-outline
+    min: 1
+    max: 168
+    step: 1
+    unit_of_measurement: "h"
+    mode: box
+
+
+  # ── COMPLETED SHELF LIFE ─────────────────────────────────────────────
+  #  Days to keep completed items visible before auto-hiding.
+  #  Range: 1-90, Default: 7
+
+  wac_completed_shelf_days:
+    name: "WAC: Completed Shelf Life"
+    icon: mdi:calendar-remove
+    min: 1
+    max: 90
+    step: 1
+    unit_of_measurement: "d"
+    mode: box
+
+
+
+#────────────────────────────────────────────────────────────────────────────╮
+#  DISPLAY SETTINGS                                                          │
+#────────────────────────────────────────────────────────────────────────────╯
+
+input_boolean:
+
+  # ── SHOW COMPLETED ─────────────────────────────────────────────────────
+  #  Whether to display completed (checked) items in the list.
+  #  When off, only active (needs_action) items are visible.
+  #  Default: on (show completed items)
+
+  wac_show_completed:
+    name: "WAC: Show Completed"
+    icon: mdi:checkbox-marked-outline
+
+
+  # ── HOVER TOOLTIPS ───────────────────────────────────────────────────
+  #  Whether hover tooltips (meeting source info) appear on action items.
+  #  Default: on (tooltips enabled)
+
+  wac_hover_tooltips:
+    name: "WAC: Hover Tooltips"
+    icon: mdi:tooltip-text-outline
+
+
+
+#────────────────────────────────────────────────────────────────────────────╮
+#  SORT SETTINGS                                                             │
+#────────────────────────────────────────────────────────────────────────────╯
+
+input_select:
+
+  # ── SORT ORDER ─────────────────────────────────────────────────────────
+  #  Controls item ordering in the card:
+  #  - Default: server-returned order (no client sort)
+  #  - Urgency first: overdue → soon → future → no due → completed
+  #  - Active first: unchecked items above checked items
+  #  Default: Default
+
+  wac_sort_order:
+    name: "WAC: Sort Order"
+    icon: mdi:sort
+    options:
+      - "Newest first"
+      - "Urgency first"
+      - "Active first"
+
+
+# | END: work_actions_card.yaml

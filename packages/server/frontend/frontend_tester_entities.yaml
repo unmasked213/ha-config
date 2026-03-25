@@ -1,0 +1,48 @@
+
+# | START: frontend_tester_entities.yaml
+# | PATH: /config/packages/server/frontend/frontend_tester_entities.yaml
+
+
+# ╭────────────────────╮
+# │   INPUT BOOLEAN
+# ╰────────────────────╯
+input_boolean:
+  test_boolean:
+    name: "Test Boolean"
+
+
+
+# ╭────────────────────╮
+# │   INPUT NUMBER
+# ╰────────────────────╯
+input_number:
+  test_number:
+    name: "Test Number"
+    min: 0
+    max: 255
+    step: 1
+
+
+
+# ╭────────────────────╮
+# │   INPUT SELECT
+# ╰────────────────────╯
+input_select:
+  test_select:
+    name: "Test Select"
+    options:
+      - Option A
+      - Option B
+      - Option C
+
+
+
+# ╭────────────────────╮
+# │   INPUT TEXT
+# ╰────────────────────╯
+input_text:
+  test_text:
+    name: "Test Text"
+
+
+# | END: frontend_tester_entities.yaml

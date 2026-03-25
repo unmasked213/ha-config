@@ -1,0 +1,43 @@
+
+# | START: frontend_dad_joke.yaml
+# |  PATH: /config/packages/server/frontend/frontend_dad_joke.yaml
+
+
+# ╭────────────────────╮
+# │    REST            │
+# ╰────────────────────╯
+rest:
+
+  # ➔ Dad Joke
+  #   Displays a dad joke
+  - resource: "https://icanhazdadjoke.com/"
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0"
+      Accept: "application/json"
+    scan_interval: 7200   # Every 2 hours
+    sensor:
+      - name: "Dad Joke"
+        unique_id: "dad_joke_sensor"
+        value_template: "Dad joke received"   # Placeholder state
+        json_attributes:
+          - joke
+        icon: "mdi:emoticon-happy-outline"
+
+
+
+# ╭────────────────────╮
+# │    TEMPLATE        │
+# ╰────────────────────╯
+template:
+
+# ➔ Dad Joke Last Updated
+#   Displays the last updated time of the dad joke
+  - sensor:
+      - name: "Dad Joke Last Updated"
+        unique_id: "dad_joke_last_updated"
+        state: "{{ now().strftime('%Y-%m-%d %H:%M') }}"
+        icon: "mdi:clock-outline"
+
+
+# | END: frontend_dad_joke.yaml

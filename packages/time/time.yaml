@@ -1,0 +1,78 @@
+
+# | START: time.yaml
+# |  PATH: /config/packages/time/time.yaml
+
+
+#  ╭────────────────────╮
+#  │   SENSOR
+#  ╰────────────────────╯
+sensor:
+
+# ➔ Time Date
+#   Displays the current time and date
+  - platform: time_date
+    display_options:
+      - 'time'             # Current time (HH:MM)
+      - 'date'             # Current date (YYYY-MM-DD)
+      - 'date_time'        # Current date and time
+      - 'date_time_utc'    # Date and time in UTC
+      - 'date_time_iso'    # Date and time in ISO 8601 format
+      - 'time_date'        # Time followed by date
+
+
+
+#  ╭────────────────────╮
+#  │   TEMPLATE
+#  ╰────────────────────╯
+template:
+
+# ➔ Current Time Seconds
+#    Unlocks per-second custom:button-card updates via triggers_update
+  - trigger:
+      - platform: time_pattern
+        seconds: "*"
+    sensor:
+      - name: "Current Time Seconds"
+        unique_id: current_time_seconds
+        state: "{{ now().timestamp() | int }}"
+
+
+
+#  ╭────────────────────╮
+#  │   INPUT NUMBER
+#  ╰────────────────────╯
+input_number:
+
+# ➔ Frontend Timer Second Value
+#   Displays the current time in seconds
+  frontend_timer_second_value:
+    name: Seconds
+    min: 0
+    max: 59
+    step: 1
+    initial: 0
+
+# ➔ Frontend Timer Minute Value
+#   Displays the current time in minutes
+  frontend_timer_minute_value:
+    name: Minutes
+    min: 0
+    max: 59
+    step: 1
+    initial: 10
+
+# ➔ Frontend Timer Hour Value
+#   Displays the current time in hours
+  frontend_timer_hour_value:
+    name: Hours
+    min: 0
+    max: 24
+    step: 1
+    initial: 0
+
+
+
+
+
+
+# |   END: time.yaml

@@ -1,0 +1,118 @@
+
+# | START: lights2.yaml
+# |  PATH: /config/packages/light/lights2.yaml
+
+# Note: light.bedroom entity refers to the office light due to historical room changes.
+# Entity ID remains unchanged to avoid breaking existing references throughout the system.
+
+
+
+# ╭────────────────────╮
+# │   INPUT SELECT     │
+# ╰────────────────────╯
+input_select:
+
+# ➔ Light Dropdown Areas
+  light_dropdown_areas:
+    name: "Rooms"
+    options:
+      - "Office"      # light.bedroom (legacy naming)
+      - "Bedroom"     # light.room_02
+      - "Floor 02"    # light.second_floor
+      - "Floor 01"    # light.floor_01
+      - "Bathroom"    # light.bathroom_light
+    icon: mdi:home-group
+
+
+
+# ╭────────────────────╮
+# │   INPUT BOOLEAN    │
+# ╰────────────────────╯
+input_boolean:
+
+  lights_menu_toggle:
+    name: Lights - Toggle menu
+    icon: mdi:lightbulb
+
+# ➔ Auto-mode toggles (when off, suppress automations)
+  lights_office_automode:
+    name: Lights - Office - Auto mode
+    icon: mdi:lightbulb-auto
+  lights_bedroom_automode:
+    name: Lights - Bedroom - Auto mode
+    icon: mdi:lightbulb-auto
+  lights_floor02_automode:
+    name: Lights - Floor 02 - Auto mode
+    icon: mdi:lightbulb-auto
+  lights_floor01_automode:
+    name: Lights - Floor 01 - Auto mode
+    icon: mdi:lightbulb-auto
+  lights_bathroom_automode:
+    name: Lights - Bathroom - Auto mode
+    icon: mdi:lightbulb-auto
+
+# ➔ Card-visibility flags (toggled by automation)
+  show_office_light_card:
+    name: Show Office Light Card
+    icon: mdi:card
+  show_bedroom_light_card:
+    name: Show Bedroom Light Card
+    icon: mdi:card
+  show_floor02_light_card:
+    name: Show Floor 02 Light Card
+    icon: mdi:card
+  show_floor01_light_card:
+    name: Show Floor 01 Light Card
+    icon: mdi:card
+  show_bathroom_light_card:
+    name: Show Bathroom Light Card
+    icon: mdi:card
+
+
+
+# ╭────────────────────╮
+# │   TEMPLATE         │
+# ╰────────────────────╯
+template:
+
+  - light:
+
+# ➔ Virtual Floor 01 Light
+      - name: "Floor 01"
+        unique_id: light_floor_01_virtual
+        icon: mdi:numeric-1-box
+        state: >
+          {% set s = states('switch.sonoff_zbminil2_switch') %}
+          {{ s if s in ['on','off'] else 'off' }}
+        turn_on:
+          service: switch.turn_on
+          target:
+            entity_id: switch.sonoff_zbminil2_switch
+        turn_off:
+          service: switch.turn_off
+          target:
+            entity_id: switch.sonoff_zbminil2_switch
+        availability: >
+          {{ states('switch.sonoff_zbminil2_switch') in ['on','off'] }}
+
+  - sensor:
+
+# ➔ Dynamic Light Entity
+      - name: "Dynamic Light Entity"
+        unique_id: sensor_dynamic_light_entity
+        state: >
+          {% set room_map = {
+            "Office":   "light.bedroom",
+            "Bedroom":  "light.room_02",
+            "Floor 02": "light.second_floor",
+            "Floor 01": "light.floor_01",
+            "Bathroom": "light.bathroom_light"
+          } %}
+          {{ room_map.get(states('input_select.light_dropdown_areas'), 'light.bedroom') }}
+
+
+
+
+
+
+# |   END: lights2.yaml

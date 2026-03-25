@@ -1,0 +1,490 @@
+
+# | START: curtains.yaml
+# |  PATH: /config/packages/device/curtains.yaml
+
+
+# ╭────────────────────╮
+# │   INPUT SELECT
+# ╰────────────────────╯
+input_select:
+  # ➔ Blind selector
+  #   Frontend helper to select which blinds to control
+  blind_selector:
+    name: Blind Selector
+    options:
+      - Bedroom Left
+      - Bedroom Right
+      - Office
+    initial: Bedroom Left
+    icon: mdi:blinds
+
+
+# ╭────────────────────╮
+# │   INPUT BOOLEAN
+# ╰────────────────────╯
+input_boolean:
+  # ➔ Helper to show or hide the slider on the dashboard card
+  #   Office
+  curtain_slider_visibility_office:
+    name: Curtains - Slider Visibility (Office)
+    initial: off
+
+  #   Bedroom Left
+  curtain_slider_visibility_bedroom_left:
+    name: Curtains - Slider Visibility (Bedroom Left)
+    initial: off
+
+  #   Bedroom Right
+  curtain_slider_visibility_bedroom_right:
+    name: Curtains - Slider Visibility (Bedroom Right)
+    initial: off
+
+  #   All
+  curtain_slider_visibility_all:
+    name: Curtains - Slider Visibility (All)
+    initial: off
+
+  # ➔ Automatic mode for blinds
+  #   Office
+  office_blinds_automatic_mode:
+    name: Office Blinds - Automatic Mode
+
+  #   Bedroom Left
+  bedroom_blinds_left_automatic_mode:
+    name: Bedroom Blinds Left - Automatic Mode
+
+  #   Bedroom Right
+  bedroom_blinds_right_automatic_mode:
+    name: Bedroom Blinds Right - Automatic Mode
+
+
+# ╭────────────────────╮
+# │   SCRIPT
+# ╰────────────────────╯
+script:
+  # Morning phased open with comprehensive safety checks
+  cover_morning_phase:
+    mode: restart
+    fields:
+      cover_entity:
+        description: "Cover entity to control"
+      position_sensor:
+        description: "Position sensor entity"
+      presence_sensor:
+        description: "Presence sensor entity"
+      weekday_min_elev:
+        description: "Minimum sun elevation for weekdays"
+        default: 3
+      weekend_min_elev:
+        description: "Minimum sun elevation for weekends/holidays"
+        default: 6
+      earliest_time:
+        description: "Earliest time to start opening"
+        default: "08:45"
+      timeout_s:
+        description: "Timeout for position changes (seconds)"
+        default: 25
+    sequence:
+      - variables:
+          is_weekend: "{{ now().isoweekday() in [6, 7] }}"
+          cal_state: "{{ states('calendar.united_kingdom_eng') }}"
+          is_holiday: "{{ cal_state == 'on' }}"
+          min_elevation: "{{ ((weekend_min_elev | default(6)) if (is_weekend or is_holiday) else (weekday_min_elev | default(3))) | float }}"
+          current_time: "{{ now() }}"
+          earliest_allowed: "{{ today_at(earliest_time ~ ':00' if earliest_time | length == 5 else earliest_time) }}"
+          sun_elevation: "{{ state_attr('sun.sun', 'elevation') | float(-90) }}"
+          phase_targets: [15, 45, 95]
+          current_position: >-
+            {% set v = states(position_sensor) %}
+            {{ v | float(0) if v not in ['unknown', 'unavailable', ''] else 0 }}
+
+      # Calendar availability logging
+      - if:
+          - condition: template
+            value_template: "{{ cal_state in ['unknown', 'unavailable', ''] }}"
+        then:
+          - service: logbook.log
+            data:
+              name: "Covers"
+              message: "Holiday calendar unavailable; using weekend-only logic."
+              entity_id: calendar.united_kingdom_eng
+
+      # Consolidated guard conditions
+      - condition: and
+        conditions:
+          - alias: "Position sensor valid"
+            condition: template
+            value_template: >-
+              {% set v = states(position_sensor) %}
+              {{ v not in ['unknown','unavailable',''] and (v | float(none)) is not none }}
+
+          - alias: "Cover entity available"
+            condition: template
+            value_template: "{{ states(cover_entity) not in ['unknown', 'unavailable', ''] }}"
+
+          - alias: "Sun above horizon"
+            condition: state
+            entity_id: sun.sun
+            state: "above_horizon"
+
+          - alias: "After earliest time"
+            condition: template
+            value_template: "{{ current_time >= earliest_allowed }}"
+
+          - alias: "Sufficient brightness"
+            condition: template
+            value_template: "{{ sun_elevation >= min_elevation }}"
+
+          - alias: "Room vacant ≥5 minutes"
+            condition: template
+            value_template: >-
+              {{ is_state(presence_sensor, 'off')
+                 and states[presence_sensor].last_changed is not none
+                 and (current_time - states[presence_sensor].last_changed).total_seconds() >= 300 }}
+
+          - alias: "Not already open"
+            condition: template
+            value_template: "{{ current_position < 90 }}"
+
+      # Phase execution loop
+      - repeat:
+          for_each: "{{ phase_targets }}"
+          sequence:
+            - variables:
+                target_position: "{{ repeat.item | float }}"
+                initial_position: "{{ states(position_sensor) | float(0) }}"
+                clamped_position: "{{ [1, [target_position | round(0), 95] | min] | max }}"
+
+            # Pre-movement checks
+            - condition: and
+              conditions:
+                - condition: template
+                  value_template: "{{ is_state(presence_sensor, 'off') }}"
+                - condition: template
+                  value_template: "{{ states(cover_entity) != 'closing' }}"
+                - condition: template
+                  value_template: "{{ (initial_position + 2) < target_position }}"
+
+            # Send position command
+            - service: cover.set_cover_position
+              target:
+                entity_id: "{{ cover_entity }}"
+              data:
+                position: "{{ clamped_position }}"
+
+            # Wait and handle results
+            - wait_for_trigger:
+                - id: target_reached
+                  platform: template
+                  value_template: "{{ states(position_sensor) | float(0) >= (target_position - 2) }}"
+                - id: presence_detected
+                  platform: template
+                  value_template: "{{ is_state(presence_sensor, 'on') }}"
+                - id: manual_closing
+                  platform: template
+                  value_template: "{{ is_state(cover_entity, 'closing') }}"
+                - id: manual_override
+                  platform: template
+                  value_template: "{{ states(position_sensor) | float(0) > (target_position + 5) }}"
+                - id: opposite_motion
+                  platform: template
+                  value_template: "{{ states(position_sensor) | float(0) < (initial_position - 2) }}"
+              timeout:
+                seconds: "{{ timeout_s }}"
+
+            # Result handling
+            - choose:
+                # Success path
+                - conditions:
+                    - condition: template
+                      value_template: "{{ wait.trigger is not none and wait.trigger.id == 'target_reached' }}"
+                  sequence:
+                    - delay: "00:01:00"
+
+                # Abort on any non-success trigger
+                - conditions:
+                    - condition: template
+                      value_template: "{{ wait.trigger is not none and wait.trigger.id != 'target_reached' }}"
+                  sequence:
+                    - stop: "Phase stopped: {{ wait.trigger.id }}"
+
+              # Timeout handling with retry
+              default:
+                - service: cover.set_cover_position
+                  target:
+                    entity_id: "{{ cover_entity }}"
+                  data:
+                    position: "{{ clamped_position }}"
+                - wait_for_trigger:
+                    - id: target_reached_retry
+                      platform: template
+                      value_template: "{{ states(position_sensor) | float(0) >= (target_position - 2) }}"
+                  timeout:
+                    seconds: "{{ timeout_s }}"
+                - if:
+                    - condition: template
+                      value_template: "{{ wait.trigger is none }}"
+                  then:
+                    - stop: "Timeout at {{ target_position }}% after retry"
+                  else:
+                    - delay: "00:01:00"
+
+
+# ╭────────────────────╮
+# │   AUTOMATION
+# ╰────────────────────╯
+automation:
+  # ➔ Auto-hide slider controls after inactivity
+  #   Hides sliders after 15 minutes of inactivity
+  - alias: "Curtains - Auto Hide Slider Controls"
+    id: curtains_auto_hide_slider_controls
+    mode: single
+    trigger:
+      # Run hourly check
+      - platform: time_pattern
+        hours: "*"
+
+      # Run when any visibility toggle is turned on
+      - platform: state
+        entity_id:
+          - input_boolean.curtain_slider_visibility_office
+          - input_boolean.curtain_slider_visibility_bedroom_left
+          - input_boolean.curtain_slider_visibility_bedroom_right
+          - input_boolean.curtain_slider_visibility_all
+        to: "on"
+        for: "00:15:00"
+
+    condition:
+      # Only run if at least one slider is visible
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: input_boolean.curtain_slider_visibility_office
+            state: "on"
+          - condition: state
+            entity_id: input_boolean.curtain_slider_visibility_bedroom_left
+            state: "on"
+          - condition: state
+            entity_id: input_boolean.curtain_slider_visibility_bedroom_right
+            state: "on"
+          - condition: state
+            entity_id: input_boolean.curtain_slider_visibility_all
+            state: "on"
+
+    action:
+      - variables:
+          # Get timestamps of last changes for all covers
+          last_changed_times:
+            - "{{ states.cover.curtain_3_a659.last_changed | as_timestamp(0) }}"
+            - "{{ states.cover.window_blind_left.last_changed | as_timestamp(0) }}"
+            - "{{ states.cover.window_blind_right.last_changed | as_timestamp(0) }}"
+          now_ts: "{{ now() | as_timestamp }}"
+          # Get the most recent change
+          most_recent_change: "{{ last_changed_times | max }}"
+          # Calculate time difference in minutes
+          minutes_since_last_change: "{{ ((now_ts - most_recent_change) / 60) | round(0) }}"
+
+      # Turn off all sliders if inactive for 15+ minutes
+      - if:
+          - condition: template
+            value_template: "{{ minutes_since_last_change > 15 }}"
+        then:
+          - service: input_boolean.turn_off
+            target:
+              entity_id:
+                - input_boolean.curtain_slider_visibility_office
+                - input_boolean.curtain_slider_visibility_bedroom_left
+                - input_boolean.curtain_slider_visibility_bedroom_right
+                - input_boolean.curtain_slider_visibility_all
+
+  # ➔ Morning Phased Open (Bedroom) — both blinds together
+  - alias: "Covers - Morning Phased Open (Bedroom)"
+    id: covers_morning_open_bedroom
+    mode: restart
+    trigger:
+      - platform: numeric_state
+        entity_id: sun.sun
+        attribute: elevation
+        above: 0
+
+      - platform: state
+        entity_id: binary_sensor.presence_sensor_fp2_07a0_presence_sensor_1_2
+        to: "off"
+        for:
+          minutes: 5
+
+      - platform: state
+        entity_id: calendar.united_kingdom_eng
+
+    condition:
+      - condition: or
+        conditions:
+          - condition: template
+            value_template: "{{ states('sensor.window_blind_left_position') | float(0) < 90 }}"
+          - condition: template
+            value_template: "{{ states('sensor.window_blind_right_position') | float(0) < 90 }}"
+
+    action:
+      - parallel:
+          - alias: "Process left blind"
+            if:
+              - condition: template
+                value_template: "{{ states('sensor.window_blind_left_position') | float(0) < 90 }}"
+            then:
+              - service: script.cover_morning_phase
+                data:
+                  cover_entity: "cover.window_blind_left"
+                  position_sensor: "sensor.window_blind_left_position"
+                  presence_sensor: "binary_sensor.presence_sensor_fp2_07a0_presence_sensor_1_2"
+
+          - alias: "Process right blind"
+            if:
+              - condition: template
+                value_template: "{{ states('sensor.window_blind_right_position') | float(0) < 90 }}"
+            then:
+              - service: script.cover_morning_phase
+                data:
+                  cover_entity: "cover.window_blind_right"
+                  position_sensor: "sensor.window_blind_right_position"
+                  presence_sensor: "binary_sensor.presence_sensor_fp2_07a0_presence_sensor_1_2"
+
+  # ➔ Morning Phased Open (Office) — curtain
+  - alias: "Covers - Morning Phased Open (Office)"
+    id: covers_morning_open_office
+    mode: restart
+    trigger:
+      - platform: numeric_state
+        entity_id: sun.sun
+        attribute: elevation
+        above: 0
+
+      - platform: state
+        entity_id: binary_sensor.presence_sensor_fp2_1780_presence_sensor_1
+        to: "off"
+        for:
+          minutes: 5
+
+      - platform: state
+        entity_id: calendar.united_kingdom_eng
+
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.window_curtain_position') | float(0) < 90 }}"
+
+    action:
+      - service: script.cover_morning_phase
+        data:
+          cover_entity: "cover.curtain_3_a659"
+          position_sensor: "sensor.window_curtain_position"
+          presence_sensor: "binary_sensor.presence_sensor_fp2_1780_presence_sensor_1"
+
+  # ➔ Evening Close (All) — presence ignored, only if >5% open
+  - alias: "Covers - Evening Close (All)"
+    id: covers_evening_close_all
+    mode: single
+    trigger:
+      - platform: numeric_state
+        entity_id: sun.sun
+        attribute: elevation
+        below: -4
+
+    action:
+      - variables:
+          targets:
+            - cover: cover.window_blind_left
+              pos: sensor.window_blind_left_position
+            - cover: cover.window_blind_right
+              pos: sensor.window_blind_right_position
+            - cover: cover.curtain_3_a659
+              pos: sensor.window_curtain_position
+
+      - repeat:
+          for_each: "{{ targets }}"
+          sequence:
+            - if:
+                - condition: template
+                  value_template: >-
+                    {% set v = states(repeat.item.pos) %}
+                    {{ v not in ['unknown', 'unavailable', ''] and (v | float(0)) > 5 }}
+              then:
+                - service: cover.set_cover_position
+                  target:
+                    entity_id: "{{ repeat.item.cover }}"
+                  data:
+                    position: 1
+
+  # ➔ Night Safety Check — when either person leaves after dark, ensure closed
+  - alias: "Covers - Night Safety Check"
+    id: covers_night_safety_check
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - person.enhy
+          - person.cam
+        to: "not_home"
+
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sun.sun', 'elevation') | float(-90) <= -4 }}"
+
+    action:
+      - variables:
+          targets:
+            - cover: cover.window_blind_left
+              pos: sensor.window_blind_left_position
+            - cover: cover.window_blind_right
+              pos: sensor.window_blind_right_position
+            - cover: cover.curtain_3_a659
+              pos: sensor.window_curtain_position
+
+      - repeat:
+          for_each: "{{ targets }}"
+          sequence:
+            - if:
+                - condition: template
+                  value_template: >-
+                    {% set v = states(repeat.item.pos) %}
+                    {{ v not in ['unknown', 'unavailable', ''] and (v | float(0)) > 5 }}
+              then:
+                - service: cover.set_cover_position
+                  target:
+                    entity_id: "{{ repeat.item.cover }}"
+                  data:
+                    position: 1
+
+
+# ╭────────────────────╮
+# │   TEMPLATE SENSOR
+# ╰────────────────────╯
+template:
+  - sensor:
+      - name: "Window Curtain Position"
+        unique_id: window_curtain_position_sensor
+        unit_of_measurement: "%"
+        state: >-
+          {% set pos = state_attr('cover.curtain_3_a659', 'current_position') %}
+          {{ pos if pos is not none else 0 }}
+        availability: >-
+          {{ states('cover.curtain_3_a659') not in ['unknown', 'unavailable'] }}
+
+      - name: "Window Blind Left Position"
+        unique_id: window_blind_left_position_sensor
+        unit_of_measurement: "%"
+        state: >-
+          {% set pos = state_attr('cover.window_blind_left', 'current_position') %}
+          {{ pos if pos is not none else 0 }}
+        availability: >-
+          {{ states('cover.window_blind_left') not in ['unknown', 'unavailable'] }}
+
+      - name: "Window Blind Right Position"
+        unique_id: window_blind_right_position_sensor
+        unit_of_measurement: "%"
+        state: >-
+          {% set pos = state_attr('cover.window_blind_right', 'current_position') %}
+          {{ pos if pos is not none else 0 }}
+        availability: >-
+          {{ states('cover.window_blind_right') not in ['unknown', 'unavailable'] }}
+
+
+# | END: curtains.yaml

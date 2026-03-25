@@ -1,0 +1,339 @@
+# | START: lights.yaml
+# | PATH: /config/packages/device/lights.yaml
+
+
+# ╭────────────────────╮
+# │ AUTOMATION
+# ╰────────────────────╯
+automation:
+# ➔ AUTO LIGHTS:  FLOOR 02
+#    Philosophy: Floor 02 landing/stairs = predictable safety lighting.
+#    Lights turn on when presence is detected and it's dark.
+#    "Dark" = twilight window (primary) or low lux (fallback on gloomy days).
+#    Brightness set only on first turn-on: 01:00–07:00 = 10%, otherwise 100%; never changes mid-session.
+#    After presence is absent for 10s, lights turn off—even if they were turned on manually.
+  - alias: "Auto-lights: Floor 02"
+    id: auto_lights_floor_02
+    mode: restart
+    description: >
+      Presence-based lighting for the 2nd floor landing/stairs with twilight +
+      lux dark detection and first-on brightness logic.
+
+    variables:
+      lux_threshold: 50  # fallback threshold for dark/gloomy days
+
+    trigger:
+      - id: presence_on
+        platform: state
+        entity_id: binary_sensor.presence_floor_02
+        to: "on"
+
+      - id: presence_off
+        platform: state
+        entity_id: binary_sensor.presence_floor_02
+        from: "on"
+        to: "off"
+        for: "00:00:10"
+
+      - id: startup
+        platform: homeassistant
+        event: start
+
+    condition: []
+
+    action:
+      - choose:
+
+          # ─────────────── PRESENCE ON / STARTUP ───────────────
+          - conditions:
+              - condition: or
+                conditions:
+                  - condition: trigger
+                    id: presence_on
+                  - condition: and
+                    conditions:
+                      - condition: trigger
+                        id: startup
+                      - condition: state
+                        entity_id: binary_sensor.presence_floor_02
+                        state: "on"
+              - condition: or
+                conditions:
+                  # Twilight window (primary darkness logic)
+                  - condition: sun
+                    after: sunset
+                    after_offset: "-00:30:00"
+                  - condition: sun
+                    before: sunrise
+                    before_offset: "00:30:00"
+                  # Lux fallback (only if ambient light is actually low)
+                  - condition: template
+                    value_template: >
+                      {% set lux = state_attr('binary_sensor.presence_floor_02_2', 'lux') %}
+                      {{ lux not in [none, 'unknown', 'unavailable'] and lux | float(999) < lux_threshold }}
+
+            sequence:
+              # Only set brightness if lights are currently OFF (prevents mid-session brightness jumps)
+              - condition: template
+                value_template: >
+                  {{ not is_state('light.floor_02', 'on') }}
+
+              - service: light.turn_on
+                target:
+                  entity_id: light.floor_02
+                data:
+                  brightness_pct: >
+                    {% set h = now().hour %}
+                    {{ 10 if 1 <= h < 7 else 100 }}
+
+          # ─────────────── PRESENCE OFF ───────────────
+          - conditions:
+              - condition: trigger
+                id: presence_off
+            sequence:
+              - service: light.turn_off
+                target:
+                  entity_id: light.floor_02
+
+
+
+
+
+# ➔ Lights - Floor 01
+#   Controls Floor 01 lights with manual override protection
+  - id: '1736077081113'
+    alias: Lights - Floor 01
+    description: Fully optimized automation for Floor 01 lights.
+    triggers:
+    - id: Presence
+      entity_id:
+      - binary_sensor.ms05_motion
+      - binary_sensor.ms04_motion
+      - binary_sensor.vs00_vibrationp
+      - binary_sensor.vs05_vibration
+      - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_6
+      - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_7
+      - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_4
+      to: 'on'
+      trigger: state
+    - id: Motion_Change
+      entity_id:
+      - binary_sensor.ms05_motion
+      - binary_sensor.ms04_motion
+      - binary_sensor.vs00_vibrationp
+      - binary_sensor.vs05_vibration
+      - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_6
+      - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_7
+      - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_4
+      - binary_sensor.c08_motion
+      trigger: state
+    - id: cycle
+      minutes: /2
+      trigger: time_pattern
+    - id: light_state_changed
+      entity_id: switch.sonoff_zbminil2_switch
+      trigger: state
+    - id: startup
+      trigger: homeassistant
+      event: start
+    actions:
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ trigger.id == ''light_state_changed'' and is_manual }}'
+        - condition: state
+          entity_id: timer.light_override
+          state: idle
+        sequence:
+        - target:
+            entity_id: timer.light_override
+          data:
+            duration: 00:{{ '%02d' | format(minutes_to_respect_manual_input|int) }}:00
+          action: timer.start
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_off
+          data: {}
+      # ─────────────── STARTUP RECOVERY ───────────────
+      - conditions:
+        - condition: template
+          value_template: '{{ trigger.id == ''startup'' }}'
+        - condition: state
+          entity_id: switch.sonoff_zbminil2_switch
+          state: 'off'
+        - condition: template
+          value_template: '{{ state_attr(''sun.sun'', ''elevation'') < 6 }}'
+        - condition: state
+          entity_id: timer.light_override
+          state: idle
+        - condition: template
+          value_template: '{{ expand(motion_sensors) | selectattr(''state'', ''eq'', ''on'') | list | count > 0 }}'
+        sequence:
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_on
+          data: {}
+        - target:
+            entity_id: switch.sonoff_zbminil2_switch
+          action: switch.turn_on
+          data: {}
+        - delay:
+            seconds: 2
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_off
+          data: {}
+      - conditions:
+        - condition: template
+          value_template: '{{ trigger.id == ''Presence'' }}'
+        - condition: state
+          entity_id: switch.sonoff_zbminil2_switch
+          state: 'off'
+        - condition: template
+          value_template: '{{ state_attr(''sun.sun'', ''elevation'') < 6 }}'
+        - condition: state
+          entity_id: timer.light_override
+          state: idle
+        - condition: template
+          value_template: "{% if trigger.entity_id == 'binary_sensor.vs00_vibrationp'
+            and is_quiet_hours %}\n  {{ has_recent_activity }}\n{% else %}\n  true\n{%
+            endif %}"
+        sequence:
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_on
+          data: {}
+        - target:
+            entity_id: switch.sonoff_zbminil2_switch
+          action: switch.turn_on
+          data: {}
+        - delay:
+            seconds: 2
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_off
+          data: {}
+      - conditions:
+        - condition: template
+          value_template: '{{ trigger.id is defined and trigger.id in [''Motion_Change'',
+            ''cycle''] }}'
+        - condition: state
+          entity_id: timer.light_override
+          state: idle
+        - condition: template
+          value_template: '{{ state_attr(''sun.sun'', ''elevation'') < 6 }}'
+        - condition: template
+          value_template: "{% set sensors = expand('binary_sensor.ms05_motion','binary_sensor.ms04_motion','binary_sensor.vs00_vibrationp','binary_sensor.vs05_vibration','binary_sensor.presence_sensor_fp2_9c35_presence_sensor_6','binary_sensor.presence_sensor_fp2_9c35_presence_sensor_7','binary_sensor.presence_sensor_fp2_9c35_presence_sensor_4')
+            %} {% if sensors | selectattr('state', 'eq', 'on') | list %}\n  false\n{%
+            else %}\n  {% set last_active = sensors | map(attribute='last_changed')
+            | max %}\n  {{ (now() - last_active).total_seconds() > (minutes_of_absence_till_auto_off|int
+            * 60) }}\n{% endif %}\n"
+        sequence:
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_on
+          data: {}
+        - target:
+            entity_id: switch.sonoff_zbminil2_switch
+          action: switch.turn_off
+          data: {}
+        - delay:
+            seconds: 2
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_off
+          data: {}
+      - conditions:
+        - condition: template
+          value_template: '{{ trigger.id is defined and trigger.id in [''Motion_Change'',
+            ''cycle''] }}'
+        - condition: state
+          entity_id: timer.light_override
+          state: idle
+        - condition: template
+          value_template: '{{ state_attr(''sun.sun'', ''elevation'') >= 6 }}'
+        sequence:
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_on
+          data: {}
+        - target:
+            entity_id: switch.sonoff_zbminil2_switch
+          action: switch.turn_off
+          data: {}
+        - delay:
+            seconds: 2
+        - target:
+            entity_id: input_boolean.floor01_auto_active
+          action: input_boolean.turn_off
+          data: {}
+    variables:
+      is_manual: '{{ trigger.id == ''light_state_changed'' and (trigger.context.user_id
+        is not none or (trigger.from_state.state == ''on'' and trigger.to_state.state
+        == ''off'' and not is_state(''input_boolean.floor01_auto_active'', ''on'')))
+        }}
+
+        '
+      motion_sensors: "{{ [\n  'binary_sensor.ms05_motion',\n  'binary_sensor.ms04_motion',\n
+        \ 'binary_sensor.vs00_vibrationp',\n  'binary_sensor.vs05_vibration',\n  'binary_sensor.presence_sensor_fp2_9c35_presence_sensor_6',\n
+        \ 'binary_sensor.presence_sensor_fp2_9c35_presence_sensor_7',\n  'binary_sensor.presence_sensor_fp2_9c35_presence_sensor_4'\n]
+        }}\n"
+      minutes_of_absence_till_auto_off: 2
+      minutes_to_respect_manual_input: 5
+      is_quiet_hours: '{{ now().hour >= 0 and now().hour < 7 }}'
+      has_recent_activity: "{% set other_sensors = [\n  'binary_sensor.ms05_motion',\n
+        \ 'binary_sensor.ms04_motion',\n  'binary_sensor.vs05_vibration',\n  'binary_sensor.presence_sensor_fp2_9c35_presence_sensor_6',\n
+        \ 'binary_sensor.presence_sensor_fp2_9c35_presence_sensor_7',\n  'binary_sensor.presence_sensor_fp2_9c35_presence_sensor_4'\n]
+        %} {% set sensors_expanded = expand(other_sensors) %} {% set ns = namespace(has_activity=false)
+        %} {% for sensor in sensors_expanded %}\n  {% if sensor.state == 'on' or
+        (now() - sensor.last_changed).total_seconds() < 3600 %}\n    {% set ns.has_activity
+        = true %}\n  {% endif %}\n{% endfor %} {{ ns.has_activity }}\n"
+    mode: single
+
+
+
+# ➔ E desk lights button
+#   Controls desk lights with button
+  - id: '1714267052410'
+    alias: E desk lights button
+    description: ''
+    triggers:
+    - entity_id: event.hue_smart_button_1_button_1
+      attribute: event_type
+      to: short_release
+      trigger: state
+    conditions: []
+    actions:
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ is_state(''light.elgato_panel_01'', ''off'') or is_state(''light.elgato_bw10k1a02640'',
+            ''off'') }}'
+        sequence:
+        - data:
+            kelvin: 5619
+            brightness_pct: 100
+          target:
+            entity_id:
+            - light.elgato_panel_01
+            - light.signe_gradient_table_1
+            - light.elgato_panel_02
+          action: light.turn_on
+      - conditions:
+        - condition: template
+          value_template: '{{ is_state(''light.elgato_panel_01'', ''on'') or is_state(''light.elgato_bw10k1a02640'',
+            ''on'') }}'
+        sequence:
+        - target:
+            entity_id:
+            - light.elgato_panel_01
+            - light.signe_gradient_table_1
+            - light.elgato_panel_02
+          data: {}
+          action: light.turn_off
+      default: []
+    mode: restart
+
+
+
+# | END: lights.yaml

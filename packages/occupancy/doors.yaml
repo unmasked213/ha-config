@@ -1,0 +1,488 @@
+
+# | START: doors.yaml
+# |  PATH: /config/packages/device/doors.yaml
+
+#  ╔═════════════════════════════════════════════════════════════════════════╗
+#  ║     DOOR SENSORS                                                        ║
+#  ╚═════════════════════════════════════════════════════════════════════════╝
+#  • Watches three doors: office, bedroom, and front (house).
+#  • Persists last-change timestamps; smooths vibration-only door with delay.
+#  • Derives unified battery/signal metrics with stable caching via attributes.
+
+#────────────────────────────────╮
+input_datetime:
+#────────────────────────────────╯
+
+  # ── OFFICE DOOR TIMESTAMP ─────────────────────────────────────────────────
+  door_office_last_change:
+    name: Door Office last change
+    has_date: true
+    has_time: true
+
+
+  # ── BEDROOM DOOR TIMESTAMP ────────────────────────────────────────────────
+  door_bedroom_last_change:
+    name: Door Bedroom last change
+    has_date: true
+    has_time: true
+
+
+  # ── HOUSE DOOR TIMESTAMP ──────────────────────────────────────────────────
+  door_house_last_change:
+    name: Door House last change
+    has_date: true
+    has_time: true
+
+
+
+
+#────────────────────────────────╮
+automation:
+#────────────────────────────────╯
+
+  # ── TRACK DOOR STATE CHANGES ──────────────────────────────────────────────
+  #  • Updates timestamp helpers when any unified door entity changes state.
+  #  • Mapping below is keyed by literal entity_id strings; renaming any of the
+  #    three unified door entities requires updating the map.
+  - id: doors_track_last_change
+    alias: Doors • last state change
+    mode: parallel
+    max: 10
+
+
+    # -- Trigger -------------------------------------------------------------
+    trigger:
+
+      - platform: state
+        entity_id:
+          - binary_sensor.door_office
+          - binary_sensor.door_bedroom
+          - binary_sensor.door_house
+
+
+    # -- Condition -----------------------------------------------------------
+    # Filters unknown/unavailable transitions and no-op transitions.
+    condition:
+
+      - condition: template
+        value_template: >
+          {{ trigger.from_state is not none and trigger.to_state is not none
+             and trigger.from_state.state not in ['unknown','unavailable']
+             and trigger.to_state.state   not in ['unknown','unavailable']
+             and trigger.from_state.state != trigger.to_state.state }}
+
+
+    # -- Action --------------------------------------------------------------
+    action:
+
+      - variables:
+          helper: >
+            {% set map = {
+              'binary_sensor.door_office':  'input_datetime.door_office_last_change',
+              'binary_sensor.door_bedroom': 'input_datetime.door_bedroom_last_change',
+              'binary_sensor.door_house':   'input_datetime.door_house_last_change'
+            } %}
+            {{ map.get(trigger.entity_id, '') }}
+
+      - choose:
+          - conditions: "{{ helper | length > 0 }}"
+            sequence:
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: "{{ helper }}"
+                data:
+                  # Uses trigger.to_state.last_changed; swapping to now() changes
+                  # semantics (recorded state-change time vs automation-run time).
+                  date: "{{ (trigger.to_state.last_changed | as_timestamp | timestamp_custom('%Y-%m-%d', true)) }}"
+                  time: "{{ (trigger.to_state.last_changed | as_timestamp | timestamp_custom('%H:%M:%S', true)) }}"
+
+
+
+
+template:
+
+  #──────────────────────────────╮
+  - binary_sensor:
+  #──────────────────────────────╯
+
+    # ── OFFICE DOOR ─────────────────────────────────────────────────────────
+    #  • Contact sensor primary, vibration fallback.
+    #  • Unified battery and signal quality metrics.
+
+    - name: "Door: Office"
+      unique_id: door_office_unified
+      device_class: door
+
+
+      # -- Availability ------------------------------------------------------
+      #  • Availability is OR (either sensor being available is sufficient) while
+      #    state selection is priority-based (contact first, vibration fallback).
+      availability: >
+        {% set c = states('binary_sensor.ds00_position') %}
+        {% set v = states('binary_sensor.vs02_c_door_vibration_2') %}
+        {{ c not in ['unknown','unavailable'] or v not in ['unknown','unavailable'] }}
+
+
+      # -- State -------------------------------------------------------------
+      state: >
+        {% set c = states('binary_sensor.ds00_position') %}
+        {% set v = states('binary_sensor.vs02_c_door_vibration_2') %}
+        {% if c in ['on','off'] %}
+          {{ c == 'on' }}
+        {% elif v in ['on','off'] %}
+          {{ v == 'on' }}
+        {% else %}
+          false
+        {% endif %}
+
+
+      # -- Attributes --------------------------------------------------------
+      attributes:
+        last_state_change: "{{ states('input_datetime.door_office_last_change') }}"
+
+        source: >
+          {% set c = states('binary_sensor.ds00_position') %}
+          {% set v = states('binary_sensor.vs02_c_door_vibration_2') %}
+          {{ 'contact' if c in ['on','off'] else ('vibration' if v in ['on','off'] else 'none') }}
+
+        contact_entity: "binary_sensor.ds00_position"
+
+        vibration_entity: "binary_sensor.vs02_c_door_vibration_2"
+
+        contact_available: "{{ states('binary_sensor.ds00_position') not in ['unknown','unavailable'] }}"
+
+        vibration_available: "{{ states('binary_sensor.vs02_c_door_vibration_2') not in ['unknown','unavailable'] }}"
+
+        battery_contact_raw: "{{ states('sensor.ds00_battery') }}"
+        # Normalises to numeric percent by stripping a literal '%' before float().
+
+        battery_contact: >
+          {% set x = states('sensor.ds00_battery') %}
+          {{ (x|replace('%',''))|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        battery_vibration_raw: "{{ states('sensor.vs01_battery') }}"
+
+        battery_vibration: >
+          {% set x = states('sensor.vs01_battery') %}
+          {{ (x|replace('%',''))|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        battery_pct: >
+          {% set bc_s = states('sensor.ds00_battery') %}
+          {% set bv_s = states('sensor.vs01_battery') %}
+          {% set bc_av = bc_s not in ['unknown','unavailable',''] %}
+          {% set bv_av = bv_s not in ['unknown','unavailable',''] %}
+          {% set bc = (bc_s|replace('%',''))|float(0) if bc_av else 0 %}
+          {% set bv = (bv_s|replace('%',''))|float(0) if bv_av else 0 %}
+          {{ (bc if bc_av else (bv if bv_av else 0))|round(0)|int }}
+
+        battery_source: >
+          {% set bc = states('sensor.ds00_battery') %}
+          {% set bv = states('sensor.vs01_battery') %}
+          {{ 'contact' if bc not in ['unknown','unavailable',''] else ('vibration' if bv not in ['unknown','unavailable',''] else '') }}
+
+        signal_contact_raw: "{{ states('sensor.ds00_bluetooth_signal') }}"
+
+        signal_contact_rssi: >
+          {% set x = states('sensor.ds00_bluetooth_signal') %}
+          {{ x|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+        signal_vibration_lqi_raw: "{{ states('sensor.vs02_c_door_lqi_2') }}"
+
+        signal_vibration_lqi: >
+          {% set x = states('sensor.vs02_c_door_lqi_2') %}
+          {{ x|int(0) if x not in ['unknown','unavailable',''] else 0 }}
+
+        signal_vibration_raw: "{{ states('sensor.lumi_lumi_vibration_aq1_rssi') }}"
+
+        signal_vibration_rssi: >
+          {% set x = states('sensor.lumi_lumi_vibration_aq1_rssi') %}
+          {{ x|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        # Hysteresis cache:
+        # - Computes a 0–100 score from the best available metric (RSSI or LQI).
+        # - Reads prior value from this entity’s own attribute via state_attr().
+        # - Emits new value only if delta >= 10 or cached == 0.
+        # Coupling: state_attr() references the literal entity_id string
+        # 'binary_sensor.door_office'. Renaming the unified entity requires
+        # updating that reference.
+        # Jinja detail: namespace() is used so current.value remains accessible
+        # after conditional blocks.
+        signal_quality: >
+          {% set crssi_s = states('sensor.ds00_bluetooth_signal') %}
+          {% set has_crssi = crssi_s not in ['unknown','unavailable',''] %}
+          {% set current = namespace(value=0) %}
+          {% if has_crssi %}
+            {% set q = ((crssi_s|float(0) + 100) / 60 * 100) %}
+            {% set current.value = ([100, [0, q]|max]|min|round(0)|int) %}
+          {% else %}
+            {% set vlqi_s = states('sensor.vs02_c_door_lqi_2') %}
+            {% set has_vlqi = vlqi_s not in ['unknown','unavailable',''] %}
+            {% if has_vlqi and (vlqi_s|int(0)) > 0 %}
+              {% set current.value = (((vlqi_s|int(0))/255*100)|round(0)|int) %}
+            {% else %}
+              {% set vrssi_s = states('sensor.lumi_lumi_vibration_aq1_rssi') %}
+              {% if vrssi_s not in ['unknown','unavailable',''] %}
+                {% set q = ((vrssi_s|float(0) + 100) / 60 * 100) %}
+                {% set current.value = ([100, [0, q]|max]|min|round(0)|int) %}
+              {% else %}
+                {% set current.value = 0 %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+          {% set cached = state_attr('binary_sensor.door_office', 'signal_quality')|int(0) %}
+          {% set diff = (current.value - cached)|abs %}
+          {{ current.value if diff >= 10 or cached == 0 else cached }}
+
+        signal_metric: >
+          {% if states('sensor.ds00_bluetooth_signal') not in ['unknown','unavailable',''] %}rssi
+          {% elif states('sensor.vs02_c_door_lqi_2') not in ['unknown','unavailable',''] %}lqi
+          {% elif states('sensor.lumi_lumi_vibration_aq1_rssi') not in ['unknown','unavailable',''] %}rssi
+          {% else %}{% endif %}
+
+        signal_source: >
+          {% if states('sensor.ds00_bluetooth_signal') not in ['unknown','unavailable',''] %}contact
+          {% elif states('sensor.vs02_c_door_lqi_2') not in ['unknown','unavailable',''] or states('sensor.lumi_lumi_vibration_aq1_rssi') not in ['unknown','unavailable',''] %}vibration
+          {% else %}{% endif %}
+
+        contributing_raw_sensors: >
+          {{ ['binary_sensor.ds00_position','binary_sensor.vs02_c_door_vibration_2'] | tojson }}
+
+
+
+
+    # ── BEDROOM DOOR ────────────────────────────────────────────────────────
+    #  • Contact sensor primary, vibration fallback.
+    #  • Unified battery and signal quality metrics.
+
+    - name: "Door: Bedroom"
+      unique_id: door_bedroom_unified
+      device_class: door
+
+
+      # -- Availability ------------------------------------------------------
+      availability: >
+        {% set c = states('binary_sensor.ds06_position') %}
+        {% set v = states('binary_sensor.vs01_vibration') %}
+        {{ c not in ['unknown','unavailable'] or v not in ['unknown','unavailable'] }}
+
+
+      # -- State -------------------------------------------------------------
+      state: >
+        {% set c = states('binary_sensor.ds06_position') %}
+        {% set v = states('binary_sensor.vs01_vibration') %}
+        {% if c in ['on','off'] %}
+          {{ c == 'on' }}
+        {% elif v in ['on','off'] %}
+          {{ v == 'on' }}
+        {% else %}
+          false
+        {% endif %}
+
+
+      # -- Attributes --------------------------------------------------------
+      attributes:
+
+        last_state_change: "{{ states('input_datetime.door_bedroom_last_change') }}"
+
+        source: >
+          {% set c = states('binary_sensor.ds06_position') %}
+          {% set v = states('binary_sensor.vs01_vibration') %}
+          {{ 'contact' if c in ['on','off'] else ('vibration' if v in ['on','off'] else 'none') }}
+
+        contact_entity: "binary_sensor.ds06_position"
+
+        vibration_entity: "binary_sensor.vs01_vibration"
+
+        contact_available: "{{ states('binary_sensor.ds06_position') not in ['unknown','unavailable'] }}"
+
+        vibration_available: "{{ states('binary_sensor.vs01_vibration') not in ['unknown','unavailable'] }}"
+
+        battery_contact_raw: "{{ states('sensor.contact_sensor_e778_battery') }}"
+
+        battery_contact: >
+          {% set x = states('sensor.contact_sensor_e778_battery') %}
+          {{ (x|replace('%',''))|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        battery_vibration_raw: "{{ states('sensor.vs02_c_door_battery_2') }}"
+
+        battery_vibration: >
+          {% set x = states('sensor.vs02_c_door_battery_2') %}
+          {{ (x|replace('%',''))|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        battery_pct: >
+          {% set bc_s = states('sensor.contact_sensor_e778_battery') %}
+          {% set bv_s = states('sensor.vs02_c_door_battery_2') %}
+          {% set bc_av = bc_s not in ['unknown','unavailable',''] %}
+          {% set bv_av = bv_s not in ['unknown','unavailable',''] %}
+          {% set bc = (bc_s|replace('%',''))|float(0) if bc_av else 0 %}
+          {% set bv = (bv_s|replace('%',''))|float(0) if bv_av else 0 %}
+          {{ (bc if bc_av else (bv if bv_av else 0))|round(0)|int }}
+
+        battery_source: >
+          {% set bc = states('sensor.contact_sensor_e778_battery') %}
+          {% set bv = states('sensor.vs02_c_door_battery_2') %}
+          {{ 'contact' if bc not in ['unknown','unavailable',''] else ('vibration' if bv not in ['unknown','unavailable',''] else '') }}
+
+        signal_contact_raw: "{{ states('sensor.contact_sensor_e778_bluetooth_signal') }}"
+
+        signal_contact_rssi: >
+          {% set x = states('sensor.contact_sensor_e778_bluetooth_signal') %}
+          {{ x|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        signal_vibration_lqi_raw: "{{ states('sensor.lumi_lumi_vibration_aq1_lqi') }}"
+
+        signal_vibration_lqi: >
+          {% set x = states('sensor.lumi_lumi_vibration_aq1_lqi') %}
+          {{ x|int(0) if x not in ['unknown','unavailable',''] else 0 }}
+
+        signal_vibration_raw: "{{ states('sensor.vs02_c_door_rssi_2') }}"
+
+        signal_vibration_rssi: >
+          {% set x = states('sensor.vs02_c_door_rssi_2') %}
+          {{ x|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        # Hysteresis cache pattern; see office door signal_quality for details.
+        # Coupling: state_attr() uses literal 'binary_sensor.door_bedroom'.
+        signal_quality: >
+          {% set crssi_s = states('sensor.contact_sensor_e778_bluetooth_signal') %}
+          {% set has_crssi = crssi_s not in ['unknown','unavailable',''] %}
+          {% set current = namespace(value=0) %}
+          {% if has_crssi %}
+            {% set q = ((crssi_s|float(0) + 100) / 60 * 100) %}
+            {% set current.value = ([100, [0, q]|max]|min|round(0)|int) %}
+          {% else %}
+            {% set vlqi_s = states('sensor.lumi_lumi_vibration_aq1_lqi') %}
+            {% if vlqi_s not in ['unknown','unavailable',''] and (vlqi_s|int(0)) > 0 %}
+              {% set current.value = (((vlqi_s|int(0))/255*100)|round(0)|int) %}
+            {% else %}
+              {% set vrssi_s = states('sensor.vs02_c_door_rssi_2') %}
+              {% if vrssi_s not in ['unknown','unavailable',''] %}
+                {% set q = ((vrssi_s|float(0) + 100) / 60 * 100) %}
+                {% set current.value = ([100, [0, q]|max]|min|round(0)|int) %}
+              {% else %}
+                {% set current.value = 0 %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+          {% set cached = state_attr('binary_sensor.door_bedroom', 'signal_quality')|int(0) %}
+          {% set diff = (current.value - cached)|abs %}
+          {{ current.value if diff >= 10 or cached == 0 else cached }}
+
+        signal_metric: >
+          {% if states('sensor.contact_sensor_e778_bluetooth_signal') not in ['unknown','unavailable',''] %}rssi
+          {% elif states('sensor.lumi_lumi_vibration_aq1_lqi') not in ['unknown','unavailable',''] %}lqi
+          {% elif states('sensor.vs02_c_door_rssi_2') not in ['unknown','unavailable',''] %}rssi
+          {% else %}{% endif %}
+
+        signal_source: >
+          {% if states('sensor.contact_sensor_e778_bluetooth_signal') not in ['unknown','unavailable',''] %}contact
+          {% elif states('sensor.lumi_lumi_vibration_aq1_lqi') not in ['unknown','unavailable',''] or states('sensor.vs02_c_door_rssi_2') not in ['unknown','unavailable',''] %}vibration
+          {% else %}{% endif %}
+
+        contributing_raw_sensors: >
+          {{ ['binary_sensor.ds06_position','binary_sensor.vs01_vibration'] | tojson }}
+
+
+
+
+    # ── HOUSE DOOR ──────────────────────────────────────────────────────────
+    #  • Vibration sensor only with smoothing delays.
+    #  • 30 second delay off, 1 second delay on.
+
+    - name: "Door: House"
+      unique_id: door_house_unified
+      device_class: door
+      delay_off: "00:00:30"
+      delay_on: "00:00:01"
+
+      # delay_* affects the unified entity’s state timing even if the underlying
+      # vibration sensor toggles more rapidly:
+      # - delay_on requires the input to remain 'on' for 1s before this entity turns on.
+      # - delay_off holds this entity 'on' for 30s after the input turns off.
+      availability: "{{ states('binary_sensor.vs00_vibration') not in ['unknown','unavailable'] }}"
+
+
+      # -- State -------------------------------------------------------------
+      state: "{{ is_state('binary_sensor.vs00_vibration', 'on') }}"
+
+
+      # -- Attributes --------------------------------------------------------
+      attributes:
+
+        last_state_change: "{{ states('input_datetime.door_house_last_change') }}"
+
+        source: "vibration"
+
+        contact_entity: "none"
+
+        vibration_entity: "binary_sensor.vs00_vibration"
+
+        contact_available: false
+
+        vibration_available: "{{ states('binary_sensor.vs00_vibration') not in ['unknown','unavailable'] }}"
+
+        battery_vibration_raw: "{{ states('sensor.vs03_battery') }}"
+
+        battery_vibration: >
+          {% set x = states('sensor.vs03_battery') %}
+          {{ (x|replace('%',''))|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        battery_pct: >
+          {% set bv_s = states('sensor.vs03_battery') %}
+          {% if bv_s not in ['unknown','unavailable',''] %}
+            {{ ((bv_s|replace('%',''))|float(0))|round(0)|int }}
+          {% else %}
+            0
+          {% endif %}
+
+        battery_source: >
+          {% set bv_s = states('sensor.vs03_battery') %}
+          {{ 'vibration' if bv_s not in ['unknown','unavailable',''] else '' }}
+
+        signal_vibration_lqi_raw: "{{ states('sensor.lumi_lumi_vibration_aq1_lqi_3') }}"
+
+        signal_vibration_lqi: >
+          {% set x = states('sensor.lumi_lumi_vibration_aq1_lqi_3') %}
+          {{ x|int(0) if x not in ['unknown','unavailable',''] else 0 }}
+
+        signal_vibration_raw: "{{ states('sensor.lumi_lumi_vibration_aq1_rssi_3') }}"
+
+        signal_vibration_rssi: >
+          {% set x = states('sensor.lumi_lumi_vibration_aq1_rssi_3') %}
+          {{ x|float(0) if x not in ['unknown','unavailable',''] else 0.0 }}
+
+        # Hysteresis cache pattern; see office door signal_quality for details.
+        # Coupling: state_attr() uses literal 'binary_sensor.door_house'.
+        signal_quality: >
+          {% set vlqi_s = states('sensor.lumi_lumi_vibration_aq1_lqi_3') %}
+          {% set current = namespace(value=0) %}
+          {% if vlqi_s not in ['unknown','unavailable',''] and (vlqi_s|int(0)) > 0 %}
+            {% set current.value = (((vlqi_s|int(0))/255*100)|round(0)|int) %}
+          {% else %}
+            {% set vrssi_s = states('sensor.lumi_lumi_vibration_aq1_rssi_3') %}
+            {% if vrssi_s not in ['unknown','unavailable',''] %}
+              {% set q = ((vrssi_s|float(0) + 100) / 60 * 100) %}
+              {% set current.value = ([100, [0, q]|max]|min|round(0)|int) %}
+            {% else %}
+              {% set current.value = 0 %}
+            {% endif %}
+          {% endif %}
+          {% set cached = state_attr('binary_sensor.door_house', 'signal_quality')|int(0) %}
+          {% set diff = (current.value - cached)|abs %}
+          {{ current.value if diff >= 10 or cached == 0 else cached }}
+
+        signal_metric: >
+          {% if states('sensor.lumi_lumi_vibration_aq1_lqi_3') not in ['unknown','unavailable',''] %}lqi
+          {% elif states('sensor.lumi_lumi_vibration_aq1_rssi_3') not in ['unknown','unavailable',''] %}rssi
+          {% else %}{% endif %}
+
+        signal_source: >
+          {% if states('sensor.lumi_lumi_vibration_aq1_lqi_3') not in ['unknown','unavailable',''] or states('sensor.lumi_lumi_vibration_aq1_rssi_3') not in ['unknown','unavailable',''] %}vibration
+          {% else %}{% endif %}
+
+        contributing_raw_sensors: >
+          {{ ['binary_sensor.vs00_vibration'] | tojson }}
+
+
+
+
+# | END: doors.yaml

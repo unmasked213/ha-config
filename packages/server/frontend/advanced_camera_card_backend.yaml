@@ -1,0 +1,82 @@
+
+# | START: advanced_camera_card_backend.yaml
+# | PATH: /config/packages/server/frontend/advanced_camera_card_backend.yaml
+
+
+
+
+# ── INFO ────────────────────────────────────────────────────────────────────
+# • Backend helpers for camera view selection.
+# • Automation A = Always mirroring manual selection.
+# • Automation B = Optional auto-follow from ACC triggers.
+# • Automation B can be enabled/disabled to lock the secondary view.
+
+
+
+
+# ── INPUT SELECT ────────────────────────────────────────────────────────────
+input_select:
+
+  # -- Camera Main View Selector ---------------------------------------------
+  camera_main_view_selector:
+    name: Camera Selector
+    options:
+      - C13
+      - C10
+      - C09
+      - C07
+      - C04
+      - Doorbell
+      - Garden
+      - Front
+    initial: C09
+
+
+  # -- Camera Secondary View Selector ----------------------------------------
+  camera_secondary_view_selector:
+    name: Camera Secondary
+    options:
+      - C13
+      - C10
+      - C09
+      - C07
+      - C04
+      - Doorbell
+      - Garden
+      - Front
+    initial: C10
+
+
+
+
+# ── AUTOMATIONS ─────────────────────────────────────────────────────────────
+automation:
+
+  - alias: camera_mirror_previous_view
+    id: camera_mirror_previous_view
+    mode: single
+
+    trigger:
+      - platform: state
+        entity_id: input_select.camera_main_view_selector
+
+    condition: []
+
+    action:
+      - variables:
+          previous: "{{ trigger.from_state.state }}"
+
+      - choose:
+          - conditions: "{{ previous not in ['unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.camera_secondary_view_selector
+                data:
+                  option: "{{ previous }}"
+
+
+
+
+# | END: advanced_camera_card_backend.yaml
+

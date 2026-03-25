@@ -1,0 +1,250 @@
+# | START: light_dropdown_pill.yaml
+# |  PATH: /config/templates/custom_button_card_templates/olympus_cards/light_dropdown_pill/light_dropdown_pill.yaml
+
+
+
+# ➔ Light Dropdown Pill
+#   Custom button card template that displays a dropdown pill for lights
+#   and provides a tooltip for the control. Core functionality:
+#
+#     • Displays a dropdown pill for lights
+#     • Provides a tooltip for the control
+#     • Updates the control when the lights change
+#     • Updates the tooltip when the lights change
+
+# ➔ Example Usage
+# type: custom:button-card
+# template: light_dropdown_pill
+# entity: input_boolean.lights_menu_toggle
+# variables:
+#   light_entities: []
+#   inactive_threshold: 300000
+#   icon_collapsed: mdi:lightbulb-auto
+#   icon_expanded: mdi:close
+
+light_dropdown_pill:
+
+# ── BASE CARD PROPERTIES ───────────────────────────────────────────────────────
+  entity: input_boolean.lights_menu_toggle
+  update_timer: 1s
+
+
+
+# ── VARIABLES ───────────────────────────────────────────────────────────────────
+  variables:
+    light_entities: []
+    inactive_threshold: 300000
+    icon_collapsed: mdi:lightbulb-auto
+    icon_expanded: mdi:close
+  update_timer: 1s
+
+
+
+# ── ACTIONS ────────────────────────────────────────────────────────────────────
+  tap_action:
+    action: toggle
+  hold_action:
+    action: more-info
+  double_tap_action:
+    action: more-info
+  show_icon: false
+  show_name: false
+  show_state: false
+
+
+
+# ── CUSTOM FIELDS ──────────────────────────────────────────────────────────────
+  custom_fields:
+
+    frame: ' '
+
+
+    main_icon: |
+      [[[
+        const open = states[entity.entity_id]?.state === 'on';
+        const icon  = open ? variables.icon_expanded : variables.icon_collapsed;
+        const color = open ? 'var(--info-color)' : 'var(--secondary-text-color)';
+        const size  = open ? 22 : 19;
+        const op    = open ? 1 : 0.55;
+        return `<ha-icon icon="${icon}" style="width:${size}px;height:${size}px;color:${color};opacity:${op}"></ha-icon>`;
+      ]]]
+
+
+    menu_icon: |
+      [[[
+        const open = states[entity.entity_id]?.state === 'on';
+        if (open) return '';
+        return `<ha-icon icon="mdi:dots-vertical" style="width:18px;height:18px;opacity:.75;color:var(--secondary-text-color)"></ha-icon>`;
+      ]]]
+
+
+    dropdown:
+      card:
+        type: vertical-stack
+        cards: |
+          [[[
+            const now = Date.now();
+            const thr = Number(variables.inactive_threshold) || 300000;
+            const items = (variables.light_entities || []).filter(eid => {
+              const s = states[eid];
+              if (!s || s.state !== 'off') return false;
+              const lc = new Date(s.last_changed).getTime();
+              return (now - lc) >= thr;
+            });
+
+            return items.map((eid, i) => {
+              const s = states[eid];
+              const icon = (s && s.attributes && s.attributes.icon) || 'mdi:lightbulb-off';
+              return {
+                type: 'custom:button-card',
+                entity: eid,
+                icon: icon,
+                show_name: false,
+                show_state: false,
+                size: '19px',
+                tap_action:
+                  { action: 'call-service', service: 'light.turn_on', service_data: { entity_id: eid } },
+                styles:
+                  { card:
+                      [ 'width: 36px',
+                        'height: 36px',
+                        'border-radius: 18px',
+                        'background: var(--ha-card-background)',
+                        'border: none',
+                        'box-shadow: none',
+                        'margin: 0 auto',
+                        `animation: ldp-item-in 220ms cubic-bezier(.2,.65,.25,1) ${i * 0.06}s both`,
+                        'transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease' ],
+                    icon: [ 'color: var(--primary-text-color)', 'width: 19px', 'height: 19px' ] }
+              };
+            });
+          ]]]
+        card_mod:
+          style: >
+            ha-card { background: transparent; border: none; box-shadow: none;
+            padding: 0; margin: 0; }
+
+
+
+# ── STATE ───────────────────────────────────────────────────────────────────────
+  state:
+    - value: 'on'
+      styles:
+        card:
+          - box-shadow: 0 2px 12px rgba(0,0,0,.14)
+        custom_fields:
+          menu_icon:
+            - display: none
+          dropdown:
+            - opacity: 1
+            - pointer-events: auto
+            - transform: translateX(-50%) scaleY(1)
+    - value: 'off'
+      styles:
+        card:
+          - box-shadow: 0 1px 6px rgba(0,0,0,.10)
+        custom_fields:
+          dropdown:
+            - opacity: 0
+            - pointer-events: none
+            - transform: translateX(-50%) scaleY(0.92)
+
+
+
+# ── STYLES ─────────────────────────────────────────────────────────────────────
+  styles:
+
+    card:
+      - height: 40px
+      - width: 64px
+      - background: var(--ha-card-background)
+      - border-radius: 999px
+      - border: none
+      - padding: 0
+      - position: relative
+      - box-sizing: border-box
+      - transition: box-shadow .2s ease
+      - display: |
+          [[[
+            const now = Date.now();
+            const thr = Number(variables.inactive_threshold) || 300000;
+            const isEdit = window.location.search.includes('edit=1');
+            const count = (variables.light_entities||[]).reduce((n,eid)=>{
+              const s = states[eid];
+              if (!s || s.state !== 'off') return n;
+              const lc = new Date(s.last_changed).getTime();
+              return n + ((now - lc) >= thr ? 1 : 0);
+            }, 0);
+            return (count || isEdit) ? 'block' : 'none';
+          ]]]
+
+
+    custom_fields:
+      frame:
+        - position: absolute
+        - left: 50%
+        - transform: translateX(-50%)
+        - top: 0
+        - width: 64px
+        - height: |
+            [[[
+              const now = Date.now();
+              const thr = Number(variables.inactive_threshold) || 300000;
+              const n = (variables.light_entities||[]).reduce((m,eid)=>{
+                const s = states[eid];
+                if (!s || s.state !== 'off') return m;
+                const lc = new Date(s.last_changed).getTime();
+                return m + ((now - lc) >= thr ? 1 : 0);
+              }, 0);
+              const extra = n ? (n * 36) + ((n - 1) * 8) + 16 : 0;   // items + gaps + padding
+              const open = states[entity.entity_id]?.state === 'on';
+              return `${open ? 40 + extra : 40}px`;
+            ]]]
+        - background: var(--ha-card-background)
+        - border: 2.5px solid var(--divider-color)
+        - border-radius: 28px
+        - box-shadow: 0 8px 24px rgba(0,0,0,.18)
+        - pointer-events: none
+        - z-index: 10
+        - transition: height 160ms cubic-bezier(.2,.65,.25,1), box-shadow 120ms ease
+        - will-change: height
+      main_icon:
+        - position: absolute
+        - top: 50%
+        - left: 12px
+        - transform: translateY(-50%)
+        - z-index: 20
+      menu_icon:
+        - position: absolute
+        - top: 50%
+        - right: 9px
+        - transform: translateY(-50%)
+        - z-index: 20
+      dropdown:
+        - position: absolute
+        - top: 40px
+        - left: 50%
+        - transform-origin: top center
+        - width: 64px
+        - padding: 8px 0
+        - display: flex
+        - flex-direction: column
+        - gap: 8px
+        - opacity: 0
+        - pointer-events: none
+        - z-index: 15
+        - transition: transform 140ms cubic-bezier(.2,.65,.25,1), opacity 120ms ease
+
+
+# ── CARD MOD ────────────────────────────────────────────────────────────────────
+  card_mod:
+    style: |
+      :host { overflow: visible !important; }
+      ha-card { overflow: visible !important; position: relative; }
+      @keyframes ldp-item-in {
+        from { opacity: 0; transform: translateY(-6px) scale(.94); }
+        to   { opacity: 1; transform: translateY(0)    scale(1); }
+      }
+
+
+# | END: light_dropdown_pill.yaml

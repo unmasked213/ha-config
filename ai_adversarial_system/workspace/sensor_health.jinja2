@@ -1,0 +1,31 @@
+# sensor_health attribute for presence_area_base
+# Add to attributes: section in presence_detection.yaml
+#
+# Purpose: Track sensor availability and flag degraded state
+#
+# Output (JSON):
+#   - available_count:     Number of sensors responding normally
+#   - unavailable_count:   Number of sensors unavailable/unknown
+#   - degraded:            true if area HAS an FP2 and it's unavailable
+#   - unavailable_sensors: List of unavailable sensor entity_ids
+#
+# Use case: Automations can check degraded before aggressive actions
+# Example:
+#   condition:
+#     - "{{ not (state_attr('binary_sensor.presence_office', 'sensor_health') | from_json).degraded }}"
+
+sensor_health: >
+  {# Note: this.attributes.* returns already-parsed lists, no from_json needed #}
+  {% set sensor_ids = this.attributes.contributing_sensors | default([]) %}
+  {% set sensor_objects = expand(sensor_ids) %}
+  {% set available_list = sensor_objects | rejectattr('state', 'in', ['unavailable', 'unknown']) | map(attribute='entity_id') | list %}
+  {% set unavailable_list = sensor_objects | selectattr('state', 'in', ['unavailable', 'unknown']) | map(attribute='entity_id') | list %}
+  {% set has_fp2 = sensor_ids | select('search', 'fp2') | list | count > 0 %}
+  {% set fp2_unavailable = unavailable_list | select('search', 'fp2') | list | count > 0 %}
+  {% set degraded = has_fp2 and fp2_unavailable %}
+  {{ {
+    "available_count": available_list | count,
+    "unavailable_count": unavailable_list | count,
+    "degraded": degraded,
+    "unavailable_sensors": unavailable_list
+  } | tojson }}

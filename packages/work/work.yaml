@@ -1,0 +1,22 @@
+# ╭────────────────────────────────────────╮
+# │   WORK — Meeting Action Pipeline
+# ╰────────────────────────────────────────╯
+#
+# Trigger automation for the action extraction pipeline.
+# The pipeline logic lives in pyscript/action_extraction_pipeline.py.
+# Pipeline logic lives in pyscript/action_extraction_pipeline.py.
+
+automation:
+  - id: action_extraction_pipeline_trigger
+    alias: "Action Extraction Pipeline Trigger"
+    description: "Triggers action extraction when a new meeting summary arrives"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: todo.meeting_summaries
+    actions:
+      - delay:
+          seconds: 5
+      - action: pyscript.action_extraction_pipeline
+        data:
+          dry_run: false

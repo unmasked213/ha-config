@@ -1,0 +1,67 @@
+# | START: prompt_manager.yaml
+# | PATH: /config/packages/ai/prompt_manager.yaml
+
+
+input_boolean:
+  prompt_manager_dev_mode:
+    name: "Prompt Manager: Dev Mode"
+    icon: mdi:code-braces
+
+
+automation:
+
+  # Generate Prompt Fields — event-driven AI generation
+  - id: generate_prompt_fields_automation
+    alias: Generate Prompt Fields
+    mode: parallel
+    trigger:
+      - platform: event
+        event_type: prompt_ai_request
+    action:
+      - variables:
+          req: "{{ trigger.event.data }}"
+          request_id: "{{ req.request_id }}"
+          prompt_content: "{{ req.prompt_content | default('') }}"
+          gen_title: "{{ req.generate_title | default(false) }}"
+          gen_desc: "{{ req.generate_description | default(false) }}"
+      - variables:
+          ai_title: ""
+          ai_description: ""
+      - if:
+          - "{{ gen_title }}"
+        then:
+          - service: ai_task.generate_data
+            data:
+              entity_id: ai_task.openai_ai_task
+              task_name: prompt title
+              instructions: >-
+                Based on the following prompt content:
+
+                {{ prompt_content }}
+
+                Generate a very short, direct title in Title Case.
+                No icons, symbols, or punctuation. Extremely concise.
+            response_variable: ai_title
+      - if:
+          - "{{ gen_desc }}"
+        then:
+          - service: ai_task.generate_data
+            data:
+              entity_id: ai_task.openai_ai_task
+              task_name: prompt description
+              instructions: >-
+                Based on the following prompt content:
+
+                {{ prompt_content }}
+
+                In a single short sentence that a 10-year-old could easily read aloud, describe what this prompt does.
+            response_variable: ai_description
+
+      # Reply via the `event` action
+      - event: prompt_ai_response
+        event_data:
+          request_id: "{{ request_id }}"
+          title: "{{ (ai_title.data | default('')) if gen_title else '' }}"
+          description: "{{ (ai_description.data | default('')) if gen_desc else '' }}"
+
+# | END: prompt_manager.yaml

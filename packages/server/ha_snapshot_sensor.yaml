@@ -1,0 +1,146 @@
+# | START: ha_snapshot_sensor.yaml
+# |  PATH: packages/server/ha_snapshot_sensor.yaml
+#
+# Pre-formatted HA server snapshot sensor.
+# Assembles the full snapshot text used by the prompt manager's fill-modal inject button.
+# State is always 'ready' (255-char limit workaround); full text is in attributes.snapshot.
+# Formatted for AI consumption — structured, terse, no dot-padding.
+#
+# Static context sections read from sensor.ha_system_context (published by pyscript/system_context.py).
+# Dynamic metric sections read from their respective sensors directly.
+
+template:
+  - sensor:
+      - name: "HA Server Snapshot"
+        unique_id: ha_server_snapshot
+        state: "ready"
+        attributes:
+          snapshot: >
+            <ha_system_snapshot generated="{{ now().strftime('%Y-%m-%dT%H:%M:%S') }}">
+
+            <context>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'executive_context') | default({})).items() %}
+            {{ val }}
+            {% endfor %}
+            </context>
+
+            <home_assistant>
+            Core: {{ state_attr('update.home_assistant_core_update', 'installed_version') | default('Unknown') }}
+            OS: {{ state_attr('update.home_assistant_operating_system_update', 'installed_version') | default('Unknown') }}
+            Supervisor: {{ state_attr('update.home_assistant_supervisor_update', 'installed_version') | default('Unknown') }}
+            Uptime: {{ states('sensor.uptime_formatted') | default('Unknown') }}
+            Installed: 2023-03-30
+            Scale: {{ states('sensor.config_line_breakdown') | default('0') }} config lines ({{ state_attr('sensor.config_line_breakdown', 'yaml') | default('0') }} YAML, {{ state_attr('sensor.config_line_breakdown', 'dashboards') | default('0') }} dashboard)
+            Resources: {{ states('sensor.lovelace_resources_count') | default('0') }} lovelace, {{ states('sensor.custom_components_count') | default('0') }} custom components, {{ states('sensor.integrations_frontend_count') | default('0') }} HACS, {{ states('sensor.addons_frontend_count') | default('0') }} addons
+            </home_assistant>
+
+            <system>
+            Platform: {{ states('sensor.installation_info') | default('Unknown') }} on {{ state_attr('sensor.installation_info', 'machine') | default('Unknown') }} ({{ state_attr('sensor.installation_info', 'arch') | default('Unknown') }})
+            CPU: {{ state_attr('sensor.cpu_speed', 'brand') | default('Unknown') }}, {{ states('sensor.cpu_thread_count') | default('8') }} threads, {{ states('sensor.processor_use') | default('Unknown') }}% use, {{ states('sensor.cpu_speed') | default('Unknown') }} GHz, {{ states('sensor.processor_temperature') | default('Unknown') }}°C
+            Load: {{ states('sensor.load_1m') | default('Unknown') }} (1m) / {{ states('sensor.load_5m') | default('Unknown') }} (5m) / {{ states('sensor.load_15m') | default('Unknown') }} (15m)
+            Memory: {{ (states('sensor.memory_use') | float(0) / 1024) | round(1) }} GB used, {{ (states('sensor.memory_free') | float(0) / 1024) | round(1) }} GB free, {{ states('sensor.memory_total_gb') | default('32') | int }} GB total
+            Software: Python {{ states('sensor.python_version') | default('Unknown') }}, Docker {{ states('sensor.docker_version') | default('Unknown') }}, Kernel {{ states('sensor.kernel_version') | default('Unknown') }}
+            </system>
+
+            <storage>
+            Disk: {{ states('sensor.disk_use') | default('0') }} GB used, {{ states('sensor.disk_free') | default('0') }} GB free, {{ states('sensor.home_assistant_host_disk_total') | default('0') }} GB total
+            Database: {{ states('sensor.database_configuration') | default('Unknown') }}, {{ state_attr('sensor.database_configuration', 'purge_keep_days') | default('Unknown') }} day retention, {{ (state_attr('sensor.storage_directory_breakdown', 'config_db_mb') | float(0) / 1024) | round(1) }} GB
+            Backups: {{ states('sensor.backup_statistics') | default('Unknown') }} backups, {{ state_attr('sensor.backup_statistics', 'total_size_gb') | default('Unknown') }} GB, oldest {{ state_attr('sensor.backup_statistics', 'oldest') | default('Unknown') }}, newest {{ state_attr('sensor.backup_statistics', 'newest') | default('Unknown') }}
+            Directories: {{ (state_attr('sensor.storage_directory_breakdown', 'config_total_mb') | float(0) / 1024) | round(1) }} GB config, {{ state_attr('sensor.storage_directory_breakdown', 'media_gb') | default('0') }} GB media, {{ state_attr('sensor.storage_directory_breakdown', 'share_gb') | default('0') }} GB share
+            </storage>
+
+            <mqtt>
+            Broker: Mosquitto {{ states('sensor.mqtt_broker_version') | default('Unknown') | replace('mosquitto version ', '') | trim }}, {{ states('sensor.mqtt_uptime_formatted') | default('Unknown') }} uptime
+            Clients: {{ states('sensor.mqtt_clients_connected') | default('0') }} connected
+            Lifetime: {{ states('sensor.mqtt_messages_received') | default('0') }} rx / {{ states('sensor.mqtt_messages_sent') | default('0') }} tx
+            </mqtt>
+
+            <connectivity>
+            IP: {{ states('sensor.system_monitor_ipv4_address_enp89s0') | default('Unknown') }}
+            Lifetime traffic: {{ (states('sensor.system_monitor_network_in_enp89s0') | float(0) / 1048576) | round(2) }} TB in, {{ (states('sensor.system_monitor_network_out_enp89s0') | float(0) / 1048576) | round(2) }} TB out
+            Throughput: {{ states('sensor.system_monitor_network_throughput_in_enp89s0') | default('Unknown') }} MB/s in, {{ states('sensor.system_monitor_network_throughput_out_enp89s0') | default('Unknown') }} MB/s out
+            Speedtest: {{ states('sensor.speedtest_download') | float(-1) | round(0) }} Mbps down, {{ states('sensor.speedtest_upload') | float(0) | round(0) }} Mbps up, {{ states('sensor.speedtest_ping') | float(0) | round(0) }} ms
+            </connectivity>
+
+            <frontend>
+            Lovelace: {{ state_attr('sensor.dashboard_complexity', 'views') | default('0') }} views, {{ state_attr('sensor.dashboard_complexity', 'total_cards') | default('0') }} cards ({{ state_attr('sensor.dashboard_complexity', 'custom_cards') | default('0') }} custom / {{ state_attr('sensor.dashboard_complexity', 'standard_cards') | default('0') }} standard), {{ ((state_attr('sensor.dashboard_complexity', 'custom_cards') | float(0)) / ([state_attr('sensor.dashboard_complexity', 'total_cards') | float(0), 1] | max) * 100) | round(0) }}% custom
+            Entity coverage: {{ state_attr('sensor.dashboard_complexity', 'entities_referenced') | default('0') }} referenced, {{ (((states('sensor.entity_domain_breakdown') | float(0)) - (state_attr('sensor.dashboard_complexity', 'entities_referenced') | float(0))) / ([states('sensor.entity_domain_breakdown') | float(0), 1] | max) * 100) | round(0) }}% unreferenced
+            </frontend>
+
+            <entities>
+            Total: {{ states('sensor.entity_domain_breakdown') | default('0') }}, unavailable: {{ state_attr('sensor.entity_domain_breakdown', 'unavailable') | default('0') }}
+            Sensors: {{ state_attr('sensor.entity_domain_breakdown', 'sensors') | default('0') }}, binary: {{ state_attr('sensor.entity_domain_breakdown', 'binary_sensors') | default('0') }}
+            Automations: {{ state_attr('sensor.entity_domain_breakdown', 'automations') | default('0') }}, scripts: {{ state_attr('sensor.entity_domain_breakdown', 'scripts') | default('0') }}, scenes: {{ state_attr('sensor.entity_domain_breakdown', 'scenes') | default('0') }}
+            Lights: {{ state_attr('sensor.entity_domain_breakdown', 'lights') | default('0') }}, switches: {{ state_attr('sensor.entity_domain_breakdown', 'switches') | default('0') }}, covers: {{ state_attr('sensor.entity_domain_breakdown', 'covers') | default('0') }}, climate: {{ state_attr('sensor.entity_domain_breakdown', 'climates') | default('0') }}
+            Media players: {{ state_attr('sensor.entity_domain_breakdown', 'media_players') | default('0') }}, cameras: {{ state_attr('sensor.entity_domain_breakdown', 'cameras') | default('0') }}
+            Helpers: {{ state_attr('sensor.entity_domain_breakdown', 'input_booleans') | default('0') }} booleans, {{ state_attr('sensor.entity_domain_breakdown', 'input_numbers') | default('0') }} numbers, {{ state_attr('sensor.entity_domain_breakdown', 'input_selects') | default('0') }} selects, {{ state_attr('sensor.entity_domain_breakdown', 'input_texts') | default('0') }} texts
+            Updates: {{ state_attr('sensor.entity_domain_breakdown', 'updates') | default('0') }}, zones: {{ state_attr('sensor.entity_domain_breakdown', 'zones') | default('0') }}
+            </entities>
+
+            <diagnostics>
+            Pending updates: {{ 'Up to date' if states('sensor.pending_updates') | int(0) == 0 else states('sensor.pending_updates_formatted') | default('Unknown') }}
+            Recorder (1h): {{ state_attr('sensor.recorder_statistics', 'states_1h') | default('0') }} states, {{ state_attr('sensor.recorder_statistics', 'events_1h') | default('0') }} events
+            Recorder (24h): {{ state_attr('sensor.recorder_statistics', 'states_24h') | default('0') }} states, {{ state_attr('sensor.recorder_statistics', 'events_24h') | default('0') }} events
+            Recorder avg: {{ state_attr('sensor.recorder_statistics', 'states_per_hour') | default('0') }} states/hr, {{ state_attr('sensor.recorder_statistics', 'events_per_hour') | default('0') }} events/hr
+            Log errors: {{ states('sensor.log_error_count') | default('0') }} errors, {{ state_attr('sensor.log_error_count', 'warnings') | default('0') }} warnings since restart
+            Error sources: {{ state_attr('sensor.log_error_count', 'recent_sources') | default([]) | join(', ') | default('None', true) }}
+            </diagnostics>
+
+            <health>
+            {% set cpu = states('sensor.processor_use') | float(0) | round(0) | int %}
+            {% set mem = states('sensor.memory_use_percent') | float(0) | round(0) | int %}
+            {% set unavail_pct = ((state_attr('sensor.entity_domain_breakdown', 'unavailable') | float(0)) / ([states('sensor.entity_domain_breakdown') | float(0), 1] | max) * 100) | round(1) | float %}
+            CPU: {{ 'Nominal' if cpu < 60 else ('Elevated' if cpu < 80 else 'High load') }} ({{ cpu }}%)
+            Memory: {{ 'Nominal' if mem < 60 else ('Elevated' if mem < 80 else 'Constrained') }} ({{ mem }}%)
+            Entities: {{ 'Nominal' if unavail_pct < 10 else ('Degraded' if unavail_pct < 25 else 'Needs attention') }} ({{ unavail_pct }}% unavailable)
+            </health>
+
+            <wrong_assumptions>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'gotchas') | default({})).items() %}
+            - {{ key }}: {{ val }}
+            {% endfor %}
+            </wrong_assumptions>
+
+            <file_locations>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'file_locations') | default({})).items() %}
+            {{ key }}: {{ val }}
+            {% endfor %}
+            </file_locations>
+
+            <naming_patterns>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'naming') | default({})).items() %}
+            {{ key }}: {{ val }}
+            {% endfor %}
+            </naming_patterns>
+
+            <subsystems>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'subsystems') | default({})).items() %}
+            {{ key }}: {{ val }}
+            {% endfor %}
+            </subsystems>
+
+            <key_relationships>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'data_flows') | default({})).items() %}
+            {{ key }}: {{ val }}
+            {% endfor %}
+            </key_relationships>
+
+            <capabilities>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'capabilities') | default({})).items() %}
+            {{ key }}: {{ val }}
+            {% endfor %}
+            </capabilities>
+
+            <known_issues>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'known_issues') | default({})).items() %}
+            - {{ key }}: {{ val }}
+            {% endfor %}
+            </known_issues>
+
+            <shared_ui_docs>
+            {% for key, val in (state_attr('sensor.ha_system_context', 'shared_ui_docs') | default({})).items() %}
+            {{ key }}: {{ val }}
+            {% endfor %}
+            </shared_ui_docs>
+
+            </ha_system_snapshot>

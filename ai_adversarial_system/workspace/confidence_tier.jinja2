@@ -1,0 +1,48 @@
+# confidence_tier attribute for presence_area_base
+# Add to attributes: section in presence_detection.yaml
+#
+# Tiers (high to low confidence):
+#   - reinforced:     FP2 on + recent motion (active occupancy)
+#   - definitive:     FP2 on alone (stationary occupancy - desk work, reading, sleep)
+#   - activity_only:  Motion on, no FP2 (edge of zone, or FP2 unavailable)
+#   - edge_triggered: Recent door activity, nothing else (transitional)
+#   - stale:          All sensors off, but activity within 30 min
+#   - absent:         All sensors off, no recent activity
+#
+# Key design decision: FP2 is trusted as presence authority.
+# Motion REINFORCES but doesn't CONTRADICT FP2.
+# "FP2 on + no motion for hours" = normal stationary occupancy, not conflict.
+
+confidence_tier: >
+  {# Note: this.attributes.* returns already-parsed lists, no from_json needed #}
+  {% set active = this.attributes.active_sensors | default([]) %}
+  {% set recent_edge = this.attributes.recent_edge_sensors | default([]) %}
+  {% set last_move = this.attributes.last_movement %}
+
+  {# Sensor type detection #}
+  {% set fp2_active = active | select('search', 'fp2') | list | count > 0 %}
+  {% set motion_active = active | select('search', 'motion') | list | count > 0 %}
+  {% set has_recent_edge = recent_edge | count > 0 %}
+
+  {# Time calculations #}
+  {% set now_ts = now() | as_timestamp %}
+  {% set last_ts = last_move | as_timestamp if last_move else 0 %}
+  {% set age_seconds = (now_ts - last_ts) | int if last_ts else 99999 %}
+
+  {# Threshold for stale (no sensors active) #}
+  {% set stale_threshold = 1800 %}  {# 30 minutes #}
+
+  {# Tier logic - FP2 is trusted for presence, motion reinforces #}
+  {% if fp2_active and motion_active %}
+    reinforced
+  {% elif fp2_active %}
+    definitive
+  {% elif motion_active %}
+    activity_only
+  {% elif has_recent_edge %}
+    edge_triggered
+  {% elif age_seconds < stale_threshold %}
+    stale
+  {% else %}
+    absent
+  {% endif %}

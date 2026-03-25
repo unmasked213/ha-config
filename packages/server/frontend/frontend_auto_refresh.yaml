@@ -1,0 +1,115 @@
+# | START: packages/auto_refresh.yaml
+# | PATH: /config/packages/auto_refresh.yaml
+
+################################################################################
+#  AUTO REFRESH SYSTEM
+#  - input_boolean.auto_refresh       → Master toggle
+#  - input_number.refresh_minutes     → Chosen interval (minutes)
+#  - script.auto_refresh_timer        → Page reload trigger handler
+#  - automation.auto_refresh_manager  → Keeps everything coordinated
+################################################################################
+
+homeassistant:
+  customize:
+    input_boolean.auto_refresh:
+      friendly_name: Auto Refresh Enabled
+    input_number.refresh_minutes:
+      friendly_name: Auto Refresh Interval (min)
+    script.auto_refresh_timer:
+      friendly_name: Auto Refresh Timer
+    automation.auto_refresh_manager:
+      friendly_name: Auto Refresh Manager
+
+################################################################################
+#  HELPERS
+################################################################################
+
+input_boolean:
+  auto_refresh:
+    name: Auto Refresh
+    icon: mdi:refresh-auto
+    initial: off
+
+input_number:
+  refresh_minutes:
+    name: Refresh Interval (Minutes)
+    min: 1
+    max: 60
+    step: 1
+    mode: slider
+    unit_of_measurement: min
+    initial: 5
+
+################################################################################
+#  SCRIPT — Schedules and cancels the reload timer
+################################################################################
+
+script:
+  auto_refresh_timer:
+    alias: Auto Refresh Timer
+    description: Handles auto-refresh timer lifecycle
+    mode: restart
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.auto_refresh
+                state: "on"
+            sequence:
+              - variables:
+                  minutes: "{{ states('input_number.refresh_minutes') | int(5) }}"
+              - delay:
+                  minutes: "{{ minutes }}"
+              - service: browser_mod.navigate
+                data:
+                  navigation_path: "{{ states('sensor.current_view_path') | default('/') }}"
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.auto_refresh
+                state: "off"
+            sequence:
+              - stop: "Auto refresh disabled"
+        default: []
+
+################################################################################
+#  AUTOMATION — Ensures timer restarts whenever settings change
+################################################################################
+
+automation:
+  - alias: Auto Refresh Manager
+    id: auto_refresh_manager
+    description: Restart or stop the timer when boolean or interval changes
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: input_boolean.auto_refresh
+      - platform: state
+        entity_id: input_number.refresh_minutes
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.auto_refresh
+                state: "on"
+            sequence:
+              - service: script.turn_on
+                target:
+                  entity_id: script.auto_refresh_timer
+        default:
+          - service: script.turn_off
+            target:
+              entity_id: script.auto_refresh_timer
+
+################################################################################
+#  OPTIONAL — Stores current Lovelace path (for targeted reloads)
+################################################################################
+
+# Create this template sensor if you want to reload only the active dashboard.
+# If you’re using Browser Mod, it can be updated dynamically by your dashboard JS.
+
+template:
+  - sensor:
+      - name: Current View Path
+        unique_id: sensor.current_view_path
+        state: "/dashboard-home/security"  # fallback value, update via Browser Mod if desired
+# | END: packages/auto_refresh.yaml

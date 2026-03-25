@@ -1,0 +1,2703 @@
+
+# | START: home.yaml
+# |  PATH: /config/ui/views/home.yaml
+
+
+# ── CORE ─────────────────────────────────────────────────────────────────────
+title:          'Home'
+path:            home
+icon:            fluent:home-20-filled
+subview:         false
+type:            sections
+max_columns:     1
+top_margin:      false
+
+
+
+
+# ── HEADER ─────────────────────────────────────────────────────────────────────
+header:
+  layout: center
+  badges_position: top
+  badges_wrap: wrap
+  card:
+    type: custom:button-card
+    template: animated_header_card
+
+
+
+
+# ── BADGES ────────────────────────────────────────────────────────────────────
+badges:
+  - type: custom:button-card
+    entity: input_boolean.lights_menu_toggle
+    update_timer: 1s
+    variables:
+      light_entities:
+        - light.room_02
+        - light.bedroom
+        - light.floor_02
+        - light.floor_01
+        - light.bathroom_light
+      inactive_threshold: 300000
+    tap_action:
+      action: call-service
+      service: input_boolean.toggle
+      service_data:
+        entity_id: input_boolean.lights_menu_toggle
+    show_icon: false
+    show_state: false
+    show_entity_picture: false
+    show_name: false
+    custom_fields:
+      main_icon: |
+        [[[
+          const isExpanded = states['input_boolean.lights_menu_toggle'].state === 'on';
+          const icon = isExpanded ? 'mdi:close' : 'mdi:lightbulb-auto';
+          const color = isExpanded ? 'rgba(94, 255, 202, 0.6)' : 'var(--secondary-text-color)';
+          const opac = isExpanded ? '1.0' : '0.4';
+          const dimens = isExpanded ? '25px' : '19px';
+          return `<ha-icon icon="${icon}" style="
+            color: ${color};
+            opacity: ${opac};
+            width: ${dimens};
+            height: 23px;
+
+          "></ha-icon>`;
+        ]]]
+      menu_icon: |
+        [[[
+          const isExpanded = states['input_boolean.lights_menu_toggle'].state === 'on';
+          return `<ha-icon icon="mdi:dots-vertical" style="
+            color: var(--primary-text-color);
+            width: 20px;
+            height: 20px;
+            opacity: ${isExpanded ? '0' : '1'};
+            transition: opacity 0.3s ease;
+          "></ha-icon>`;
+        ]]]
+      room_icons:
+        card:
+          type: vertical-stack
+          cards: |
+            [[[
+              const isExpanded = states['input_boolean.lights_menu_toggle']?.state === 'on';
+              if (!isExpanded) return [];
+
+              const now = Date.now();
+              const threshold = variables.inactive_threshold;
+
+              const items = variables.light_entities
+                .filter(eid => {
+                  const s = states[eid];
+                  if (!s || s.state !== 'off') return false;
+                  const lastChanged = new Date(s.last_changed).getTime();
+                  return (now - lastChanged) >= threshold;
+                })
+                .map((eid, index) => {
+                  const icon = states[eid]?.attributes?.icon || 'mdi:lightbulb-off';
+                  return {
+                    type: 'custom:button-card',
+                    entity: eid,
+                    icon: icon,
+                    show_name: false,
+                    show_state: false,
+                    size: '19px',
+                    tap_action: {
+                      action: 'call-service',
+                      service: 'light.toggle',
+                      service_data: { entity_id: eid }
+                    },
+                    styles: {
+                      card: [
+                        'width: 36px',
+                        'height: 36px',
+                        'border-radius: 18px',
+                        'background: var(--ha-card-background)',
+                        'border: 2px solid rgba(150,150,150,0.1)',
+                        'box-shadow: 0 1px 3px rgba(0,0,0,0.1)',
+                        'margin: 0 auto',
+                        `animation: slideIn 0.4s cubic-bezier(0.4,0,0.2,1) ${index * 0.08}s both`,
+                      ],
+                      icon: [
+                        'color: var(--primary-text-color)',
+                        'width: 19px',
+                        'height: 18px',
+                      ],
+                    },
+                  };
+                });
+
+              return items;
+            ]]]
+    state:
+      - value: 'on'
+        styles:
+          card:
+            - height: 40px
+            - width: 60px
+            - background: var(--ha-card-background)
+            - border: 3px solid rgba(0, 133, 255, 1)
+            - border-bottom: none
+            - border-radius: 28px 28px 0px 0px
+            - flex-direction: column
+            - padding: 0
+            - box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1)
+            - overflow: visible
+            - position: relative
+            - z-index: 1000
+          custom_fields:
+            main_icon:
+              - position: absolute
+              - top: 16px
+              - left: 50%
+              - transform: translateX(-50%)
+              - margin: 0
+              - z-index: 2
+            menu_icon:
+              - opacity: 0
+              - position: absolute
+              - visibility: hidden
+            room_icons:
+              - opacity: 1
+              - display: flex
+              - flex-direction: column
+              - gap: 9px
+              - align-items: center
+              - justify-content: flex-start
+              - width: 60px
+              - position: absolute
+              - top: 36px
+              - left: '-2.5px'
+              - padding: 8px 0
+              - z-index: 1001
+              - background: var(--ha-card-background)
+              - border: 3px solid rgba(0, 133, 255, 1)
+              - border-top: none
+              - border-radius: 0px 0px 28px 28px
+              - box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1)
+              - pointer-events: auto
+      - value: 'off'
+        styles:
+          card:
+            - height: 40px
+            - width: 60px
+            - background: var(--ha-card-background)
+            - border: 3px solid var(--ha-card-background)
+            - border-radius: 20px
+            - padding: 0
+            - box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08)
+            - overflow: hidden
+          custom_fields:
+            main_icon:
+              - position: absolute
+              - top: 50%
+              - left: 16px
+              - transform: translateY(-50%)
+              - margin: 0
+              - z-index: 2
+            menu_icon:
+              - position: absolute
+              - top: 45%
+              - right: 8px
+              - transform: translateY(-50%)
+              - opacity: 0.8
+            room_icons:
+              - opacity: 0
+              - display: none
+              - position: absolute
+              - visibility: hidden
+    styles:
+      card:
+        - transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        - display: flex
+        - cursor: pointer
+        - '-webkit-font-smoothing': antialiased
+        - text-rendering: optimizeLegibility
+        - position: relative
+        - box-sizing: border-box
+        - '--mdc-ripple-color': rgba(0,0,0,0)
+      custom_fields:
+        main_icon:
+          - display: flex
+          - align-items: center
+          - justify-content: center
+          - transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+        menu_icon:
+          - display: flex
+          - align-items: center
+          - justify-content: center
+          - transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+          - width: 20px
+          - height: 20px
+        room_icons:
+          - transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+          - box-sizing: border-box
+    card_mod:
+      style: |
+        :host {
+          overflow: visible !important;
+          position: relative !important;
+          {% set light_entities = ['light.room_02', 'light.bedroom', 'light.floor_02', 'light.floor_01', 'light.bathroom_light'] %}
+          {% set ns = namespace(inactive_count=0) %}
+          {% for entity_id in light_entities %}
+            {% if states(entity_id) == 'off' and (now() - states[entity_id].last_changed).total_seconds() >= 300 %}
+              {% set ns.inactive_count = ns.inactive_count + 1 %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.inactive_count == 0 %}
+            display: none !important;
+          {% endif %}
+        }
+
+        @keyframes slideIn {
+          0% {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        ha-card {
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          transform-origin: center center;
+          overflow: visible !important;
+          position: relative !important;
+          height: 40px !important;
+        }
+
+        /* Style the nested button-cards in vertical-stack */
+        #room_icons hui-vertical-stack-card ha-card {
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          transform-origin: center center;
+        }
+
+        #room_icons hui-vertical-stack-card ha-card:hover {
+          border-color: rgba(245, 234, 196, 0.6) !important;
+          transform: scale(1.05) !important;
+          box-shadow: 0 2px 8px rgba(245, 234, 196, 0.2) !important;
+        }
+
+        #room_icons hui-vertical-stack-card ha-card:active {
+          transform: scale(0.95) !important;
+          transition: transform 0.1s ease !important;
+        }
+
+        ha-card > div {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+          overflow: visible;
+        }
+  - type: entity
+    show_name: false
+    show_state: true
+    show_icon: false
+    entity: sensor.time
+    tap_action:
+      action: navigate
+      navigation_path: /dashboard-home/single-motion
+  - type: custom:mod-card
+    card:
+      type: custom:mushroom-template-badge
+      content: '{{ states.sensor.phone_c_battery_level.state_with_unit }}'
+      icon: |
+        {% if states('sensor.phone_c_battery_state') == 'charging' %}
+          mdi:battery-charging
+        {% elif states('sensor.phone_c_battery_state') == 'discharging' %}
+          mdi:battery-arrow-down
+        {% elif states('sensor.phone_c_battery_level') | float(2) < 11 %}
+          mdi:battery-10
+        {% else %}
+          mdi:battery
+        {% endif %}
+      color: >
+        {% set battery_level = states('sensor.phone_c_battery_level') |
+        float(0) %}
+
+        {% set battery_state = states('sensor.phone_c_battery_state') %}
+
+        {% if battery_level < 11 %}
+          #D30101
+        {% elif battery_level < 25 %}
+          #D30101
+        {% elif battery_level < 50 %}
+          #FF2E92
+        {% elif battery_level < 75 %}
+          #6510F8
+        {% elif battery_level < 90 %}
+          #0085FF
+        {% else %}
+          #72EFDD
+        {% endif %}
+      entity: sensor.phone_c_battery_level
+      label: Phone C
+      tap_action:
+        action: more-info
+    card_mod:
+      style:
+        mushroom-template-badge:
+          $: |
+            ha-state-icon {
+              {% if states('sensor.phone_c_battery_state') == 'charging' %}
+                animation: pulse 2s ease-in-out infinite;
+              {% elif states('sensor.phone_c_battery_state') == 'discharging' %}
+                animation: pulse 2s ease-in-out infinite;
+              {% else %}
+                animation: none;
+              {% endif %}
+            }
+            .badge::before {
+              content: '';
+              position: absolute;
+              top: -1px;
+              left: -1px;
+              right: -1px;
+              bottom: -1px;
+              border: 3px solid var(--badge-color);
+              border-radius: inherit;
+              mask: conic-gradient(rgba(0, 0, 0, 1) 0% {{states('sensor.phone_c_battery_level')}}%, rgba(0, 0, 0, 0) {{states('sensor.phone_c_battery_level')}}% 100%);
+            }
+            @keyframes pulse {
+              0% {
+                transform: scale(1);
+                opacity: 0.7;
+              }
+              50% {
+                transform: scale(1.2);
+                opacity: 1;
+              }
+              100% {
+                transform: scale(1);
+                opacity: 0.7;
+              }
+            }
+        .: |
+          ha-card {
+            background: none;
+            border: none;
+          }
+  - type: custom:mod-card
+    card:
+      type: custom:mushroom-template-badge
+      content: '{{ states.sensor.ipad_battery_plus.state_with_unit if states.sensor.ipad_battery_plus else "N/A" }}'
+      icon: |
+        {% if states('sensor.phone_c_battery_state') == 'charging' %}
+          mdi:battery-charging
+        {% elif states('sensor.phone_c_battery_state') == 'discharging' %}
+          mdi:battery-arrow-down
+        {% elif states('sensor.ipad_battery_plus') | float(2) < 11 %}
+          mdi:battery-10
+        {% else %}
+          mdi:battery
+        {% endif %}
+      color: >
+        {% set battery_level = states('sensor.ipad_battery_plus') | float(0)
+        %}
+
+        {% set battery_state = states('sensor.phone_c_battery_state') %}
+
+        {% if battery_level < 11 %}
+          #D30101
+        {% elif battery_level < 25 %}
+          #D30101
+        {% elif battery_level < 50 %}
+          #FF2E92
+        {% elif battery_level < 75 %}
+          #6510F8
+        {% elif battery_level < 90 %}
+          #0085FF
+        {% else %}
+          #72EFDD
+        {% endif %}
+      entity: sensor.ipad_battery_plus
+      label: Tablet C
+      tap_action:
+        action: more-info
+    card_mod:
+      style:
+        mushroom-template-badge:
+          $: |
+            ha-state-icon {
+              {% if states('sensor.phone_c_battery_state') == 'charging' %}
+                animation: pulse 2s ease-in-out infinite;
+              {% elif states('sensor.phone_c_battery_state') == 'discharging' %}
+                animation: pulse 2s ease-in-out infinite;
+              {% else %}
+                animation: none;
+              {% endif %}
+            }
+            .badge::before {
+              content: '';
+              position: absolute;
+              top: -1px;
+              left: -1px;
+              right: -1px;
+              bottom: -1px;
+              border: 3px solid var(--badge-color);
+              border-radius: inherit;
+              mask: conic-gradient(rgba(0, 0, 0, 1) 0% {{states('sensor.ipad_battery_plus')}}%, rgba(0, 0, 0, 0) {{states('sensor.ipad_battery_plus')}}% 100%);
+            }
+            @keyframes pulse {
+              0% {
+                transform: scale(1);
+                opacity: 0.7;
+              }
+              50% {
+                transform: scale(1.2);
+                opacity: 1;
+              }
+              100% {
+                transform: scale(1);
+                opacity: 0.7;
+              }
+            }
+        .: |
+          ha-card {
+            background: none;
+            border: none;
+          }
+
+  - type: custom:button-card
+    template: light_pill
+    entity: light.bedroom
+
+  - type: custom:button-card
+    template: light_pill
+    entity: light.floor_01
+
+  - type: custom:button-card
+    template: light_pill
+    entity: light.floor_02
+
+  - type: custom:button-card
+    template: light_pill
+    entity: light.room_02
+
+  - type: custom:button-card
+    template: light_pill
+    entity: light.bathroom_light
+
+
+
+
+# ── SECTIONS ───────────────────────────────────────────────────────────────────
+sections:
+  - type: grid
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            name: |
+              [[[
+                const name = 'Bedroom';
+                return `<span>${name.split('').map((letter, index) => `<span style="display: inline-block; animation: textfadeintro 1s both; animation-delay: ${1 + index * 0.1}s;">${letter}</span>`).join('')}</span>`;
+              ]]]
+            icon: phu:rooms-bedroom
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/bedroom
+            custom_fields:
+              state: |
+                [[[
+                  const stateValue = Math.round(states['sensor.hub_2_8ab7'].state) + '°C';
+                  return `<span>${stateValue.split('').map((char, index) => `<span style="display: inline-block; animation: textfadeintro 1s both; animation-delay: ${1.3 + index * 0.1}s;">${char}</span>`).join('')}</span>`;
+                ]]]
+              icon1:
+                card:
+                  type: custom:button-card
+                  tooltip: Control bedroom lights
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#lights_room02'
+                    haptic: success
+                  show_icon: true
+                  icon: |
+                    [[[
+                      return (states['light.room_02'].state === 'on')
+                              ? 'mdi:lightbulb-on'
+                              : 'mdi:lightbulb-off';
+                    ]]]
+                  styles:
+                    card:
+                      - border-radius: 50%
+                      - background: |
+                          [[[
+                            if (states['light.room_02'].state === 'on') {
+                              const color = states['light.room_02'].attributes.rgb_color || [255, 255, 255];
+                              return `linear-gradient(135deg, rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.8) 0%, rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.7) 100%)`;
+                            } else {
+                              return `var(--divider-color)`;
+                            }
+                          ]]]
+                      - width: calc(var(--card-size) * 0.192)
+                      - height: calc(var(--card-size) * 0.192)
+                      - box-shadow: none
+                      - border: none
+                    icon:
+                      - width: calc(var(--card-size) * 0.096)
+                      - height: calc(var(--card-size) * 0.096)
+                      - color: white
+              icon2:
+                card:
+                  type: custom:button-card
+                  show_icon: true
+                  styles:
+                    card:
+                      - border-radius: 50%
+                      - background: >-
+                          linear-gradient(45deg, rgba(253,125,90,1),
+                          rgba(253,172,90,1))
+                      - width: calc(var(--card-size) * 0.192)
+                      - height: calc(var(--card-size) * 0.192)
+                      - box-shadow: none
+                      - border: none
+                    icon:
+                      - width: calc(var(--card-size) * 0.096)
+                      - height: calc(var(--card-size) * 0.096)
+                      - color: var(--primary-text-color, rgb(255, 255, 255))
+                      - opacity: 0.9
+              icon3:
+                card:
+                  type: custom:button-card
+                  tooltip: Window blind controls
+                  show_icon: true
+                  icon: |
+                    [[[
+                      return (states['cover.blinds_right_cover'].attributes.current_position <= 20 &&
+                              states['cover.blinds_left_cover'].attributes.current_position <= 20)
+                              ? 'phu:ikea-blind-closed'
+                              : 'phu:ikea-blind-open';
+                    ]]]
+                  show_name: false
+                  tap_action:
+                    action: call-service
+                    service: |
+                      [[[
+                        const left_blind = 'cover.blinds_left_cover';
+                        const right_blind = 'cover.blinds_right_cover';
+
+                        if (!states[left_blind] || !states[right_blind]) {
+                          return 'persistent_notification.create';
+                        }
+
+                        const left_position = states[left_blind].attributes.current_position || 0;
+                        const right_position = states[right_blind].attributes.current_position || 0;
+
+                        if (states[left_blind].state === 'opening' || states[left_blind].state === 'closing' ||
+                            states[right_blind].state === 'opening' || states[right_blind].state === 'closing') {
+                          return 'cover.stop_cover';
+                        }
+
+                        return (left_position < 50 || right_position < 50) ? 'cover.open_cover' : 'cover.close_cover';
+                      ]]]
+                    service_data:
+                      entity_id:
+                        - cover.blinds_left_cover
+                        - cover.blinds_right_cover
+                  styles:
+                    card:
+                      - border-radius: 50%
+                      - background: >-
+                          linear-gradient(135deg, rgba(90, 159, 248, 1) 0%,
+                          rgba(42, 104, 236, 1) 100%)
+                      - width: calc(var(--card-size) * 0.192)
+                      - height: calc(var(--card-size) * 0.192)
+                      - box-shadow: none
+                      - border: none
+                    icon:
+                      - width: calc(var(--card-size) * 0.096)
+                      - height: calc(var(--card-size) * 0.096)
+                      - color: var(--primary-text-color, rgb(255, 255, 255))
+                      - opacity: 0.9
+            styles:
+              grid:
+                - grid-template-areas: '"n btn" "state btn" "i btn"'
+                - grid-template-columns: 1fr min-content
+                - grid-template-rows: min-content min-content min-content 1fr
+              card:
+                - '--card-size': 230px
+                - height: var(--card-size)
+                - width: var(--card-size)
+                - padding: >-
+                    calc(var(--card-size) * 0.088) calc(var(--card-size) *
+                    0.032) calc(var(--card-size) * 0.088)
+                    calc(var(--card-size) * 0.088)
+                - background: var(--card-background-color, rgba(255, 255, 255, 0.9))
+                - animation: cardpopintro 1s 0.3s both
+              custom_fields:
+                state:
+                  - grid-area: state
+                  - justify-self: start
+                  - align-self: start
+                  - width: 100%
+                  - text-align: left
+                  - display: block
+                  - font-size: calc(var(--card-size) * 0.05)
+                  - opacity: '0.7'
+                  - padding-top: calc(var(--card-size) * 0.008)
+                icon1:
+                  - position: absolute
+                  - top: calc(var(--card-size) * 0.1)
+                  - right: calc(var(--card-size) * 0.032)
+                  - animation: cardpopintro 1s 0.8s both
+                icon2:
+                  - position: absolute
+                  - top: calc(var(--card-size) * 0.35)
+                  - right: calc(var(--card-size) * 0.032)
+                  - animation: cardpopintro 1s 0.9s both
+                icon3:
+                  - position: absolute
+                  - top: calc(var(--card-size) * 0.6)
+                  - right: calc(var(--card-size) * 0.032)
+                  - animation: cardpopintro 1s 1s both
+              name:
+                - grid-area: 'n'
+                - font-size: calc(var(--card-size) * 0.072)
+                - font-weight: 500
+                - justify-self: start
+                - align-self: start
+                - width: 100%
+                - text-align: left
+                - display: block
+              img_cell:
+                - grid-area: i
+                - justify-content: start
+                - position: absolute
+                - width: calc(var(--card-size) * 0.72)
+                - height: calc(var(--card-size) * 0.72)
+                - left: '-2%'
+                - bottom: '-4%'
+                - margin: >-
+                    0 0 calc(var(--card-size) * -0.08) calc(var(--card-size)
+                    * -0.08)
+                - background: var(--contrast3,rgba(255,255,255,0.08))
+                - opacity: '0.8'
+                - border-radius: 50%
+                - animation: cardpopintro 0.4s 0.6s both
+              icon:
+                - position: relative
+                - width: calc(var(--card-size) * 0.4)
+                - color: var(--primary-text-color,rgba(5,5,5,1))
+                - opacity: '0.2'
+                - animation: cardpopintro 0.8s 0.8s both
+            extra_styles: |
+              @keyframes bgpopintro {
+                0% { transform: scale(0); }
+              }
+
+              @keyframes cardpopintro {
+                0% { transform: scale(0); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+              }
+
+              @keyframes slide {
+                0% {transform: translateX(-3%); opacity: 0;}
+                100% {transform: translateX(0%); opacity: 1;}
+              }
+
+              @keyframes textfadeintro {
+                from { transform: scaleX(0.2) translateX(100px); filter: blur(20px); opacity: 0; }
+                to { transform: scaleX(1) translateX(0); filter: blur(0); opacity: 1; }
+              }
+            card_mod:
+              style: |
+                :host {
+                  display: block;
+                  margin-left: auto;
+                  margin-right: auto;
+                }
+          - type: custom:button-card
+            section_mode: true
+            grid_options:
+              rows: 2
+              columns: 6
+            entity: weather.pirateweather
+            variables:
+              wx_weather: weather.pirateweather
+              wx_precip_intensity: sensor.pirateweather_precip_intensity
+              wx_precip_accum: sensor.pirateweather_today_precipitation_accumulation
+              wx_cloud: sensor.pirateweather_cloud_cover
+              wx_sun: sun.sun
+              wx_moon: sensor.moon_phase
+              wx_forecast_fb: weather.forecast_home
+              wx_enable_anim: true
+              wx_shared_init: |
+                [[[
+                  // Namespace
+                  const ns = (window.__haWxCard = window.__haWxCard || {});
+                  ns.v ||= '3.3.1';
+
+                  // Respect system reduced motion and device capabilities
+                  ns.anim = (variables.wx_enable_anim !== false) && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+                  ns.highDPI = window.devicePixelRatio > 1;
+
+                  // Unified configuration with named constants
+                  ns.config ||= {
+                    CACHE_MS: 300000,
+                    MAX_CACHE_ENTRIES: 24,
+                    ICON_SIZE: 115,
+                    DAY_MS: 86400000,
+                    GLOW: 'drop-shadow(0 0 3px rgba(255,255,255,0.2))',
+                    TRANSITION_MIN_BY_MONTH: [10,10,15,15,20,20,20,20,15,15,10,10],
+                    TRANSITION_MIN_CLAMP: 5 * 60 * 1000, // 5 minutes minimum
+                    CLOUD_HEAVY: 85,
+                    CLOUD_PARTLY: 60,
+                    RAIN_THRESHOLD: 0.1,
+                    RAIN_FREEZE_TEMP: 0,
+                    BLUR_ENABLED_FACTOR: 3, // backdrop-filter blur amount
+                    TEMP: {
+                      BASE: 1.3, STEP: 0.1, DEG: 0.05, DUR: '0.4s', DEF: 23,
+                      COLORS: { VERY_COLD:'#52B8F9', COLD:'#72CAFF', HOT:'#FFD700', VERY_HOT:'#E56B42' }
+                    },
+                    RAIN: { BASE: 1.2, STEP: 0.1, SIZE: 24, VB: '0 0 24 24' }  // removed redundant FREEZE
+                  };
+
+                  // LRU with expiry + recency bump
+                  ns.lru ||= (name, max) => {
+                    const bucket = (ns[`cache_${name}`] = ns[`cache_${name}`] || { data: new Map(), order: [] });
+                    const now = () => Date.now();
+                    return {
+                      get: (key) => {
+                        const item = bucket.data.get(key);
+                        if (!item) return null;
+                        if (now() - item.ts > ns.config.CACHE_MS) { bucket.data.delete(key); return null; }
+                        const idx = bucket.order.indexOf(key);
+                        if (idx !== -1) { bucket.order.splice(idx, 1); bucket.order.push(key); }
+                        return item.value;
+                      },
+                      set: (key, value) => {
+                        bucket.data.set(key, { value, ts: now() });
+                        const idx = bucket.order.indexOf(key);
+                        if (idx !== -1) bucket.order.splice(idx, 1);
+                        bucket.order.push(key);
+                        while (bucket.order.length > max) {
+                          const evict = bucket.order.shift();
+                          bucket.data.delete(evict);
+                        }
+                      }
+                    };
+                  };
+
+                  // Enhanced utilities with error boundaries
+                  ns.util ||= {};
+                  ns.__warn ||= {};
+                  ns.util.warnOnce ||= (k, msg) => { if (ns.__warn[k]) return; ns.__warn[k] = 1; try { console.warn(msg); } catch(_){} };
+                  ns.util.guard ||= (fn, fb) => { try { return fn(); } catch { return fb; } };
+                  ns.util.safe ||= (id, attr = null, fb = '') => ns.util.guard(() => {
+                    const e = hass?.states?.[id];
+                    if (!e) return fb;
+                    return attr ? (e.attributes?.[attr] ?? fb) : (e.state ?? fb);
+                  }, fb);
+                  ns.util.exists ||= (id) => ns.util.guard(() => hass?.states?.[id] !== undefined, false);
+                  ns.util.parseDT ||= (s) => ns.util.guard(() => {
+                    const d = new Date(s);
+                    return Number.isNaN(+d) ? null : d;
+                  }, null);
+                  ns.util.span ||= (content, delay, style = '') => {
+                    const dur = ns.config?.TEMP?.DUR || '0.4s';
+                    const anim = ns.anim ? `digitIn ${dur} ease-out both ${delay}s` : 'none';
+                    return `<span style="display:inline-block;will-change:transform;animation:${anim}${style ? ';' + style : ''}">${content}</span>`;
+                  };
+
+                  // Computational helpers - small, pure, testable
+                  ns.compute ||= {
+                    transition(ctx) {
+                      const { util, config } = ns;
+                      if (!util.exists(ctx.sun)) return { active: false, night: false };
+
+                      const night = util.safe(ctx.sun) === 'below_horizon';
+                      const winMin = (config.TRANSITION_MIN_BY_MONTH[new Date().getMonth()] || 15) * 60000;
+                      const win = Math.max(winMin, config.TRANSITION_MIN_CLAMP);
+
+                      const rise = util.parseDT(util.safe(ctx.sun, 'next_rising'));
+                      const set  = util.parseDT(util.safe(ctx.sun, 'next_setting'));
+                      if (!rise || !set) return { active: false, night };
+
+                      const now = Date.now();
+                      const last = night
+                        ? ((set.getTime() > now) ? set.getTime() - config.DAY_MS : set.getTime())
+                        : ((rise.getTime() > now) ? rise.getTime() - config.DAY_MS : rise.getTime());
+
+                      const dt = now - last;
+                      if (dt >= 0 && dt <= win) {
+                        const p = Math.min(dt / win, 1);
+                        const hue = night ? 25 : 40, sat = 85 + p * 10, light = 60 + p * 5;
+                        return {
+                          active: true,
+                          night,
+                          color: `hsl(${hue}, ${sat}%, ${light}%)`,
+                          icon: night ? 'sunset' : 'sunrise'
+                        };
+                      }
+                      return { active: false, night };
+                    },
+
+                    normalizeState(ctx) {
+                      const { util } = ns;
+                      const st0 = String(util.safe(ctx.weather, null, 'clear')).replace(/-(?:day|night)$/,'');
+                      const map = {
+                        rainy:'rain', pouring:'rain', drizzle:'rain',
+                        sleet:'snow', freezing_rain:'snow', hail:'snow', mixed:'snow',
+                        lightning:'thunderstorms', thunderstorm:'thunderstorms', thunderstorms:'thunderstorms',
+                        mist:'fog', haze:'fog', smoke:'fog'
+                      };
+                      let st = map[st0] || st0;
+
+                      // Handle rain fallback when intensity is zero
+                      if (st === 'rain') {
+                        const i = parseFloat(util.safe(ctx.precip_intensity, null, '0'));
+                        if (!Number.isFinite(i) || i === 0) {
+                          const fb = String(util.safe(ctx.forecast_fb, null, 'clear'));
+                          st = fb ? fb.replace(/-(?:day|night)$/,'') : 'clear';
+                        }
+                      }
+                      return st;
+                    },
+
+                    cloudBucket(ctx) {
+                      const { util, config } = ns;
+                      let v = Number(util.safe(ctx.cloud, null, NaN));
+                      if (!Number.isFinite(v)) v = Number(util.safe(ctx.weather, 'cloud_coverage', NaN));
+                      if (!Number.isFinite(v)) return null;
+                      v = Math.max(0, Math.min(100, v));
+                      return v >= config.CLOUD_HEAVY ? 'heavy' : v >= config.CLOUD_PARTLY ? 'partly' : 'light';
+                    },
+
+                    resolveIcon(st, ctx) {
+                      const { maps, config, util } = ns;
+                      const tr = ns.compute.transition(ctx);
+
+                      // Active transition overrides everything
+                      if (tr.active) {
+                        return { name: tr.icon, opts: { color: tr.color, glow: true } };
+                      }
+
+                      const night = tr.night;
+                      const bucket = ns.compute.cloudBucket(ctx);
+                      const pick = (pair) => night ? pair[1] : pair[0];
+
+                      // Weather conditions that override cloud logic
+                      if (['thunderstorms','fog','rain','snow'].includes(st)) {
+                        return { name: pick(maps.weather[st] || ['clear-day','clear-night']) };
+                      }
+
+                      // Night-time logic
+                      if (night) {
+                        if (bucket === 'heavy') return { name: 'cloudy' };
+                        if (bucket === 'partly') return { name: 'partly-cloudy-night' };
+
+                        // Moon phase for clear nights
+                        const phase = util.safe(ctx.moon);
+                        const m = maps.moon[phase];
+                        return m ? { name: m.icon, opts: { color: m.color, glow: m.glow } } : { name: 'clear-night' };
+                      }
+
+                      // Day-time logic
+                      return { name: pick(maps.weather[st] || ['clear-day','clear-night']) };
+                    }
+                  };
+
+                  // Icon maps
+                  ns.maps ||= {};
+                  ns.maps.weather ||= {
+                    clear: ['clear-day', 'clear-night'],
+                    sunny: ['clear-day', 'clear-night'],
+                    exceptional: ['clear-day', 'clear-night'],
+                    partlycloudy: ['partly-cloudy-day', 'partly-cloudy-night'],
+                    cloudy: ['cloudy', 'cloudy'],
+                    rain: ['rain', 'rain'],
+                    snow: ['snow', 'snow'],
+                    thunderstorms: ['thunderstorms', 'thunderstorms'],
+                    fog: ['fog', 'fog']
+                  };
+                  ns.maps.mdi ||= {
+                    'clear-day': 'mdi:weather-sunny',
+                    'clear-night': 'mdi:weather-night',
+                    'partly-cloudy-day': 'mdi:weather-partly-cloudy',
+                    'partly-cloudy-night': 'mdi:weather-night-partly-cloudy',
+                    'cloudy': 'mdi:weather-cloudy',
+                    'rain': 'mdi:weather-rainy',
+                    'snow': 'mdi:weather-snowy',
+                    'thunderstorms': 'mdi:weather-lightning',
+                    'fog': 'mdi:weather-fog',
+                    'sunrise': 'mdi:weather-sunset-up',
+                    'sunset': 'mdi:weather-sunset-down',
+                    'moon-new-fill': 'mdi:moon-new',
+                    'moon-waxing-crescent-fill': 'mdi:moon-waxing-crescent',
+                    'moon-first-quarter-fill': 'mdi:moon-first-quarter',
+                    'moon-waxing-gibbous-fill': 'mdi:moon-waxing-gibbous',
+                    'moon-full-fill': 'mdi:moon-full',
+                    'moon-waning-gibbous-fill': 'mdi:moon-waning-gibbous',
+                    'moon-last-quarter-fill': 'mdi:moon-last-quarter',
+                    'moon-waning-crescent-fill': 'mdi:moon-waning-crescent'
+                  };
+                  ns.maps.moon ||= {
+                    full_moon:       { icon: 'moon-full-fill',            color: 'hsl(40, 20%, 95%)', glow: true  },
+                    waxing_gibbous:  { icon: 'moon-waxing-gibbous-fill',  color: 'hsl(35, 15%, 90%)', glow: false },
+                    first_quarter:   { icon: 'moon-first-quarter-fill',   color: 'hsl(30, 10%, 88%)', glow: false },
+                    waxing_crescent: { icon: 'moon-waxing-crescent-fill', color: 'hsl(25,  5%, 85%)', glow: false },
+                    new_moon:        { icon: 'moon-new-fill',             color: 'hsl(220, 5%, 80%)', glow: false },
+                    waning_crescent: { icon: 'moon-waning-crescent-fill', color: 'hsl(225, 5%, 82%)', glow: false },
+                    last_quarter:    { icon: 'moon-last-quarter-fill',    color: 'hsl(230,10%, 85%)', glow: false },
+                    waning_gibbous:  { icon: 'moon-waning-gibbous-fill',  color: 'hsl(235,15%, 88%)', glow: false }
+                  };
+
+                  // Entities (resolved once per render)
+                  ns.entities = {
+                    weather: variables.wx_weather || 'weather.pirateweather',
+                    precip_intensity: variables.wx_precip_intensity || 'sensor.pirateweather_precip_intensity',
+                    precip_accum: variables.wx_precip_accum || 'sensor.pirateweather_today_precipitation_accumulation',
+                    moon: variables.wx_moon || 'sensor.moon_phase',
+                    cloud: variables.wx_cloud || 'sensor.pirateweather_cloud_cover',
+                    sun: variables.wx_sun || 'sun.sun',
+                    forecast_fb: variables.wx_forecast_fb || 'weather.forecast_home'
+                  };
+
+                  return '';
+                ]]]
+            show_icon: false
+            show_name: false
+            show_state: false
+            update_timer: 60s
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/weather
+              haptic: success
+            hold_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Weather Details
+                  content:
+                    type: weather-forecast
+                    entity: '[[[ return variables.wx_weather ]]]'
+                    show_forecast: true
+            styles:
+              card:
+                - height: 120px
+                - position: relative
+                - margin: 0
+                - padding: 0
+                - overflow: hidden
+                - display: flex
+                - align-items: center
+                - background: var(--ha-card-background, var(--card-background-color))
+                - border-radius: var(--ha-card-border-radius, 12px)
+                - box-shadow: var(--ha-card-box-shadow, none)
+                - backdrop-filter: |-
+                    [[[
+                      window.__haWxCard || (variables.wx_shared_init, 0);
+                      const ns = window.__haWxCard;
+                      const enabled = ns.anim && ns.highDPI;
+                      return enabled ? `blur(calc(var(--wx-blur-enabled,1) * ${ns.config.BLUR_ENABLED_FACTOR}px))` : 'none';
+                    ]]]
+                - animation: |-
+                    [[[
+                      window.__haWxCard || (variables.wx_shared_init, 0);
+                      const ns = window.__haWxCard;
+                      return ns.anim ? 'cardIn 0.8s cubic-bezier(0.23,1,0.32,1) both' : 'none';
+                    ]]]
+                - will-change: transform, backdrop-filter
+              custom_fields:
+                weather_icon:
+                  - position: absolute
+                  - top: 50%
+                  - left: 5px
+                  - width: 115px
+                  - transform: translateY(-50%)
+                  - animation: |-
+                      [[[
+                        window.__haWxCard || (variables.wx_shared_init, 0);
+                        const ns = window.__haWxCard;
+                        return ns.anim ? 'iconIn 0.9s cubic-bezier(0.34,1.56,0.64,1) both 0.4s' : 'none';
+                      ]]]
+                temp_field:
+                  - position: absolute
+                  - bottom: 52px
+                  - right: 20px
+                  - overflow: visible
+                  - font-size: 2em
+                  - font-weight: 400
+                  - line-height: 1
+                  - animation: |-
+                      [[[
+                        window.__haWxCard || (variables.wx_shared_init, 0);
+                        const ns = window.__haWxCard;
+                        return ns.anim ? 'tempIn 0.7s ease-out both 0.8s' : 'none';
+                      ]]]
+                rain_field:
+                  - position: absolute
+                  - bottom: 25px
+                  - right: 26px
+                  - font-size: 0.83em
+                  - font-weight: 300
+                  - color: var(--primary-text-color)
+                  - white-space: nowrap
+                  - overflow: visible
+                  - animation: |-
+                      [[[
+                        window.__haWxCard || (variables.wx_shared_init, 0);
+                        const ns = window.__haWxCard;
+                        return ns.anim ? 'tempIn 0.6s ease-out both 1s' : 'none';
+                      ]]]
+            custom_fields:
+              weather_icon: |
+                [[[
+                  window.__haWxCard || (variables.wx_shared_init, 0);
+                  return (() => {
+                    const ns = window.__haWxCard;
+                    const { config, util, maps, entities, compute } = ns;
+                    const cache = ns.lru('icon', config.MAX_CACHE_ENTRIES);
+
+                    const KNOWN = new Set([
+                      'clear-day','clear-night','partly-cloudy-day','partly-cloudy-night','cloudy','rain','snow','thunderstorms','fog','sunrise','sunset',
+                      'moon-new-fill','moon-waxing-crescent-fill','moon-first-quarter-fill','moon-waxing-gibbous-fill','moon-full-fill','moon-waning-gibbous-fill','moon-last-quarter-fill','moon-waning-crescent-fill'
+                    ]);
+                    const isMeteoconsReady = !!(window.customIcons?.meteocons);
+
+                    const createIcon = (name, opts = {}) => {
+                      const { size = config.ICON_SIZE, color = '', glow = false } = opts;
+                      const id = isMeteoconsReady && KNOWN.has(name) ? `meteocons:${name}` : (maps.mdi[name] || 'mdi:weather-sunny');
+                      const styles = [
+                        `width:${size}px`,`height:${size}px`,`--mdc-icon-size:${size}px`,
+                        color && `color:${color}`, glow && `filter:${config.GLOW}`
+                      ].filter(Boolean).join(';');
+                      return `<ha-icon icon="${id}" style="${styles}" aria-hidden="true"></ha-icon>`;
+                    };
+
+                    const key = (typeof entity === 'object' && entity?.entity_id) || String(entities.weather) || 'weather_card';
+                    const tr = compute.transition(entities);
+                    const st = compute.normalizeState(entities);
+                    const resolved = compute.resolveIcon(st, entities);
+
+                    const cacheKey = JSON.stringify({
+                      st,
+                      n: tr.night,
+                      a: tr.active,
+                      name: resolved.name,
+                      color: resolved?.opts?.color || ''
+                    });
+                    const cached = cache.get(key);
+                    if (cached && cached.key === cacheKey) return cached.html;
+
+                    const iconHtml = createIcon(resolved.name, resolved.opts || {});
+
+                    const aria = tr.night
+                      ? (tr.active ? `Sun ${tr.icon}` : (['rain','snow','fog','thunderstorms'].includes(st) ? st : (util.safe(entities.moon) || 'clear night')))
+                      : (st || 'clear');
+
+                    const result = `<span role="img" aria-label="Weather: ${aria}">${iconHtml}</span>`;
+                    cache.set(key, { key: cacheKey, html: result });
+                    return result;
+                  })();
+                ]]]
+              temp_field: |
+                [[[
+                  window.__haWxCard || (variables.wx_shared_init, 0);
+                  return (() => {
+                    const ns = window.__haWxCard;
+                    const { config, util, entities } = ns;
+                    const cache = ns.lru('temp', config.MAX_CACHE_ENTRIES);
+
+                    const tint = (t) => t <= 5 ? config.TEMP.COLORS.VERY_COLD
+                                  : t <= 15 ? config.TEMP.COLORS.COLD
+                                  : t >= 30 ? config.TEMP.COLORS.VERY_HOT
+                                  : t >= 25 ? config.TEMP.COLORS.HOT : '';
+
+                    const key = (typeof entity === 'object' && entity?.entity_id) || String(entities.weather) || 'weather_card';
+                    const raw = util.guard(() => hass?.states?.[entities.weather]?.attributes?.temperature, null);
+                    const n = util.guard(() => Math.round(Number(raw)), NaN);
+                    const t = Number.isFinite(n) ? n : config.TEMP.DEF;
+
+                    const cacheKey = `t:${t}`;
+                    const cached = cache.get(key);
+                    if (cached && cached.key === cacheKey) return cached.html;
+
+                    const s = String(Math.abs(t));
+                    const color = tint(t);
+                    const style = color ? `color:${color}` : '';
+                    const digits = [...s].map((d,i) => util.span(d, config.TEMP.BASE + i*config.TEMP.STEP, style)).join('');
+                    const deg = util.span('°', config.TEMP.BASE + s.length*config.TEMP.STEP + config.TEMP.DEG, `font-size:0.6em;vertical-align:super${style?';'+style:''}`);
+                    const sign = t < 0 ? util.span('-', config.TEMP.BASE - config.TEMP.STEP, style) : '';
+                    const out = `<span role="img" aria-label="Temperature: ${t} degrees">${sign}${digits}${deg}</span>`;
+
+                    cache.set(key, { key: cacheKey, html: out });
+                    return out;
+                  })();
+                ]]]
+              rain_field: |
+                [[[
+                  window.__haWxCard || (variables.wx_shared_init, 0);
+                  return (() => {
+                    const ns = window.__haWxCard;
+                    const { config, util, entities } = ns;
+                    const cache = ns.lru('rain', config.MAX_CACHE_ENTRIES);
+
+                    const PATH = 'M12,3.77L11.25,4.61C11.25,4.61 9.97,6.06 8.68,7.94C7.39,9.82 6,12.07 6,14.23A6,6 0 0,0 12,20.23A6,6 0 0,0 18,14.23C18,12.07 16.61,9.82 15.32,7.94C14.03,6.06 12.75,4.61 12.75,4.61L12,3.77Z';
+                    const svg = (c)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${config.RAIN.SIZE}" height="${config.RAIN.SIZE}" viewBox="${config.RAIN.VB}" style="vertical-align:-6px;margin-right:-0.5px">${c}</svg>`;
+                    const grad = (id, arr) => `<defs><linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%">${arr.map((c,i)=>`<stop offset="${i*100}%" stop-color="${c}"/>`).join('')}</linearGradient></defs>`;
+                    const drop = (id, cols) => svg(grad(id, cols) + `<path fill="url(#${id})" class="rain-drop" d="${PATH}"/>`);
+                    const dry  = () => svg(`<path fill="var(--contrast8,#888)" d="${PATH}"/><line x1="4" y1="20" x2="20" y2="4" stroke="var(--contrast8,#888)" stroke-width="2"/>`);
+
+                    const fmtAbs12 = (idx) => { const h = idx % 24; const h12 = (h % 12) || 12; return `${h12}${h >= 12 ? 'pm' : 'am'}`; };
+                    const fmtRel   = (idx) => idx === 0 ? 'now' : `in ${idx}h`;
+
+                    const key = (typeof entity === 'object' && entity?.entity_id) || String(entities.weather) || 'weather_card';
+                    const t = Number(util.safe(entities.weather, 'temperature', config.TEMP.DEF));
+                    const vals = util.guard(() => hass?.states?.[entities.precip_accum]?.attributes?.values, []);
+                    const arr = Array.isArray(vals) ? vals.map(Number).filter(v => Number.isFinite(v) && v >= 0) : [];
+                    const idx = arr.findIndex(v => v >= config.RAIN_THRESHOLD);
+
+                    const cacheKey = `t:${t}|len:${arr.length}|first:${idx}`;
+                    const cached = cache.get(key);
+                    if (cached && cached.key === cacheKey) return cached.html;
+
+                    let out;
+                    if (t <= config.RAIN_FREEZE_TEMP) {
+                      const id = `${key.replace(/[^A-Za-z0-9_]/g,'_')}_snow`;
+                      out = `<span role="img" aria-label="Snow likely">${drop(id, ['#86c3db','#5eafcf'])}</span>`;
+                    } else if (!arr.length || idx === -1) {
+                      out = `<span role="img" aria-label="No rain expected">${dry()}</span>`;
+                    } else {
+                      const id = `${key.replace(/[^A-Za-z0-9_]/g,'_')}_rain`;
+                      const isAbsolute = arr.length >= 24;
+                      const labelStr = isAbsolute ? fmtAbs12(idx) : fmtRel(idx);
+                      const label = [...labelStr].map((ch,i)=> ns.util.span(ch, config.RAIN.BASE + (i+1)*config.RAIN.STEP)).join('');
+                      out = `<span role="img" aria-label="Rain ${isAbsolute?'at':'in'} ${labelStr}">${drop(id, ['#64b5f6','#1976d2'])}${label}</span>`;
+                    }
+
+                    cache.set(key, { key: cacheKey, html: out });
+                    return out;
+                  })();
+                ]]]
+            extra_styles: >
+              :host { --wx-blur-enabled: 1; } @keyframes cardIn {
+                0% { transform: scale(0.96); opacity: 0; backdrop-filter: blur(calc(var(--wx-blur-enabled,1) * 4px)); }
+                100% { transform: scale(1); opacity: 1; backdrop-filter: blur(0); }
+              } @keyframes iconIn {
+                0% { opacity: 0; transform: translateY(-50%) scale(0.7) rotate(-5deg); filter: contrast(0.5); }
+                70% { opacity: 1; transform: translateY(-50%) scale(1.02); filter: contrast(1.1); }
+                100% { transform: translateY(-50%) scale(1); filter: contrast(1); }
+              } @keyframes tempIn {
+                0% { opacity: 0; transform: translateY(10px); }
+                100% { opacity: 1; transform: translateY(0); }
+              } @keyframes digitIn {
+                from { opacity: 0; transform: scaleY(0.5) translateY(20px); }
+                to { opacity: 1; transform: scaleY(1) translateY(0); }
+              } .rain-drop { animation: rainDrop 3s ease-in-out infinite;
+              transform-origin: center; } @keyframes rainDrop { 0%,100% {
+              transform: translateY(0); } 50% { transform: translateY(1px);
+              } } @media (prefers-reduced-motion: reduce) {
+                *, *::before, *::after {
+                  animation: none !important;
+                  transform: none !important;
+                  opacity: 1 !important;
+                  filter: none !important;
+                }
+              }
+
+      - square: false
+        type: grid
+        columns: 3
+        cards:
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: ph:office-chair-fill
+              name: Office
+              index: 2
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/office
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: mdi:calendar-sync
+              name: Rota Sync
+              index: 3
+            tap_action:
+              action: navigate
+              navigation_path: '#upload_rota'
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: mdi:lightbulb
+              name: Lights
+              index: 4
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/hallway
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: fluent:slide-text-sparkle-28-regular
+              name: AI Prompts
+              index: 2
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/ai_prompts
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: mdi:wifi
+              name: Network
+              navigation_path: /dashboard-home/network
+              index: 3
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/network
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: mdi:cctv
+              name: Security
+              navigation_path: /dashboard-home/security
+              index: 4
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/security
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: mdi:cog
+              name: Settings
+              index: 3
+            tap_action:
+              toggle_menu: >
+                [[[ this.dispatchEvent(new Event('hass-toggle-menu', {
+                bubbles: true,
+                      composed: true })); ]]]
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: mdi:cart
+              name: Shopping
+              navigation_path: /dashboard-home/shopping
+              index: 4
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/shopping
+              haptic: success
+
+          - type: custom:button-card
+            template: animated_category_card
+            variables:
+              icon: mdi:paw
+              name: Pets
+              navigation_path: /dashboard-home/pets
+              index: 5
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-home/pets
+              haptic: success
+
+
+
+      - type: vertical-stack
+        cards:
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#lights_room02'
+            styles: |-
+              .bubble-header-container {
+                flex-direction: row-reverse; /* Swap close button position */
+              }
+              .bubble-header {
+                margin: 0 0 0 14px !important; /* Swap close button position */
+              }
+              .name {
+                color: var(--contrast20, var(--primary-text-color, rgba(255, 255, 255, 0.9))) !important;
+                font-size: 0.85em !important;
+                font-weight: 300 !important;
+                letter-spacing: 1.5px !important;
+                font-family: Ubuntu, sans-serif;
+
+              }
+              .bubble-button-card-container {
+                background: var(--contrast3, var(--primary-background-color, rgba(255, 255, 255, 0.2))) !important;
+              }
+              .bubble-sub-button-1 {
+                opacity: 0.5 !important;
+              }
+            name: All bedroom lights
+            icon: fluent:lightbulb-32-light
+            show_last_changed: false
+            show_attribute: false
+            show_name: true
+            show_state: false
+            trigger_state: 'on'
+            trigger_close: false
+            show_header: true
+            button_type: slider
+            entity: light.room_02
+            scrolling_effect: false
+            show_icon: true
+            sub_button:
+              - entity: light.room_02
+                icon: mdi:dots-vertical
+                show_background: false
+                show_state: false
+                show_last_changed: false
+                show_attribute: false
+                show_icon: true
+            use_accent_color: false
+            bg_opacity: '100'
+            card_layout: large
+            tap_action:
+              action: toggle
+            bg_color: var(--mdc-theme-surface)
+          - type: custom:mod-card
+            style: |
+
+              ha-card {
+                margin: 20px;
+
+                background: transparent;
+                position: center;
+                --swiper-pagination-bottom: 18px;
+              }
+
+              ha-card::before {
+                backdrop-filter: none !important;
+                box-shadow: none !important;
+              }
+            card:
+              type: custom:swipe-card
+              parameters:
+                watchOverflow: true
+                slideToClickedSlide: true
+                centeredSlides: false
+                preloadImages: true
+                preventInteractionOnTransition: true
+                mousewheel: true
+                spaceBetween: 25
+                initialSlide: 0
+                slidesPerView: 1
+                loop: true
+              cards:
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_adrift
+                      image: /local/hue/adrift.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_adrift
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_amber_bloom
+                      image: /local/hue/amber_bloom.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_amber_bloom
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_amethyst_valley
+                      image: /local/hue/amethyst_valley.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_amethyst_valley
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_arctic_aurora
+                      image: /local/hue/arctic_aurora.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_arctic_aurora
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_beginnings
+                      image: /local/hue/beginnings.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_beginnings
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_blood_moon
+                      image: /local/hue/blood_moon.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_blood_moon
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_blossom
+                      image: /local/hue/blossom.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_blossom
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_blue_lagoon
+                      image: /local/hue/blue_lagoon.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_blue_lagoon
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_blue_planet
+                      image: /local/hue/blue_planet.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_blue_planet
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_cancun
+                      image: /local/hue/cancun.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_cancun
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_crocus
+                      image: /local/hue/crocus.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_crocus
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_dreamy_dusk
+                      image: /local/hue/dreamy_dusk.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_dreamy_dusk
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_emerald_flutter
+                      image: /local/hue/emerald_flutter.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_emerald_flutter
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_emerald_isle
+                      image: /local/hue/emerald_isle.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_emerald_isle
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_first_light
+                      image: /local/hue/first_light.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_first_light
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_frosty_dawn
+                      image: /local/hue/frosty_dawn.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_frosty_dawn
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_galaxy
+                      image: /local/hue/galaxy.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_galaxy
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_golden_pond
+                      image: /local/hue/golden_pond.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_golden_pond
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_honolulu
+                      image: /local/hue/honolulu.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_honolulu
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_horizon
+                      image: /local/hue/horizon.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_horizon
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_ibiza
+                      image: /local/hue/ibiza.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_ibiza
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_lake_mist
+                      image: /local/hue/lake_mist.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_lake_mist
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_lake_placid
+                      image: /local/hue/lake_placid.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_lake_placid
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_lily
+                      image: /local/hue/lily.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_lily
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_magneto
+                      image: /local/hue/magento.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_magneto
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_majestic_morning
+                      image: /local/hue/majestic_morning.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_majestic_morning
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_memento
+                      image: /local/hue/memento.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_memento
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_meriete
+                      image: /local/hue/meriete.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_meriete
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_midwinter
+                      image: /local/hue/midwinter.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_midwinter
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_misty_ridge
+                      image: /local/hue/misty_ridge.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_misty_ridge
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_moonlight
+                      image: /local/hue/moonlight.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_moonlight
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_mountain_breeze
+                      image: /local/hue/mountain_breeze.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_mountain_breeze
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_narcissa
+                      image: /local/hue/narcissa.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_narcissa
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_nebula
+                      image: /local/hue/nebula.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_nebula
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_ocean_dawn
+                      image: /local/hue/ocean_dawn.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_ocean_dawn
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_painted_sky
+                      image: /local/hue/painted_sky.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_painted_sky
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_palm_beach
+                      image: /local/hue/palm_beach.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_palm_beach
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_pensive
+                      image: /local/hue/pensive.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_pensive
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_precious
+                      image: /local/hue/precious.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_precious
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_resplendent
+                      image: /local/hue/resplendent.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_resplendent
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_rolling_hills
+                      image: /local/hue/rolling_hills.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_rolling_hills
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_ruby_glow
+                      image: /local/hue/ruby_glow.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_ruby_glow
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_savanna_sunset
+                      image: /local/hue/savanna_sunset.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_savanna_sunset
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_scarlet_dream
+                      image: /local/hue/scarlet_dream.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_scarlet_dream
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_spring_blossom
+                      image: /local/hue/spring_blossom.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_spring_blossom
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_starlight
+                      image: /local/hue/starlight.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_starlight
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_still_waters
+                      image: /local/hue/still_waters.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_still_waters
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_sunday_morning
+                      image: /local/hue/sunday_morning.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_sunday_morning
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_sundown
+                      image: /local/hue/sundown.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_sundown
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_sunflare
+                      image: /local/hue/sunflare.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_sunflare
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_tokyo
+                      image: /local/hue/tokyo.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_tokyo
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_tropical_twilight
+                      image: /local/hue/tropical_twilight.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_tropical_twilight
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_valley_dawn
+                      image: /local/hue/valley_dawn.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_valley_dawn
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_warm_embrace
+                      image: /local/hue/warm_embrace.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_warm_embrace
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_tokyo
+                      image: /local/hue/tokyo.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_tokyo
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_tropical_twilight
+                      image: /local/hue/tropical_twilight.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_tropical_twilight
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                - type: custom:paper-buttons-row
+                  base_config:
+                    name: false
+                    styles:
+                      icon:
+                        height: 64px;
+                        width: 64px;
+                        box-shadow: 0 0 0.7rem 0.08rem var(--contrast6)
+                        opacity: 83%
+                        border-radius: 50%
+                        border: solid 0.3px var(--contrast5)
+                  buttons:
+                    - entity: scene.room_02_winter_beauty
+                      image: /local/hue/winter_beauty.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_winter_beauty
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_winter_mountain
+                      image: /local/hue/winter_mountain.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_winter_mountain
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                    - entity: scene.room_02_rio
+                      image: /local/hue/rio.png
+                      tap_action:
+                        haptic: success
+                        action: call-service
+                        service: hue.activate_scene
+                        target:
+                          entity_id: scene.room_02_rio
+                        data:
+                          dynamic: true
+                          transition: 1
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+          - type: custom:bubble-card
+            card_type: separator
+            name: Lights
+            card_layout: large
+            styles: |
+              .bubble-name {
+                color: var(--contrast20, var(--primary-text-color, rgba(255, 255, 255, 0.9))) !important;
+                font-size: 0.95em !important;
+                font-weight: 400 !important;
+                letter-spacing: 1.4px !important;
+                padding-left: 12px;
+                font-family: Ubuntu, sans-serif;
+                text-transform: capitalize;
+              }
+              .bubble-icon {
+                display: none;
+              }
+              .bubble-line {
+                background-color: var(--contrast6, var(--divider-color, rgba(0, 0, 0, 0.1)));
+                opacity: 1;
+                height: 1px;
+              }
+              ha-card {
+                margin-bottom: -2px !important;
+              }
+          - type: custom:gap-card
+            height: 10
+          - type: custom:auto-entities
+            card:
+              type: grid
+              columns: 2
+              square: false
+            card_param: cards
+            filter:
+              include:
+                - options:
+                    type: custom:bubble-card
+                    card_type: button
+                    button_type: slider
+                    columns: 2
+                    rows: 2
+                    show_name: true
+                    show_attribute: false
+                    attribute: brightness
+                    styles: |
+                      .name {
+                        color:  var(--primary-text-color) !important;
+                        font-size: 0.8em !important;
+                        font-weight: 400 !important;
+                        letter-spacing: 1px !important;
+                        text-transform: capitalize;
+                      }
+                      .bubble-button-card-container {
+                        background: rgba(255, 255, 255, 0.04) !important;
+                      }
+                      .bubble-sub-button-1 {
+                        opacity: 0.75 !important;
+                      }
+                    slider_live_update: false
+                    card_layout: normal
+                    sub_button:
+                      - entity: this.entity_id
+                        show_background: false
+                        icon: mdi:dots-vertical
+                        tap_action:
+                          action: fire-dom-event
+                          browser_mod:
+                            service: browser_mod.popup
+                            data:
+                              title: Light Control
+                              style: >
+                                --popup-min-width: 400px;
+                                --tablet-popup-header-color: rgba(0, 0, 0,
+                                0) !important; --popup-background-color:
+                                rgba(0, 0, 0, 0); --popup-border-width: 0;
+                              card_mod:
+                                style:
+                                  .: |
+                                    ha-dialog-header {
+                                      position: relative !important;
+                                      color: rgba(101, 101, 128, 0.5) !important;
+                                    }
+                                    ha-dialog-header ha-icon-button {
+                                      color: rgba(101, 101, 128, 0.8) !important;
+                                      position: absolute !important;
+                                      right: 16px !important;
+                                      top: 50% !important;
+                                      transform: translateY(-50%) !important;
+                                    }
+                              content:
+                                type: custom:more-info-card
+                                entity: this.entity_id
+                                card_mod:
+                                  style:
+                                    more-info-content$ more-info-light $ ha-more-info-state-header$: |
+                                      p {
+                                        display: none;
+                                      }
+                                    more-info-content$ more-info-light$ div$ light-color-rgb-picker$: |
+                                      .color-container {
+                                        native-color-picker {display: none};
+                                      }
+                                    more-info-content$ more-info-light$: |
+                                      div {
+                                        display: none;
+                                      }
+                                      .controls {
+                                        .color-container
+                                        {
+                                          display: none;
+                                        }
+                                        ha-state-control-light-brightness {
+                                          display: block;
+                                        }
+                                        ha-icon-button-group { display: block;}
+                                        light-color-rgb-picker {
+                                          display: block;
+                                          width: 50%;
+                                          padding 0px;
+                                          margin: 0px;
+                                        }
+                                        light-color-rgb-picker .native-color-picker .container {
+                                          display: none;
+                                        }
+                                      }
+                                    .: |
+                                      .type-custom-more-info-card {
+                                        state-card-content { display: none;}
+                                        background: transparent !important;
+                                      }
+                                      ha-card {
+                                        background: transparent !important;
+                                        box-shadow: none !important;
+                                      }
+                    tap_action:
+                      action: toggle
+                  domain: light
+                  area: bedroom_2
+              exclude:
+                - options: {}
+                  entity_id: light.room_02
+                - options: {}
+                  entity_id: light.bedroom
+                - options: {}
+                  entity_id: light.2nd_floor
+                - options: {}
+                  attributes:
+                    type: browser_mod
+                - options: {}
+                  state: unavailable
+                - options: {}
+                  entity_id: /dnd/
+            show_empty: true
+            sort:
+              method: entity_id
+              reverse: false
+          - type: custom:bubble-card
+            card_type: separator
+            name: Offline
+            card_layout: large
+            styles: |
+              .bubble-name {
+                color: var(--contrast20, var(--primary-text-color, rgba(255, 255, 255, 0.9))) !important;
+                font-size: 0.95em !important;
+                font-weight: 400 !important;
+                letter-spacing: 1.4px !important;
+                padding-left: 12px;
+                font-family: Ubuntu, sans-serif;
+                text-transform: capitalize;
+              }
+              .bubble-icon {
+                display: none;
+              }
+              .bubble-line {
+                background-color: var(--contrast6, var(--divider-color, rgba(0, 0, 0, 0.1)));
+                opacity: 1;
+                height: 1px;
+              }
+              ha-card {
+                margin-bottom: -2px !important;
+
+              }
+          - type: custom:auto-entities
+            card:
+              type: grid
+              columns: 2
+              square: false
+            card_param: cards
+            filter:
+              include:
+                - domain: light
+                  area: bedroom_2
+                  state: unavailable
+                  options:
+                    type: custom:bubble-card
+                    card_type: button
+                    button_type: slider
+                    columns: 2
+                    rows: 2
+                    show_name: true
+                    show_attribute: false
+                    attribute: brightness
+                    styles: |
+                      .name {
+                        color: var(--contrast16, var(--primary-text-color, rgba(255, 255, 255, 0.9))) !important;
+                        font-size: 0.85em !important;
+                        font-weight: 300 !important;
+                        letter-spacing: 1.5px !important;
+                        text-transform: capitalize;
+                      }
+                      .bubble-button-card-container {
+                        background: var(--red-tint, var(--error-color, rgba(255, 0, 0, 0.3))) !important;
+                      }
+                      .bubble-icon {
+                        color: var(--red, var(--primary-text-color, rgba(255, 0, 0, 0.9))) !important;
+                      }
+                      .bubble-icon-container {
+                        background-color: var(--red-tint, var(--error-color, rgba(255, 0, 0, 0.3)));
+                        opacity: 0.5 !important;
+                      }
+                      .bubble-sub-button-1 {
+                        opacity: 0.2 !important;
+                      }
+                    slider_live_update: false
+                    card_layout: normal
+              exclude:
+                - entity_id: light.room_02
+                - entity_id: light.bedroom
+                - entity_id: light.2nd_floor
+                - attributes:
+                    type: browser_mod
+                - entity_id: /dnd/
+            show_empty: true
+    column_span: 1
+
+
+# |   END: home.yaml

@@ -1,0 +1,20 @@
+
+# | START: railway.yaml
+# |  PATH: /config/packages/travel/railway.yaml
+
+
+# ╭────────────────────╮
+# │   INPUT TEXT
+# ╰────────────────────╯
+input_text:
+
+# ➔ Train Service Summary
+#   Input text for the train service summary
+  train_service_summary:
+    name: Train Service Summary
+    max: 255
+    initial: "clear"
+
+
+
+# |   END: railway.yaml

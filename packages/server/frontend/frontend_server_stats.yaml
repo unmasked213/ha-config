@@ -1,0 +1,1072 @@
+# | START: frontend_server_stats.yaml
+# |  PATH: packages/server/frontend/frontend_server_stats.yaml
+
+# Home Assistant template and command_line sensor definitions for frontend statistics.
+# Home Assistant OS runtime with Supervisor API access.
+# Depends on: sensor.last_boot, sensor.installation_info, sensor.mqtt_broker_uptime,
+#   Supervisor API (/run/supervisor.token), Mosquitto addon (core-mosquitto),
+#   jq and standard shell utilities available in HA container.
+
+
+
+#  ╔═════════════════════════════════════════════════════════════════════════╗
+#  ║     FRONTEND SERVER STATS                                               ║
+#  ╚═════════════════════════════════════════════════════════════════════════╝
+
+#  • Provides a comprehensive overview of the server's frontend resources,
+#    including addons, integrations, and other resources.
+#  • Also provides a breakdown of the server's resources by domain.
+#  • Provides a breakdown of the server's resources by domain.
+
+
+
+
+template:
+
+  #──────────────────────────────╮
+  - sensor:
+  #──────────────────────────────╯
+
+     # ── PENDING UPDATES FORMATTED ──────────────────────────────────────────
+      - name: Pending Updates Formatted
+        unique_id: pending_updates_formatted
+        state: >-
+          {% set blacklist = ['firmware'] %}
+          {% set updates = states.update
+             | selectattr('state', 'eq', 'on')
+             | rejectattr('name', 'search', blacklist | join('|'), ignorecase=true)
+             | list %}
+          {% set count = updates | count %}
+          {% if count > 0 %}
+            {% set names = updates
+               | map(attribute='name')
+               | map('replace', ' update', '')
+               | map('replace', 'Update ', '')
+               | map('title')
+               | list %}
+            {{ count }} pending: {{ names | join(', ') }}
+          {% else %}
+            Up to date
+          {% endif %}
+
+
+    # ── ADDONS LIST ─────────────────────────────────────────────────────────
+    #  • This sensor lists the addons installed on the server.
+
+      - name: addons_frontend_list
+        unique_id: addons_frontend_list
+
+
+      # -- State -------------------------------------------------------------
+      # Uses now() to force state updates; actual data is in attributes.
+
+        state: "{{ now() }}"
+
+
+
+      # -- Attributes --------------------------------------------------------
+      # Filters update entities belonging to Supervisor integration.
+      # Chain of replacements normalises entity_id to human-readable addon name.
+
+        attributes:
+          items: >-
+            {{ states.update
+               | map(attribute='entity_id')
+               | select('in', integration_entities('Supervisor'))
+               | map('replace', 'update.', '')
+               | map('replace', '_update', '')
+               | map('replace', '_', ' ')
+               | map('title')
+               | sort
+               | list }}
+
+
+
+
+    # ── ADDONS COUNT ────────────────────────────────────────────────────────
+    #  • This sensor counts the number of addons installed on the server.
+
+      - name: addons_frontend_count
+        unique_id: addons_frontend_count
+
+
+      # -- State -------------------------------------------------------------
+
+        state: >-
+          {{ states.update
+             | map(attribute='entity_id')
+             | select('in', integration_entities('Supervisor'))
+             | list | count }}
+
+
+
+    # ── INTEGRATIONS LIST ───────────────────────────────────────────────────
+    #  • This sensor lists the integrations installed on the server.
+
+      - name: integrations_frontend_list
+        unique_id: integrations_frontend_list
+
+
+      # -- State -------------------------------------------------------------
+      # Uses now() to force state updates; actual data is in attributes.
+
+        state: "{{ now() }}"
+
+
+      # -- Attributes --------------------------------------------------------
+      # Filters update entities belonging to HACS integration.
+
+        attributes:
+          items: >-
+            {{ states.update
+               | map(attribute='entity_id')
+               | select('in', integration_entities('hacs'))
+               | map('replace', 'update.', '')
+               | map('replace', '_update', '')
+               | map('replace', '_', ' ')
+               | map('title')
+               | sort
+               | list }}
+
+
+
+
+    # ── INTEGRATIONS COUNT ──────────────────────────────────────────────────
+    #  • This sensor counts the number of integrations installed on the server.
+
+      - name: integrations_frontend_count
+        unique_id: integrations_frontend_count
+
+
+      # -- State -------------------------------------------------------------
+
+        state: >-
+          {{ states.update
+             | map(attribute='entity_id')
+             | select('in', integration_entities('hacs'))
+             | list | count }}
+
+
+
+
+
+    # ── PENDING UPDATES ─────────────────────────────────────────────────────
+    #  • Counts update entities that have updates available.
+    #  • State 'on' means update available, 'off' means up to date.
+
+      - name: Pending Updates
+        unique_id: pending_updates
+        icon: mdi:package-up
+        unit_of_measurement: "updates"
+        state_class: measurement
+
+        state: >-
+          {% set blacklist = ['firmware'] %}
+          {{ states.update
+             | selectattr('state', 'eq', 'on')
+             | rejectattr('name', 'search', blacklist | join('|'), ignorecase=true)
+             | list | count }}
+
+        attributes:
+          entities: >-
+            {% set blacklist = ['firmware'] %}
+            {{ states.update
+               | selectattr('state', 'eq', 'on')
+               | rejectattr('name', 'search', blacklist | join('|'), ignorecase=true)
+               | map(attribute='entity_id')
+               | list }}
+          names: >-
+            {% set blacklist = ['firmware'] %}
+            {{ states.update
+               | selectattr('state', 'eq', 'on')
+               | rejectattr('name', 'search', blacklist | join('|'), ignorecase=true)
+               | map(attribute='name')
+               | list }}
+
+
+
+    # ── LAST BOOT FORMATTED ─────────────────────────────────────────────────
+    #  • This sensor formats the last boot time of the server.
+
+      - name: Last Boot Formatted
+        unique_id: last_boot_formatted
+        icon: mdi:restart
+
+
+      # -- State -------------------------------------------------------------
+
+        state: >-
+          {% set boot = states('sensor.last_boot') | as_datetime %}
+          {% if boot %}
+            {{ boot.strftime('%d %b %Y, %H:%M') }}
+          {% else %}
+            Unknown
+          {% endif %}
+
+
+      # -- Attributes --------------------------------------------------------
+      # 86400 is seconds per day; integer division gives whole days since boot.
+
+        attributes:
+          days_ago: >-
+            {% set boot = states('sensor.last_boot') | as_datetime %}
+            {% if boot %}
+              {{ ((now() - boot).total_seconds() / 86400) | int }}
+            {% else %}
+              0
+            {% endif %}
+
+
+
+
+    # ── UPTIME FORMATTED ────────────────────────────────────────────────────
+    #  • This sensor formats the uptime of the server.
+
+      - name: Uptime Formatted
+        unique_id: uptime_formatted
+        icon: mdi:clock-outline
+
+
+      # -- State -------------------------------------------------------------
+      # Cascading conditionals produce shortest meaningful representation.
+
+        state: >-
+          {% set boot = states('sensor.last_boot') | as_datetime %}
+          {% if boot %}
+            {% set delta = now() - boot %}
+            {% set days = delta.days %}
+            {% set hours = (delta.seconds // 3600) %}
+            {% set minutes = (delta.seconds % 3600) // 60 %}
+            {% if days > 0 %}
+              {{ days }}d {{ hours }}h {{ minutes }}m
+            {% elif hours > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}m
+            {% endif %}
+          {% else %}
+            Unknown
+          {% endif %}
+
+
+      # -- Attributes --------------------------------------------------------
+
+        attributes:
+          total_days: >-
+            {% set boot = states('sensor.last_boot') | as_datetime %}
+            {% if boot %}
+              {{ ((now() - boot).total_seconds() / 86400) | round(1) }}
+            {% else %}
+              0
+            {% endif %}
+          total_hours: >-
+            {% set boot = states('sensor.last_boot') | as_datetime %}
+            {% if boot %}
+              {{ ((now() - boot).total_seconds() / 3600) | round(1) }}
+            {% else %}
+              0
+            {% endif %}
+
+
+
+
+    # ── ENTITY DOMAIN BREAKDOWN ─────────────────────────────────────────────
+    #  • This sensor breaks down the number of entities by domain.
+
+      - name: Entity Domain Breakdown
+        unique_id: entity_domain_breakdown
+        unit_of_measurement: "entities"
+
+
+      # -- State -------------------------------------------------------------
+
+        state: "{{ states | count }}"
+
+
+      # -- Attributes --------------------------------------------------------
+      # Each attribute accesses the corresponding domain's state object directly.
+
+        attributes:
+          unavailable: "{{ states | selectattr('state', 'eq', 'unavailable') | list | count }}"
+          unknown: "{{ states | selectattr('state', 'eq', 'unknown') | list | count }}"
+
+          # Core Domains
+          sensors: "{{ states.sensor | count }}"
+          binary_sensors: "{{ states.binary_sensor | count }}"
+
+          # Control Domains
+          switches: "{{ states.switch | count }}"
+          lights: "{{ states.light | count }}"
+          covers: "{{ states.cover | count }}"
+          fans: "{{ states.fan | count }}"
+          locks: "{{ states.lock | count }}"
+          climates: "{{ states.climate | count }}"
+          humidifiers: "{{ states.humidifier | count }}"
+          water_heaters: "{{ states.water_heater | count }}"
+          vacuums: "{{ states.vacuum | count }}"
+
+          # Media & AV
+          media_players: "{{ states.media_player | count }}"
+          cameras: "{{ states.camera | count }}"
+          remotes: "{{ states.remote | count }}"
+
+          # Automation & Logic
+          automations: "{{ states.automation | count }}"
+          scripts: "{{ states.script | count }}"
+          scenes: "{{ states.scene | count }}"
+
+          # Helpers
+          input_booleans: "{{ states.input_boolean | count }}"
+          input_numbers: "{{ states.input_number | count }}"
+          input_selects: "{{ states.input_select | count }}"
+          input_texts: "{{ states.input_text | count }}"
+          input_datetimes: "{{ states.input_datetime | count }}"
+          timers: "{{ states.timer | count }}"
+          counters: "{{ states.counter | count }}"
+          numbers: "{{ states.number | count }}"
+          selects: "{{ states.select | count }}"
+          buttons: "{{ states.button | count }}"
+          texts: "{{ states.text | count }}"
+          datetimes: "{{ states.datetime | count }}"
+          dates: "{{ states.date | count }}"
+          times: "{{ states.time | count }}"
+
+          # Tracking & Location
+          device_trackers: "{{ states.device_tracker | count }}"
+          persons: "{{ states.person | count }}"
+          zones: "{{ states.zone | count }}"
+
+          # Security
+          alarm_control_panels: "{{ states.alarm_control_panel | count }}"
+
+          # Updates & System
+          updates: "{{ states.update | count }}"
+
+          # Misc
+          weather: "{{ states.weather | count }}"
+          calendars: "{{ states.calendar | count }}"
+          images: "{{ states.image | count }}"
+          todos: "{{ states.todo | count }}"
+          events: "{{ states.event | count }}"
+          sirens: "{{ states.siren | count }}"
+          valves: "{{ states.valve | count }}"
+          lawn_mowers: "{{ states.lawn_mower | count }}"
+
+
+    # ── CPU THREAD COUNT ───────────────────────────────────────────────────
+    #  • Static hardware specification for the host CPU.
+
+      - name: CPU Thread Count
+        unique_id: cpu_thread_count
+        icon: mdi:cpu-64-bit
+        state: "8"
+
+
+    # ── MEMORY TOTAL ───────────────────────────────────────────────────────
+    #  • Static hardware specification for installed host memory.
+
+      - name: Memory Total GB
+        unique_id: memory_total_gb
+        icon: mdi:memory
+        unit_of_measurement: "GB"
+        state: "32"
+
+
+    # ── MQTT UPTIME FORMATTED ───────────────────────────────────────────────
+    #  • Formats MQTT broker uptime into human-readable format.
+
+      - name: MQTT Uptime Formatted
+        unique_id: mqtt_uptime_formatted
+        icon: mdi:clock-outline
+
+
+      # -- State -------------------------------------------------------------
+      # Input is raw seconds from sensor.mqtt_broker_uptime.
+      # Uses integer division constants: 86400 (day), 3600 (hour), 60 (minute).
+
+        state: >-
+          {% set seconds = states('sensor.mqtt_broker_uptime') | int(0) %}
+          {% set days = (seconds // 86400) %}
+          {% set hours = (seconds % 86400) // 3600 %}
+          {% set minutes = (seconds % 3600) // 60 %}
+          {% if days > 0 %}
+            {{ days }}d {{ hours }}h {{ minutes }}m
+          {% elif hours > 0 %}
+            {{ hours }}h {{ minutes }}m
+          {% else %}
+            {{ minutes }}m
+          {% endif %}
+
+
+
+
+    # ── INSTALLATION TYPE DISPLAY ───────────────────────────────────────────
+    #  • Provides a cleaner display name for installation type.
+
+      - name: Installation Type Display
+        unique_id: installation_type_display
+        icon: mdi:home-assistant
+
+
+      # -- State -------------------------------------------------------------
+      # Maps raw installation_info values to abbreviated display names.
+      # HAOS includes machine identifier for hardware identification.
+
+        state: >-
+          {% set install_type = states('sensor.installation_info') %}
+          {% set machine = state_attr('sensor.installation_info', 'machine') %}
+          {% if install_type == 'Home Assistant OS' %}
+            HAOS ({{ machine | default('Unknown') }})
+          {% elif install_type == 'Home Assistant Container' %}
+            Container
+          {% elif install_type == 'Home Assistant Supervised' %}
+            Supervised
+          {% elif install_type == 'Home Assistant Core' %}
+            Core
+          {% else %}
+            {{ install_type | default('Unknown') }}
+          {% endif %}
+
+
+
+
+
+
+
+
+
+
+
+#────────────────────────────────╮
+command_line:
+#────────────────────────────────╯
+
+
+  # ── DASHBOARD COMPLEXITY ──────────────────────────────────────────────────
+  #  • This sensor measures the complexity of the dashboard.
+
+  - sensor:
+      name: Dashboard Complexity
+      unique_id: dashboard_complexity
+      scan_interval: 6000
+      icon: mdi:view-dashboard-outline
+      command_timeout: 30
+
+
+      # -- Command -----------------------------------------------------------
+      # Parses all lovelace* files in .storage directory.
+      # Complexity score: total_cards + (custom_cards * 2) + views.
+      # Custom cards weighted 2x because they indicate advanced configuration.
+      # Temp file used to aggregate entities across all dashboard files.
+
+      command: >
+        sh -c '
+          cd /config/.storage || exit 1;
+          files=$(ls lovelace* 2>/dev/null);
+          total_cards=0; views=0; custom_cards=0;
+          all_entities=$(mktemp);
+          for f in $files; do
+            j=$(cat "$f" | jq -r ".data.config.views");
+            [ "$j" = "null" ] && continue;
+            v=$(echo "$j" | jq "length");
+            views=$((views+v));
+            c=$(echo "$j" | jq "..|objects|select(has(\"type\"))|.type" | wc -l);
+            total_cards=$((total_cards+c));
+            cc=$(echo "$j" | jq "..|objects|select(has(\"type\"))|.type" | grep -c "\"custom:" || true);
+            custom_cards=$((custom_cards+cc));
+            echo "$j" | jq -r "..|.entity? // empty" >> "$all_entities";
+          done;
+          entities=$(sort -u "$all_entities" | wc -l);
+          rm -f "$all_entities";
+          std_cards=$((total_cards-custom_cards));
+          score=$((total_cards + custom_cards*2 + views));
+          echo "{\"complexity_score\":$score,\"total_cards\":$total_cards,\"views\":$views,\"custom_cards\":$custom_cards,\"standard_cards\":$std_cards,\"entities_referenced\":$entities}";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.complexity_score | int }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - total_cards
+        - views
+        - custom_cards
+        - standard_cards
+        - entities_referenced
+
+
+
+
+    # ── CONFIG LINE BREAKDOWN ───────────────────────────────────────────────
+    #  • This sensor breaks down the number of lines in the config directory.
+  - sensor:
+      name: Config Line Breakdown
+      unique_id: config_line_breakdown
+      scan_interval: 6000
+      command_timeout: 30
+      unit_of_measurement: "lines"
+      icon: mdi:file-code-outline
+
+
+      # -- Command -----------------------------------------------------------
+      # Excludes custom_components and Purgatory directories from counts.
+      # YAML/YML counted separately because BusyBox sh lacks grouped -o tests.
+      # Uses -print0 and xargs -0 for safe handling of filenames with spaces.
+
+      command: >
+        sh -c '
+          cd /config || exit 1;
+          # count YAML/YML separately because BusyBox sh dislikes grouped -o tests
+          yaml=$( (find . -type f -name "*.yaml" ! -path "./custom_components/*" ! -path "./Purgatory/*" -print0;
+                   find . -type f -name "*.yml"  ! -path "./custom_components/*" ! -path "./Purgatory/*" -print0) 2>/dev/null |
+                   { xargs -0 cat 2>/dev/null || true; } | wc -l );
+          json=$(find . -type f -name "*.json" ! -path "./custom_components/*" ! -path "./Purgatory/*" -print0 2>/dev/null |
+                 { xargs -0 cat 2>/dev/null || true; } | wc -l);
+          dashboards=$(find .storage -maxdepth 1 -type f -name "lovelace*" -print0 2>/dev/null |
+                       { xargs -0 cat 2>/dev/null || true; } | wc -l);
+          total=$((yaml + json + dashboards));
+          echo "{\"total\":$total,\"yaml\":$yaml,\"json\":$json,\"dashboards\":$dashboards}";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.total | int }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - yaml
+        - json
+        - dashboards
+
+
+
+
+    # ── LOVELACE RESOURCES COUNT ────────────────────────────────────────────
+    #  • This sensor counts the number of frontend resources registered in Lovelace.
+
+  - sensor:
+      name: Lovelace Resources Count
+      unique_id: lovelace_resources_count
+      scan_interval: 3600
+      icon: mdi:webpack
+
+
+      # -- Command -----------------------------------------------------------
+      # Reads from .storage/lovelace_resources which contains registered JS/CSS resources.
+
+      command: >
+        sh -c 'cat /config/.storage/lovelace_resources 2>/dev/null | jq ".data.items | length" || echo 0'
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value | int }}"
+
+
+
+
+    # ── CUSTOM COMPONENTS COUNT ─────────────────────────────────────────────
+    #  • This sensor counts the number of custom components installed.
+
+  #   Counts the number of custom components installed.
+  - sensor:
+      name: Custom Components Count
+      unique_id: custom_components_count
+      scan_interval: 3600
+      icon: mdi:puzzle
+
+
+      # -- Command -----------------------------------------------------------
+      # Each subdirectory in custom_components is one integration.
+
+      command: >
+        sh -c 'ls -1 /config/custom_components 2>/dev/null | wc -l'
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value | int }}"
+
+
+
+
+    # ── STORAGE DIRECTORY BREAKDOWN ─────────────────────────────────────────
+    #  • This sensor analyzes the storage usage across accessible directories.
+
+  #   Analyzes storage usage across accessible directories
+  - sensor:
+      name: Storage Directory Breakdown
+      unique_id: storage_directory_breakdown
+      scan_interval: 3600
+      icon: mdi:folder-multiple
+      command_timeout: 90
+      unit_of_measurement: "GB"
+      value_template: "{{ value_json.total_gb | int }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - media_gb
+        - share_gb
+        - config_total_mb
+        - config_www_mb
+        - config_custom_mb
+        - config_storage_mb
+        - config_packages_mb
+        - config_themes_mb
+        - config_blueprints_mb
+        - config_db_mb
+        - config_other_mb
+
+
+      # -- Command -----------------------------------------------------------
+      # Uses du -sm for megabyte output; database files use -smc to sum multiple files.
+      # config_other is computed as total minus known subdirectories.
+
+      command: >
+        sh -c '
+          # Function to safely get size in MB (returns 0 on failure)
+          get_mb() {
+            du -sm "$1" 2>/dev/null | cut -f1 || echo 0
+          }
+
+          # Root folders (MB)
+          media=$(get_mb /media)
+          share=$(get_mb /share)
+
+          # Config subdirectories (MB)
+          config_www=$(get_mb /config/www)
+          config_custom=$(get_mb /config/custom_components)
+          config_storage=$(get_mb /config/.storage)
+          config_packages=$(get_mb /config/packages)
+          config_themes=$(get_mb /config/themes)
+          config_blueprints=$(get_mb /config/blueprints)
+
+          # Database specific: Use -c to sum files, tail to get total, cut for number
+          config_db=$(du -smc /config/home-assistant_v2.db* 2>/dev/null | tail -1 | cut -f1 || echo 0)
+
+          # Config Total and "Other" calc
+          config_total=$(get_mb /config)
+          config_known=$((config_www + config_custom + config_storage + config_packages + config_themes + config_blueprints + config_db))
+          config_other=$((config_total - config_known))
+
+          # Total Calculation (Convert sum of MB to GB)
+          total_mb=$((media + share + config_total))
+          total_gb=$((total_mb / 1024))
+
+          # Construct JSON
+          echo "{\"total_gb\": $total_gb, \"media_gb\": $((media/1024)), \"share_gb\": $((share/1024)), \"config_total_mb\": $config_total, \"config_www_mb\": $config_www, \"config_custom_mb\": $config_custom, \"config_storage_mb\": $config_storage, \"config_packages_mb\": $config_packages, \"config_themes_mb\": $config_themes, \"config_blueprints_mb\": $config_blueprints, \"config_db_mb\": $config_db, \"config_other_mb\": $config_other}"
+        '
+
+
+
+
+    # ── BACKUP STATISTICS ───────────────────────────────────────────────────
+    #  • This sensor queries the Supervisor API for backup information.
+
+  - sensor:
+      name: Backup Statistics
+      unique_id: backup_statistics
+      scan_interval: 3600
+      icon: mdi:backup-restore
+      command_timeout: 60
+      unit_of_measurement: "backups"
+
+
+      # -- Command -----------------------------------------------------------
+      # Reads Supervisor token from /run/supervisor.token or environment.
+      # Backup sizes from API are in MB; division by 1024 converts to GB.
+
+      command: >
+        sh -c '
+          TOKEN=$(cat /run/supervisor.token 2>/dev/null || echo "$SUPERVISOR_TOKEN");
+          curl -sSL -H "Authorization: Bearer $TOKEN" \
+               -H "Content-Type: application/json" \
+               http://hassio/backups 2>/dev/null |
+          jq -c ".data.backups | {
+            count: length,
+            total_size_gb: (if length > 0 then ((map(.size) | add) / 1024 | floor) else 0 end),
+            oldest: (if length > 0 then (map(.date) | min | .[0:10]) else \"None\" end),
+            newest: (if length > 0 then (map(.date) | max | .[0:10]) else \"None\" end)
+          }";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+      # Returns count if valid JSON received, otherwise -1 to indicate error
+      # (allows card to detect failure vs genuine 0 backups)
+
+      value_template: "{{ value_json.count | int(-1) }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+      # Note: Attributes will be missing if command fails - card should handle gracefully
+
+      json_attributes:
+        - total_size_gb
+        - oldest
+        - newest
+
+
+
+
+    # ── DATABASE STATISTICS ─────────────────────────────────────────────────
+    #  • This sensor analyzes the size of the database files.
+
+  - sensor:
+      name: Database Statistics
+      unique_id: database_statistics
+      scan_interval: 3600
+      icon: mdi:database
+      command_timeout: 30
+      unit_of_measurement: "MB"
+
+
+      # -- Command -----------------------------------------------------------
+      # SQLite uses three files: main db, shared memory (-shm), write-ahead log (-wal).
+      # Uses du -sk for kilobyte precision, then divides by 1024 for MB.
+
+      command: >
+        sh -c '
+          db="/config/home-assistant_v2.db";
+          db_size=$(du -sk "$db" 2>/dev/null | cut -f1 || echo 0);
+          shm_size=$(du -sk "$db-shm" 2>/dev/null | cut -f1 || echo 0);
+          wal_size=$(du -sk "$db-wal" 2>/dev/null | cut -f1 || echo 0);
+          total_kb=$((db_size + shm_size + wal_size));
+          total_mb=$((total_kb / 1024));
+          echo "{\"total_mb\":$total_mb,\"db_mb\":$((db_size/1024)),\"shm_mb\":$((shm_size/1024)),\"wal_mb\":$((wal_size/1024))}";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.total_mb | int }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - db_mb
+        - shm_mb
+        - wal_mb
+
+
+
+
+    # ── DATABASE CONFIGURATION ──────────────────────────────────────────────
+    #  • This sensor analyzes the configuration of the database.
+
+  - sensor:
+      name: Database Configuration
+      unique_id: database_configuration
+      scan_interval: 3600
+      icon: mdi:database-cog
+      command_timeout: 30
+
+
+      # -- Command -----------------------------------------------------------
+      # Detects database type by checking for SQLite file or parsing db_url.
+      # purge_keep_days defaults to 10 (Home Assistant's default) if not configured.
+
+      command: >
+        sh -c '
+          # Detect database type
+          if [ -f /config/home-assistant_v2.db ]; then
+            db_type="SQLite";
+          else
+            # Check for MariaDB/MySQL/PostgreSQL in configuration.yaml
+            db_url=$(grep -A 5 "^recorder:" /config/configuration.yaml | grep "db_url:" | sed "s/.*db_url: *//;s/!secret.*//;s/\"//g" | head -1);
+            if echo "$db_url" | grep -qi "mysql\\|mariadb"; then
+              db_type="MariaDB";
+            elif echo "$db_url" | grep -qi "postgresql"; then
+              db_type="PostgreSQL";
+            else
+              db_type="SQLite";
+            fi
+          fi
+
+          # Extract purge_keep_days from configuration
+          purge_days=$(grep -A 10 "^recorder:" /config/configuration.yaml | grep "purge_keep_days:" | sed "s/.*purge_keep_days: *//;s/#.*//;s/ *$//" | head -1);
+
+          # Default to 10 if not found (HA default)
+          [ -z "$purge_days" ] && purge_days="10";
+
+          echo "{\"db_type\":\"$db_type\",\"purge_keep_days\":$purge_days}";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.db_type }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - purge_keep_days
+
+
+
+
+
+  # ── INSTALLATION INFO ─────────────────────────────────────────────────────
+  #  • Queries the Supervisor API for installation type and machine details.
+  #  • Derives installation type from response structure.
+
+  - sensor:
+      name: Installation Info
+      unique_id: installation_info
+      scan_interval: 86400
+      icon: mdi:home-assistant
+      command_timeout: 30
+
+
+      # -- Command -----------------------------------------------------------
+      # Installation type inferred: hassos field present = HAOS, machine without hassos = Supervised.
+
+      command: >
+        sh -c '
+          TOKEN=$(cat /run/supervisor.token 2>/dev/null || echo "$SUPERVISOR_TOKEN");
+          curl -sSL -H "Authorization: Bearer $TOKEN" \
+               -H "Content-Type: application/json" \
+               http://hassio/info 2>/dev/null |
+          jq -c "{
+            installation_type: (if .data.hassos != null then \"Home Assistant OS\" elif .data.machine != null then \"Supervised\" else \"Unknown\" end),
+            hassos_version: .data.hassos,
+            machine: .data.machine,
+            arch: .data.arch,
+            supported: .data.supported,
+            board: (.data.board // \"N/A\")
+          }";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.installation_type }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - hassos_version
+        - machine
+        - arch
+        - supported
+        - board
+
+
+
+
+  # ── MQTT BROKER INFO ──────────────────────────────────────────────────────
+  #  • Queries Mosquitto broker for version and basic configuration.
+  #  • Requires mosquitto_sub available in the container (via Mosquitto addon).
+
+  - sensor:
+      name: MQTT Broker Info
+      unique_id: mqtt_broker_info
+      scan_interval: 3600
+      icon: mdi:email-fast
+      command_timeout: 15
+
+
+      # -- Command -----------------------------------------------------------
+      # Connects to core-mosquitto hostname (Mosquitto addon's internal DNS name).
+      # -C 1 reads single message, -W 5 sets 5-second timeout per topic.
+      # $SYS topics are Mosquitto's built-in statistics topics.
+
+      command: >
+        sh -c '
+          # Attempt to get version from $SYS topic
+          version=$(mosquitto_sub -h core-mosquitto -t "\$SYS/broker/version" -C 1 -W 5 2>/dev/null || echo "Unknown");
+
+          # Get connected clients count
+          clients=$(mosquitto_sub -h core-mosquitto -t "\$SYS/broker/clients/connected" -C 1 -W 5 2>/dev/null || echo "0");
+
+          # Get total messages received
+          messages_received=$(mosquitto_sub -h core-mosquitto -t "\$SYS/broker/messages/received" -C 1 -W 5 2>/dev/null || echo "0");
+
+          # Get total messages sent
+          messages_sent=$(mosquitto_sub -h core-mosquitto -t "\$SYS/broker/messages/sent" -C 1 -W 5 2>/dev/null || echo "0");
+
+          # Get broker uptime in seconds
+          uptime=$(mosquitto_sub -h core-mosquitto -t "\$SYS/broker/uptime" -C 1 -W 5 2>/dev/null || echo "0 seconds");
+          uptime_clean=$(echo "$uptime" | grep -oE "^[0-9]+" || echo "0");
+
+          echo "{\"version\":\"$version\",\"clients_connected\":$clients,\"messages_received\":$messages_received,\"messages_sent\":$messages_sent,\"uptime_seconds\":$uptime_clean}";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.version }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - clients_connected
+        - messages_received
+        - messages_sent
+        - uptime_seconds
+
+
+
+
+  # ── PYTHON VERSION ────────────────────────────────────────────────────────
+  #  • Returns the Python version used by Home Assistant Core.
+
+  - sensor:
+      name: Python Version
+      unique_id: python_version
+      scan_interval: 86400
+      icon: mdi:language-python
+
+
+      # -- Command -----------------------------------------------------------
+
+      command: "python3 --version | cut -d' ' -f2"
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value | trim }}"
+
+
+
+
+  # ── DOCKER VERSION ────────────────────────────────────────────────────────
+  #  • Returns the Docker version from the host via Supervisor API.
+
+  - sensor:
+      name: Docker Version
+      unique_id: docker_version
+      scan_interval: 86400
+      icon: mdi:docker
+      command_timeout: 15
+
+
+      # -- Command -----------------------------------------------------------
+
+      command: >
+        sh -c '
+          TOKEN=$(cat /run/supervisor.token 2>/dev/null || echo "$SUPERVISOR_TOKEN");
+          curl -sSL -H "Authorization: Bearer $TOKEN" \
+               -H "Content-Type: application/json" \
+               http://hassio/info 2>/dev/null |
+          jq -r ".data.docker // \"Unknown\"";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value | trim }}"
+
+
+
+
+  # ── KERNEL VERSION ────────────────────────────────────────────────────────
+  #  • Returns the Linux kernel version from the host via Supervisor API.
+
+  - sensor:
+      name: Kernel Version
+      unique_id: kernel_version
+      scan_interval: 86400
+      icon: mdi:linux
+      command_timeout: 15
+
+
+      # -- Command -----------------------------------------------------------
+
+      command: >
+        sh -c '
+          TOKEN=$(cat /run/supervisor.token 2>/dev/null || echo "$SUPERVISOR_TOKEN");
+          curl -sSL -H "Authorization: Bearer $TOKEN" \
+               -H "Content-Type: application/json" \
+               http://hassio/host/info 2>/dev/null |
+          jq -r ".data.kernel // \"Unknown\"";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value | trim }}"
+
+
+
+
+
+
+
+
+
+
+
+#────────────────────────────────╮
+mqtt:
+#────────────────────────────────╯
+
+
+  # ── MQTT $SYS TOPIC SENSORS ───────────────────────────────────────────────
+  #  • Subscribes to Mosquitto $SYS topics for broker statistics.
+  #  • Requires sys_interval > 0 in Mosquitto addon configuration.
+
+  sensor:
+
+    # -- Broker Version ------------------------------------------------------
+
+    - name: MQTT Broker Version
+      unique_id: mqtt_broker_version
+      state_topic: "$SYS/broker/version"
+      icon: mdi:email-fast
+
+
+    # -- Connected Clients ---------------------------------------------------
+
+    - name: MQTT Clients Connected
+      unique_id: mqtt_clients_connected
+      state_topic: "$SYS/broker/clients/connected"
+      icon: mdi:account-multiple
+      state_class: measurement
+
+
+    # -- Messages Received ---------------------------------------------------
+
+    - name: MQTT Messages Received
+      unique_id: mqtt_messages_received
+      state_topic: "$SYS/broker/messages/received"
+      icon: mdi:email-receive
+      state_class: total_increasing
+
+
+    # -- Messages Sent -------------------------------------------------------
+
+    - name: MQTT Messages Sent
+      unique_id: mqtt_messages_sent
+      state_topic: "$SYS/broker/messages/sent"
+      icon: mdi:email-send
+      state_class: total_increasing
+
+
+    # -- Broker Uptime -------------------------------------------------------
+    # Mosquitto publishes uptime as "N seconds"; template extracts numeric portion.
+
+    - name: MQTT Broker Uptime
+      unique_id: mqtt_broker_uptime
+      state_topic: "$SYS/broker/uptime"
+      icon: mdi:clock-outline
+      value_template: "{{ value.split(' ')[0] | int(0) }}"
+      unit_of_measurement: "s"
+      state_class: total_increasing
+
+
+
+# |   END: frontend_server_stats.yaml

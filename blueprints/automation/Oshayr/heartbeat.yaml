@@ -1,0 +1,282 @@
+blueprint:
+  name: Home Assistant HeartBeat
+  domain: automation
+  author: Oshayr
+  source_url: https://raw.githubusercontent.com/Oshayr/ha-heartbeat-blueprint/refs/heads/main/automation/heartbeat.yaml
+  description: "# Home Assistant HeartBeat\n[![View on GitHub](https://img.shields.io/badge/GitHub-View%20Repository-blue?logo=github)](https://github.com/Oshayr/ha-heartbeat-blueprint)\n▣
+    Conveys a periodic pulse of “what’s up right now”.\n  Generates a professional
+    summary of smart-home *activity* during the\n  last **X hours** (default 24 h;
+    720 h ≈ monthly, 2160 h ≈ quarterly).\n▣ Token-aware compression keeps prompts
+    inside LLM limits.\n▣ Works with any Conversation agent (OpenAI, Anthropic, local
+    Llama…).\n▣ Sends the result as a persistent notification.\n### Blueprint setup\nRun
+    every - How often the report should run (30min, 1 hour, 3 hours, 6 hours, 12 hours,
+    24 hours (default))\nLook-back period (h) - How many hours of activity to summarise
+    (1 – 24).\nConversation agent - Pick the Conversation / LLM agent that should
+    receive the prompt.\nMax prompt length (chars) - Absolute ceiling for the size
+    of the text sent to the LLM. 1 token ≈ 4 chars, so 4 096 chars ≈ 1 024 tokens.\n####
+    Advanced settings\n  extra_prompt - Extra LLM instructions (optional)\n  Output
+    mode - summary → run the LLM and show its summary, raw → skip the LLM call and
+    show the activity list verbatim\n  Message ID - The message Id for the LLM chat
+    and the notificatins\n  Skip notification - Skip notification when nothing changed\n####
+    Advanced Filters\n  Domains to ignore - List of Domains to be ignored.\n  States
+    to ignore - List of States to be ignored.\n  Areas to ignore - List of Areas to
+    be ignored.\n  Entities to ignore - List of Entities to be ignored.\n  \n"
+  input:
+    Main Settings:
+      name: Main Settings
+      icon: mdi:key
+      description: The Main Blueprint settings
+      collapsed: false
+      input:
+        run_every:
+          name: Run every
+          description: How often the report should run
+          selector:
+            select:
+              options:
+              - label: 30 minutes
+                value: '30'
+              - label: 1 hour
+                value: '60'
+              - label: 3 hours
+                value: '180'
+              - label: 6 hours
+                value: '360'
+              - label: 12 hours
+                value: '720'
+              - label: 24 hours
+                value: '1440'
+              custom_value: false
+              sort: false
+              multiple: false
+          default: '1440'
+        lookback_hours:
+          name: Look-back period (h)
+          description: How many hours of activity to summarise (1 – 24).
+          selector:
+            number:
+              min: 1.0
+              max: 24.0
+              step: 1.0
+              unit_of_measurement: h
+              mode: slider
+          default: 24
+        llm_agent:
+          name: Conversation agent
+          selector:
+            conversation_agent: {}
+          description: Pick the Conversation / LLM agent that should receive the prompt.
+          default: conversation.chatgpt
+        max_prompt_len:
+          name: Max prompt length (chars)
+          description: 'Absolute ceiling for the size of the text sent to the LLM.
+            1 token ≈ 4 chars, so 4 096 chars ≈ 1 024 tokens.
+
+            '
+          selector:
+            number:
+              min: 512.0
+              max: 32000.0
+              step: 256.0
+              mode: slider
+          default: 4096
+    advanced:
+      name: advanced settings
+      icon: mdi:cog
+      description: Advanced Settings
+      collapsed: true
+      input:
+        extra_prompt:
+          name: Extra LLM instructions (optional)
+          default: ''
+          description: Optional text appended to the end of the prompt.
+          selector:
+            text:
+              multiline: true
+              multiple: false
+        output_mode:
+          name: Output mode
+          description: "• **summary** → run the LLM and show its summary  \n• **raw**
+            \    → skip the LLM call and show the activity list verbatim\n"
+          selector:
+            select:
+              options:
+              - label: Summary (LLM)
+                value: summary
+              - label: Raw activity list
+                value: raw
+              custom_value: false
+              sort: false
+              multiple: false
+          default: summary
+        conversation_id:
+          name: Conversation ID
+          description: The Conversation ID for the LLM chat and the notificatins
+          selector:
+            text:
+              multiple: false
+              multiline: false
+          default: HeartBeat
+        skip_if_empty:
+          name: Skip notification
+          description: "• ON  → the blueprint is completely silent if the look-back
+            window\n  contains no changes.  \n• OFF → you still get a “Nothing to
+            report” message.\n"
+          selector:
+            boolean: {}
+          default: false
+    filters:
+      name: Filters
+      icon: mdi:filter
+      description: Filters to decrease prompt size
+      collapsed: true
+      input:
+        reject_domains:
+          name: Domains to ignore
+          description: 'YAML list of Home-Assistant domains that should be ignored
+            when building the change log.  Leave the defaults unless you need extra
+            domains filtered out (e.g. `binary_sensor`, `weather`, …).
+
+            '
+          default:
+          - sensor
+          - automation
+          - script
+          - camera
+          selector:
+            object: {}
+        bad_states:
+          name: States to ignore
+          description: 'YAML list of state strings that should be skipped (e.g. unavailable
+            / unknown).  Add more if you have custom sentinel values.
+
+            '
+          default:
+          - unavailable
+          - unknown
+          - ''
+          selector:
+            object: {}
+        exclude_areas:
+          name: Areas to exclude
+          description: 'YAML list of Areas that should never appear in the activity
+            list.
+
+            '
+          selector:
+            area:
+              multiple: true
+          default: []
+        exclude_entities:
+          name: Entities to ignore
+          description: 'YAML list of entity-IDs that should never appear in the activity
+            list.
+
+            Example: `[''switch.fishtank'', ''light.back_yard_string'']`
+
+            '
+          selector:
+            entity:
+              multiple: true
+          default: []
+trigger:
+- trigger: template
+  id: periodic_interval
+  value_template: '{% set interval = input(''run_every'') %} {{ (as_timestamp(now())
+    // 60) % interval == 0 }}'
+  for:
+    seconds: 1
+action:
+- alias: Prepare prompt data
+  variables:
+    agent_id: !input llm_agent
+    extra_prompt_txt: !input extra_prompt
+    lookback_hours: !input lookback_hours
+    reject_domains: !input reject_domains
+    bad_states: !input bad_states
+    max_len: !input max_prompt_len
+    output_mode: !input output_mode
+    excluded_areas: !input exclude_areas
+    message_id: !input conversation_id
+    skip_if_empty: !input skip_if_empty
+    excluded_entities: !input exclude_entities
+    updates: '{{ states.update | selectattr(''state'',''eq'',''on'') | map(attribute=''name'')
+      | list }}'
+    body_info: "{%- set cutoff = now() - timedelta(hours = lookback_hours|int) -%}
+      {%- set data = namespace(lines=[], earliest=now()) -%} {%- for s in states if
+      \ \n        s.last_changed > cutoff and \n        s.domain not in reject_domains
+      and \n        s.state  not in bad_states and\n        s.entity_id not in excluded_entities
+      -%}\n  {%- set a_id   = area_id(s.entity_id) -%}\n  {%- set area = area_name(a_id)
+      or '' -%}\n  {%- if a_id and area and (a_id not in excluded_areas) and (area
+      not in excluded_areas) -%}\n    {%- set data.lines = data.lines + ['%s;%s;%s;%s;%s'
+      % (s.domain,area,s.name or s.entity_id,s.state,s.last_changed.strftime('%m-%d
+      %H:%M'))] -%}\n    {%- if s.last_changed < data.earliest -%}{%- set data.earliest
+      = s.last_changed -%}{%- endif -%}\n  {%- endif -%}\n{%- endfor -%} {{ {'earliest':
+      data.earliest.isoformat(), 'body': data.lines|join('\\n')} }}"
+    body_final: '{{ body_info.body }} {% if updates != [] %}Updates needed: {{ updates
+      }}{% endif %}'
+    start_time: '{{(body_info.earliest | as_datetime | as_local).strftime(''%d %b
+      %Y %H:%M'') }}'
+    hours: '{{ ((now() - body_info.earliest | as_datetime).total_seconds() // 3600)
+      | int }}'
+    header: '#SHR{{ hours }}h {{ start_time }}→{{ now().strftime(''%d %b %Y %H:%M'')
+      }}'
+    rules: '###RULES
+
+      1 Summary≤2 s
+
+      2 Alerts⚠ and updates if exist
+
+      3 Plain MD'
+    footer: This data conveys a periodic pulse of “what’s up right now” in Home assistant.
+      Consider the information, then  reply which will be displayed as a persistaint
+      notification. {{ extra_prompt_txt }}
+    prompt_text: '{{ header }} {{ body_final }} {{ rules }} {{ footer }}'
+    no_body: '{{ body_final | length == 0 }}'
+    big_body: '{{ prompt_text | length > max_len }}'
+    raw: '{{ output_mode == ''raw'' }}'
+- alias: Check if empty, too large, no changes
+  choose:
+  - conditions: '{{ no_body }}'
+    sequence:
+    - choose:
+      - conditions: '{{ skip_if_empty }}'
+        sequence: []
+      default:
+      - variables:
+          report_text: Nothing to report in the last {{ hours }} h.
+  - conditions: '{{ raw }}'
+    sequence:
+    - variables:
+        report_text: '#SHR{{ hours }}h  Length: {{ body_final | length }} {{ start_time
+          }}→{{ now().strftime(''%d %b %Y %H:%M'') }} {{ body_final }}
+
+          '
+  - conditions: '{{ big_body }}'
+    sequence:
+    - variables:
+        report_text: 'Prompt would exceed the maximum length ({{ prompt_text | length
+          }} > {{ max_len }} chars). Increase *Max prompt length* or filter.
+
+          '
+  default:
+  - action: conversation.process
+    data:
+      agent_id: '{{ agent_id }}'
+      conversation_id: '{{ message_id }}'
+      text: '{{ prompt_text }}'
+    response_variable: llm_final
+  - alias: Prepare report text
+    variables:
+      report_text: "{% if llm_final.response is defined %}\n  {{ llm_final.response.speech.plain.speech
+        }}\n{% elif llm_final.text is defined %}\n  {{ llm_final.text }}\n{% else
+        %}\n  {{ llm_final }}\n{% endif %}\n"
+- alias: Send Notification
+  choose:
+  - conditions: '{{ report_text != '''' }}'
+    sequence:
+    - action: persistent_notification.create
+      data:
+        title: Smart-Home Report ({{hours}}h)
+        message: '{{ report_text }}'
+        notification_id: '{{ message_id }}'

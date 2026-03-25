@@ -1,0 +1,122 @@
+# | START: claude_bridge.yaml
+# |  PATH: /config/packages/ai/claude_bridge.yaml
+
+
+#  ╔═════════════════════════════════════════════════════════════════════════╗
+#  ║     CLAUDE BRIDGE                                                       ║
+#  ╚═════════════════════════════════════════════════════════════════════════╝
+
+#  Bidirectional text channel between Claude (via MCP conversation intents)
+#  and Home Assistant automations/scripts.
+#
+#  Write path (Claude → HA):
+#    Claude adds items to todo.claude_bridge via HassListAddItem intent.
+#    Relay automation picks up new items, timestamps them, and copies to
+#    input_text.claude_bridge_payload for downstream automations/scripts.
+#    Todo item is cleared after relay. ~6K per item via intent layer.
+#    Usable payload in input_text: ~244 chars (255 minus timestamp prefix).
+#
+#  Read path (HA → Claude):
+#    Scripts/automations write to todo.claude_bridge_response using
+#    todo.add_item with summary (label) and description (full payload).
+#    Claude reads via todo_get_items. No practical size limit on description.
+#    See also: transcript_pipeline.yaml which auto-writes Plaud transcripts
+#    to this response channel.
+#
+#  Todo lists (created via UI, not defined here):
+#    todo.claude_bridge           — write channel, Claude → HA
+#    todo.claude_bridge_response  — read channel, HA → Claude
+#
+#  Payloads in input_text are prefixed with a unix timestamp to guarantee
+#  state change even when the same command is sent consecutively.
+
+
+# ── HELPERS ─────────────────────────────────────────────────────────────────
+
+input_text:
+  claude_bridge_payload:
+    name: Claude Bridge Payload
+    max: 255
+
+input_datetime:
+  claude_bridge_last_received:
+    name: Claude Bridge Last Received
+    has_date: true
+    has_time: true
+
+
+# ── AUTOMATION ──────────────────────────────────────────────────────────────
+
+automation:
+  - id: claude_bridge_relay
+    alias: "Claude Bridge - Relay Payload"
+    trigger:
+      - platform: state
+        entity_id: todo.claude_bridge
+    condition:
+      - condition: template
+        value_template: "{{ states('todo.claude_bridge') | int(0) > 0 }}"
+    action:
+      # Fetch the most recent item from the bridge list
+      - service: todo.get_items
+        target:
+          entity_id: todo.claude_bridge
+        data:
+          status: needs_action
+        response_variable: items
+      - variables:
+          raw: "{{ items['todo.claude_bridge']['items'][-1]['summary'] | trim }}"
+
+      # Prefix with unix timestamp to guarantee state change on repeat payloads
+      # Truncate to 255 to prevent overflow from long payloads
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.claude_bridge_payload
+        data:
+          value: >-
+            {{ (now().timestamp() | int | string ~ '|' ~ raw)[:255] }}
+
+      # Record when the payload arrived
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.claude_bridge_last_received
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+      # Clear the todo item to prevent buildup
+      - service: todo.remove_item
+        target:
+          entity_id: todo.claude_bridge
+        data:
+          item: "{{ raw }}"
+        continue_on_error: true
+
+
+
+  - id: claude_bridge_chat_bridge_test
+    alias: "Claude Bridge - Chat Bridge Test"
+    trigger:
+      - trigger: webhook
+        webhook_id: claude-chat-bridge-test
+        allowed_methods:
+          - POST
+        local_only: false
+    action:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.claude_bridge_payload
+        data:
+          value: "{{ trigger.json.message }}"
+
+
+      - action: todo.add_item
+        target:
+          entity_id: todo.c
+        data:
+          item: "{{ trigger.json.message }}"
+
+
+
+
+
+# | END: claude_bridge.yaml

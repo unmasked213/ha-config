@@ -1,0 +1,25 @@
+# | START: frontend_theme_management.yaml
+# | PATH: /config/packages/server/frontend/frontend_theme_management.yaml
+
+
+
+# ╭────────────────────╮
+# │   AUTOMATION
+# ╰────────────────────╯
+automation:
+
+# ➔ Sets the default theme when the server starts
+  - id: set_default_theme_on_server_boot
+    alias: "Frontend • Set default theme on server boot"
+    mode: single
+    triggers:
+      - trigger: homeassistant
+        event: start
+    actions:
+      - action: frontend.set_theme
+        data:
+          name: Material You
+          mode: dark
+
+
+# | END: frontend_theme_management.yaml

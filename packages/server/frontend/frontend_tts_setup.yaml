@@ -1,0 +1,131 @@
+# frontend_tts_setup.yaml
+#
+# Helpers
+input_text:
+  tts_message:
+    name: "TTS Message"
+    max: 255
+    initial: ""
+
+input_select:
+  tts_model:
+    icon: mdi:robot-happy
+    name: "TTS Model"
+    options:
+      - Alexa
+      - Nabu
+
+input_boolean:
+  alexa_whispermode:
+    name: "Alexa Whisper Mode"
+
+# # Script
+# script:
+#   send_tts_message:
+#     alias: "TTS: Send message"
+#     description: >
+#       Deliver a trimmed TTS message through either Alexa or Nabu.
+#       Rejects empty or over‑long input.  Shows a toast and
+#       persistent notification on validation errors.  When Alexa is
+#       selected it adds a short chime and optionally wraps the text
+#       in a whisper effect.  When Nabu is selected it speaks via
+#       the GPT‑4o Mini TTS provider.  Resets the input helper after
+#       sending.  Ignores concurrent calls silently.
+#     mode: single
+#     max: 5
+#     max_exceeded: silent
+#     fields:
+#       model:
+#         description: "Model name as selected in input_select.tts_model"
+#         example: "Alexa"
+#       message:
+#         description: "Raw message typed by the user"
+#         example: "Hello world"
+#     sequence:
+#       - variables:
+#           trimmed: "{{ (message | string | trim) }}"
+#           too_long: "{{ trimmed | length > 255 }}"
+#           empty: "{{ trimmed == '' }}"
+#       - choose:
+#           - conditions:
+#               - "{{ empty or too_long }}"
+#             sequence:
+#               - service: persistent_notification.create
+#                 data:
+#                   title: "TTS Message Error"
+#                   message: >-
+#                     {% if empty %}
+#                       No message was sent because the input was empty. Please type a message before sending.
+#                     {% else %}
+#                       Your message is too long. Please shorten it to 255 characters or fewer.
+#                     {% endif %}
+#                   notification_id: "tts_message_error"
+#               - choose:
+#                   - conditions:
+#                       - "{{ service_available('browser_mod.toast') }}"
+#                     sequence:
+#                       - service: browser_mod.toast
+#                         data:
+#                           message: >-
+#                             {% if empty %}
+#                               No message sent – please type something.
+#                             {% else %}
+#                               Message too long – shorten it.
+#                             {% endif %}
+#                           duration: 3000
+#                 default: []
+#         default:
+#           - choose:
+#               - conditions:
+#                   - "{{ model == 'Alexa' }}"
+#                 sequence:
+#                   - variables:
+#                       chime: "soundbank://soundlibrary/ui/gameshow/amzn_ui_sfx_gameshow_positive_response_02"
+#                   - choose:
+#                       - conditions:
+#                           - condition: state
+#                             entity_id: input_boolean.alexa_whispermode
+#                             state: "on"
+#                         sequence:
+#                           - service: notify.alexa_media_echo_show_15
+#                             data:
+#                               message: |
+#                                 <speak>
+#                                   <audio src="{{ chime }}"/>
+#                                   <amazon:effect name="whispered">{{ trimmed }}</amazon:effect>
+#                                 </speak>
+#                               data:
+#                                 type: tts
+#                     default:
+#                       - service: notify.alexa_media_echo_show_15
+#                         data:
+#                           message: |
+#                             <speak>
+#                               <audio src="{{ chime }}"/>
+#                               {{ trimmed }}
+#                             </speak>
+#                           data:
+#                             type: tts
+#               - conditions:
+#                   - "{{ model == 'Nabu' }}"
+#                 sequence:
+#                   - choose:
+#                       - conditions:
+#                           - "{{ states('media_player.sonos_speaker') not in ['idle', 'paused', 'off', 'standby', 'unavailable'] }}"
+#                         sequence:
+#                           - service: media_player.media_stop
+#                             target:
+#                               entity_id: media_player.sonos_speaker
+#                     default: []
+#                   - service: tts.speak
+#                     target:
+#                       entity_id: tts.openai_gpt_4o_mini_tts
+#                     data:
+#                       message: "{{ trimmed }}"
+#                       cache: false
+#                       media_player_entity_id: media_player.sonos_speaker
+#           - service: input_text.set_value
+#             target:
+#               entity_id: input_text.tts_message
+#             data:
+#               value: ""

@@ -1,0 +1,202 @@
+
+# | START: pc.yaml
+# |  PATH: /config/packages/device/pc.yaml
+
+
+#  ╭────────────────────╮
+#  │   INPUT BOOLEAN
+#  ╰────────────────────╯
+input_boolean:
+
+# ➔ C PC Display Notifications
+#   Toggle to display notifications from HASS.agent
+  c_pc_display_notifications:
+    initial: on
+
+
+
+#  ╭────────────────────╮
+#  │   INPUT TEXT
+#  ╰────────────────────╯
+input_text:
+
+# ➔ C PC's IP address
+#   IP address of C PC
+  pc_ip_address:
+    name: PC IP Address
+    initial: !secret c_pc_ip_address
+
+
+
+#  ╭────────────────────╮
+#  │   REST COMMAND
+#  ╰────────────────────╯
+rest_command:
+
+  # ➔ Send HASS Agent Notification
+  #   Send a notification to C PC using HASS.agent's local API  
+  send_hass_agent_notification:
+    url: "http://{{ states('input_text.pc_ip_address') }}:5115/notify"
+    method: POST
+    headers:
+      Content-Type: application/json
+    payload: '{"title": "{{ title }}", "message": "{{ message }}"}'
+
+
+
+
+
+
+#  ╭──────────────────────────────╮
+#  │   TEMPLATE
+#  ╰──────────────────────────────╯
+
+# ➔ C PC Session State (Windows + HASS.Agent)
+#   Exposes a single reliable tri-state sensor: off | locked | unlocked
+#
+#   Strategy:
+#   1) Build a heartbeat (binary_sensor.c_pc_online_hass_agent) from the "last_updated"
+#      timestamps of multiple HASS.Agent sensors. If nothing reports within GRACE,
+#      we assume the PC is off (or unreachable).
+#   2) Build a tri-state sensor (sensor.c_pc_session) using explicit SessionLock events
+#      and the active window title as a fallback. Never returns unknown/unavailable.
+#
+#   ── USER SETTINGS ──
+#   Update the three entity IDs below if yours differ. Keep them lowercase.
+#   Tune GRACE if your Agent reports less or more frequently.
+#   Add/adjust LOCK_TITLES if your lock screen strings differ (e.g., language/branding).
+#   Optionally add titles to UNLOCK_WHITELIST to override false positives that contain
+#   the word "lock" but are not the Windows lock screen (see commented examples).
+
+template:
+  - binary_sensor:
+      - name: c_pc_online_hass_agent
+        unique_id: c_pc_online_hass_agent_v1
+        device_class: connectivity
+        # Heartbeat: if NONE of the tracked sensors reported within GRACE seconds => offline
+        state: >
+          {% set GRACE = 150 %}
+          {% set ids = [
+              'sensor.a_a_lastsystemstatechange',
+              'sensor.a_a_activewindow_2',
+              'sensor.a_a_lastactive'
+            ] %}
+          {% set stamps = ids
+              | map('states.get')
+              | reject('equalto', None)
+              | map(attribute='last_updated')
+              | map('as_timestamp') | list %}
+          {% set newest = stamps | max(default=0) %}
+          {{ (as_timestamp(now()) - newest) <= GRACE }}
+        attributes:
+          newest_update_age_sec: >
+            {% set ids = [
+                'sensor.a_a_lastsystemstatechange',
+                'sensor.a_a_activewindow_2',
+                'sensor.a_a_lastactive'
+              ] %}
+            {% set stamps = ids
+                | map('states.get')
+                | reject('equalto', None)
+                | map(attribute='last_updated')
+                | map('as_timestamp') | list %}
+            {% set newest = stamps | max(default=0) %}
+            {{ (as_timestamp(now()) - newest) | round(0) }}
+          tracked_entities: >
+            {{ ['sensor.a_a_lastsystemstatechange', 'sensor.a_a_activewindow_2', 'sensor.a_a_lastactive'] }}
+
+  - trigger:
+      # Recompute promptly on any source change, at startup, and every 30s (timeout enforcement).
+      - platform: state
+        entity_id:
+          - sensor.a_a_lastsystemstatechange
+          - sensor.a_a_activewindow_2
+          - sensor.a_a_lastactive
+          - binary_sensor.c_pc_online_hass_agent
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        seconds: "/30"
+    sensor:
+      - name: c_pc_session
+        unique_id: c_pc_session_state_v1
+        icon: >
+          {% set online = is_state('binary_sensor.c_pc_online_hass_agent','on') %}
+          {% if not online %}
+            mdi:power
+          {% else %}
+            {% set session = (states('sensor.a_a_lastsystemstatechange') or '') | lower %}
+            {% set win     = (states('sensor.a_a_activewindow_2') or '') | lower %}
+            {% set LOCK_TITLES = [
+                'windows default lock screen',
+                'lock screen',
+                'lockapp',
+                'winlogon',
+                'logonui',
+                'credential ui',
+                'secure desktop'
+              ] %}
+            {% set ns = namespace(hit=false) %}
+            {% for t in LOCK_TITLES %}
+              {% if t in win %}{% set ns.hit = true %}{% endif %}
+            {% endfor %}
+            {% set is_locked = ('sessionlock' in session) or ns.hit %}
+            {{ 'mdi:lock' if is_locked else 'mdi:monitor' }}
+          {% endif %}
+        state: >
+          # Returns one of: off | locked | unlocked
+          {% set online = is_state('binary_sensor.c_pc_online_hass_agent','on') %}
+          {% if not online %}
+            off
+          {% else %}
+            {% set session = (states('sensor.a_a_lastsystemstatechange') or '') | lower %}
+            {% set win     = (states('sensor.a_a_activewindow_2') or '') | lower %}
+
+            # Treat these window-title fragments as definitive lock indicators.
+            {% set LOCK_TITLES = [
+                'windows default lock screen',
+                'lock screen',
+                'lockapp',
+                'winlogon',
+                'logonui',
+                'credential ui',
+                'secure desktop'
+              ] %}
+
+            # EXCEPTION (commented): if a window title contains "lock" but should NOT imply "locked",
+            # list it here to force "unlocked". Example entries:
+            #   'lockstep client', 'obs studio - lock preview'
+            {% set UNLOCK_WHITELIST = [  ] %}  # add lowercase strings if needed
+
+            {% set ns = namespace(locked_hit=false, unlocked_whitelist=false) %}
+            {% for t in LOCK_TITLES %}
+              {% if t in win %}{% set ns.locked_hit = true %}{% endif %}
+            {% endfor %}
+            {% for t in UNLOCK_WHITELIST %}
+              {% if t in win %}{% set ns.unlocked_whitelist = true %}{% endif %}
+            {% endfor %}
+
+            {% set is_locked =
+                 (('sessionlock' in session) or ns.locked_hit)
+                 and (not ns.unlocked_whitelist) %}
+
+            {{ 'locked' if is_locked else 'unlocked' }}
+          {% endif %}
+        attributes:
+          sources: >
+            {{ {
+                'lastsystemstatechange': states('sensor.a_a_lastsystemstatechange'),
+                'activewindow': states('sensor.a_a_activewindow_2'),
+                'heartbeat_online': states('binary_sensor.c_pc_online_hass_agent')
+              } }}
+          notes: >
+            This sensor never yields unknown/unavailable. If all sources stop updating
+            beyond the GRACE window, state becomes "off".
+
+
+# |   END: c_pc.yaml
+
+
+
+
+# |   END: pc.yaml

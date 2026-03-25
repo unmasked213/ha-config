@@ -1,0 +1,136 @@
+# | START: phone_control.yaml
+# |  PATH: /config/packages/device/phone_control.yaml
+
+
+
+
+script:
+
+  # ── FIND MY PHONE ─────────────────────────────────────────────────────────
+  phone_c_find:
+    alias: Find My Phone
+    sequence:
+      - action: notify.mobile_app_phone_c
+        data:
+          message: Finding phone
+          data:
+            channel: alarm_stream_max
+            ttl: 0
+            priority: high
+      - delay:
+          seconds: 2
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_ringer_mode
+          data:
+            command: normal
+      - delay:
+          seconds: 2
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_volume_level
+          data:
+            media_stream: ring_stream
+            command: 100
+      - delay:
+          seconds: 2
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_volume_level
+          data:
+            media_stream: notification_stream
+            command: 100
+      - delay:
+          seconds: 2
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_flashlight
+          data:
+            command: turn_on
+      - delay:
+          seconds: 2
+      - action: notify.mobile_app_phone_c
+        data:
+          message: TTS
+          data:
+            tts_text: >-
+              <speak><prosody volume="x-loud">Oi! <break time="300ms"/> Yeah you!
+              <break time="500ms"/> Looking for something? <break time="500ms"/> I'm
+              over here! <break time="300ms"/> Hello! <break time="500ms"/> Found me
+              yet? <break time="500ms"/> Keep looking! <break time="300ms"/> Getting
+              warmer!</prosody></speak>
+            media_stream: notification
+    mode: single
+
+
+
+
+  # ── RINGER MODES ──────────────────────────────────────────────────────────
+  phone_c_ringer_normal:
+    alias: Phone Ringer Normal
+    sequence:
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_ringer_mode
+          data:
+            command: normal
+    mode: single
+
+  phone_c_ringer_vibrate:
+    alias: Phone Ringer Vibrate
+    sequence:
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_ringer_mode
+          data:
+            command: vibrate
+    mode: single
+
+  phone_c_ringer_silent:
+    alias: Phone Ringer Silent
+    sequence:
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_ringer_mode
+          data:
+            command: silent
+    mode: single
+
+
+
+
+  # ── FLASHLIGHT TOGGLE ─────────────────────────────────────────────────────
+  phone_c_flashlight_toggle:
+    alias: Phone Flashlight Toggle
+    sequence:
+      - action: notify.mobile_app_phone_c
+        data:
+          message: command_flashlight
+          data:
+            command: "{{ 'turn_off' if is_state('binary_sensor.phone_c_flashlight', 'on') else 'turn_on' }}"
+    mode: single
+
+
+
+
+template:
+  - binary_sensor:
+
+      # ── PHONE C FLASHLIGHT STATUS ─────────────────────────────────────────
+      - name: "Phone C Flashlight"
+        unique_id: phone_c_flashlight
+        icon: "{{ 'mdi:flashlight' if this.state == 'on' else 'mdi:flashlight-off' }}"
+        state: >
+          {% set attrs = states.sensor.phone_c_active_notification_count.attributes %}
+          {% set ns = namespace(found=false) %}
+          {% for key, value in attrs.items() %}
+            {% if 'com.android.systemui' in key and value == 'Torch turned on' %}
+              {% set ns.found = true %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.found }}
+
+
+
+
+# |   END: phone_control.yaml

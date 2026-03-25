@@ -1,0 +1,337 @@
+
+# | START: presence_desks.yaml
+# | PATH: /config/packages/occupancy/presence_desks.yaml
+
+
+# ================================
+# Desk Presence – Analysis Package (with source aliases)
+# Aliases:
+#   - binary_sensor.desk_bedroom_presence  -> mirrors FP2 Enhy desk
+#   - binary_sensor.desk_office_presence   -> mirrors FP2 office desk
+#
+# Update just the two FP2 IDs below if they ever change.
+# ================================
+
+template:
+  - binary_sensor:
+      # ---------- SOURCE ALIASES ----------
+      # These mirror the physical sensors. Edit the FP2 IDs here if needed.
+      - name: Desk Bedroom Presence
+        unique_id: alias_desk_bedroom_presence
+        state: "{{ is_state('binary_sensor.presence_sensor_fp2_07a0_presence_sensor_3','on') }}"
+        availability: "{{ states('binary_sensor.presence_sensor_fp2_07a0_presence_sensor_3') not in ['unknown','unavailable',''] }}"
+        device_class: occupancy
+
+      - name: Desk Office Presence
+        unique_id: alias_desk_office_presence
+        state: "{{ is_state('binary_sensor.presence_sensor_fp2_1780_presence_sensor_2','on') }}"
+        availability: "{{ states('binary_sensor.presence_sensor_fp2_1780_presence_sensor_2') not in ['unknown','unavailable',''] }}"
+        device_class: occupancy
+
+      # ---------- NIGHT WINDOW FLAGS (23:00–07:00 local) ----------
+      - name: Bedroom Night Window
+        unique_id: bedroom_night_window
+        state: >
+          {% set h = now().hour %}
+          {{ (h >= 23) or (h < 7) }}
+        availability: "{{ True }}"
+        device_class: running
+
+      - name: Office Night Window
+        unique_id: office_night_window
+        state: >
+          {% set h = now().hour %}
+          {{ (h >= 23) or (h < 7) }}
+        availability: "{{ True }}"
+        device_class: running
+
+      # ---------- PRESENCE DURING NIGHT WINDOW ----------
+      - name: Bedroom Presence At Night
+        unique_id: bedroom_presence_at_night
+        state: >
+          {{ is_state('binary_sensor.desk_bedroom_presence','on')
+             and is_state('binary_sensor.bedroom_night_window','on') }}
+        availability: >
+          {{ states('binary_sensor.desk_bedroom_presence') not in ['unknown','unavailable',''] and
+             states('binary_sensor.bedroom_night_window') not in ['unknown','unavailable',''] }}
+        device_class: occupancy
+
+      - name: Office Presence At Night
+        unique_id: office_presence_at_night
+        state: >
+          {{ is_state('binary_sensor.desk_office_presence','on')
+             and is_state('binary_sensor.office_night_window','on') }}
+        availability: >
+          {{ states('binary_sensor.desk_office_presence') not in ['unknown','unavailable',''] and
+             states('binary_sensor.office_night_window') not in ['unknown','unavailable',''] }}
+        device_class: occupancy
+
+      # ---------- LONG SESSION DETECTORS (≥90 MIN CONTINUOUS) ----------
+      - name: Bedroom Long Session ≥90m
+        unique_id: bedroom_long_session_90m
+        state: "{{ is_state('binary_sensor.desk_bedroom_presence','on') }}"
+        availability: "{{ states('binary_sensor.desk_bedroom_presence') not in ['unknown','unavailable',''] }}"
+        delay_on:
+          minutes: 90
+
+      - name: Office Long Session ≥90m
+        unique_id: office_long_session_90m
+        state: "{{ is_state('binary_sensor.desk_office_presence','on') }}"
+        availability: "{{ states('binary_sensor.desk_office_presence') not in ['unknown','unavailable',''] }}"
+        delay_on:
+          minutes: 90
+
+  # ---------- OPTIONAL: AVERAGE DAILY HOURS (derived) ----------
+  - sensor:
+      - name: Bedroom Avg Daily Hours (7d)
+        unique_id: bedroom_avg_daily_hours_7d
+        unit_of_measurement: "h/d"
+        state: >
+          {% set t = states('sensor.bedroom_desk_hours_7d')|float(0) %}
+          {{ (t / 7) | round(2) }}
+        availability: "{{ states('sensor.bedroom_desk_hours_7d') not in ['unknown','unavailable',''] }}"
+
+      - name: Bedroom Avg Daily Hours (30d)
+        unique_id: bedroom_avg_daily_hours_30d
+        unit_of_measurement: "h/d"
+        state: >
+          {% set t = states('sensor.bedroom_desk_hours_30d')|float(0) %}
+          {{ (t / 30) | round(2) }}
+        availability: "{{ states('sensor.bedroom_desk_hours_30d') not in ['unknown','unavailable',''] }}"
+
+      - name: Bedroom Avg Daily Hours (90d)
+        unique_id: bedroom_avg_daily_hours_90d
+        unit_of_measurement: "h/d"
+        state: >
+          {% set t = states('sensor.bedroom_desk_hours_90d')|float(0) %}
+          {{ (t / 90) | round(2) }}
+        availability: "{{ states('sensor.bedroom_desk_hours_90d') not in ['unknown','unavailable',''] }}"
+
+      - name: Office Avg Daily Hours (7d)
+        unique_id: office_avg_daily_hours_7d
+        unit_of_measurement: "h/d"
+        state: >
+          {% set t = states('sensor.office_desk_hours_7d')|float(0) %}
+          {{ (t / 7) | round(2) }}
+        availability: "{{ states('sensor.office_desk_hours_7d') not in ['unknown','unavailable',''] }}"
+
+      - name: Office Avg Daily Hours (30d)
+        unique_id: office_avg_daily_hours_30d
+        unit_of_measurement: "h/d"
+        state: >
+          {% set t = states('sensor.office_desk_hours_30d')|float(0) %}
+          {{ (t / 30) | round(2) }}
+        availability: "{{ states('sensor.office_desk_hours_30d') not in ['unknown','unavailable',''] }}"
+
+      - name: Office Avg Daily Hours (90d)
+        unique_id: office_avg_daily_hours_90d
+        unit_of_measurement: "h/d"
+        state: >
+          {% set t = states('sensor.office_desk_hours_90d')|float(0) %}
+          {{ (t / 90) | round(2) }}
+        availability: "{{ states('sensor.office_desk_hours_90d') not in ['unknown','unavailable',''] }}"
+
+# ---------- HISTORY STATS (HOURS / SESSIONS / NIGHT HOURS / LONG SESSIONS) ----------
+sensor:
+  # ===== TODAY =====
+  - platform: history_stats
+    name: Bedroom Desk Hours Today
+    entity_id: binary_sensor.desk_bedroom_presence
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Bedroom Desk Sessions Today
+    entity_id: binary_sensor.desk_bedroom_presence
+    state: "on"
+    type: count
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Desk Hours Today
+    entity_id: binary_sensor.desk_office_presence
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Desk Sessions Today
+    entity_id: binary_sensor.desk_office_presence
+    state: "on"
+    type: count
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  # ===== LAST NIGHT (23:00–07:00) =====
+  - platform: history_stats
+    name: Bedroom Night Hours (Last Night)
+    entity_id: binary_sensor.bedroom_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ today_at('23:00') - timedelta(days=1) }}"
+    end: "{{ today_at('07:00') }}"
+
+  - platform: history_stats
+    name: Office Night Hours (Last Night)
+    entity_id: binary_sensor.office_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ today_at('23:00') - timedelta(days=1) }}"
+    end: "{{ today_at('07:00') }}"
+
+  # ===== ROLLING WINDOWS: SHORT (7d), MED (30d), LONG (90d) =====
+  # ---- Bedroom: total hours in window ----
+  - platform: history_stats
+    name: Bedroom Desk Hours (7d)
+    entity_id: binary_sensor.desk_bedroom_presence
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Bedroom Desk Hours (30d)
+    entity_id: binary_sensor.desk_bedroom_presence
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=30) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Bedroom Desk Hours (90d)
+    entity_id: binary_sensor.desk_bedroom_presence
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=90) }}"
+    end: "{{ now() }}"
+
+  # ---- Office: total hours in window ----
+  - platform: history_stats
+    name: Office Desk Hours (7d)
+    entity_id: binary_sensor.desk_office_presence
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Desk Hours (30d)
+    entity_id: binary_sensor.desk_office_presence
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=30) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Desk Hours (90d)
+    entity_id: binary_sensor.desk_office_presence
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=90) }}"
+    end: "{{ now() }}"
+
+  # ---- Bedroom: night hours within window ----
+  - platform: history_stats
+    name: Bedroom Night Hours (7d)
+    entity_id: binary_sensor.bedroom_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Bedroom Night Hours (30d)
+    entity_id: binary_sensor.bedroom_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=30) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Bedroom Night Hours (90d)
+    entity_id: binary_sensor.bedroom_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=90) }}"
+    end: "{{ now() }}"
+
+  # ---- Office: night hours within window ----
+  - platform: history_stats
+    name: Office Night Hours (7d)
+    entity_id: binary_sensor.office_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Night Hours (30d)
+    entity_id: binary_sensor.office_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=30) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Night Hours (90d)
+    entity_id: binary_sensor.office_presence_at_night
+    state: "on"
+    type: time
+    start: "{{ now() - timedelta(days=90) }}"
+    end: "{{ now() }}"
+
+  # ---- Long-session counts (≥90m) per window ----
+  - platform: history_stats
+    name: Bedroom Long Sessions (7d, ≥90m)
+    entity_id: binary_sensor.bedroom_long_session_90m
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Bedroom Long Sessions (30d, ≥90m)
+    entity_id: binary_sensor.bedroom_long_session_90m
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(days=30) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Bedroom Long Sessions (90d, ≥90m)
+    entity_id: binary_sensor.bedroom_long_session_90m
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(days=90) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Long Sessions (7d, ≥90m)
+    entity_id: binary_sensor.office_long_session_90m
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(days=7) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Long Sessions (30d, ≥90m)
+    entity_id: binary_sensor.office_long_session_90m
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(days=30) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: Office Long Sessions (90d, ≥90m)
+    entity_id: binary_sensor.office_long_session_90m
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(days=90) }}"
+    end: "{{ now() }}"
+
+
+# | END: presence_desks.yaml

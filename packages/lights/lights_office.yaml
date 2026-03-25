@@ -1,0 +1,137 @@
+# | START: office_lighting.yaml
+# |  PATH: /config/packages/lighting/office_lighting.yaml
+
+
+
+
+#  ╔═══════════════════════════════════════════════════════════════════════════╗
+#  ║     OFFICE LIGHTING AUTOMATIONS                                           ║
+#  ╚═══════════════════════════════════════════════════════════════════════════╝
+
+#  • Controls light.bedroom (intentional naming mismatch - this IS the office)
+#  • Presence-based on/off with lux-aware entry lighting
+#  • External control buffer prevents automation interference for 30 seconds
+
+
+
+
+#────────────────────────────────╮
+input_boolean:
+#────────────────────────────────╯
+
+  # ── INTERNAL CONTROL FLAG ───────────────────────────────────────────────────
+  #  • Set momentarily when automations in this file control the light.
+  #  • Allows detection of external (non-automation) light control.
+
+  office_lights_internal_control:
+    name: "Office Lights Internal Control Flag"
+
+
+
+
+#────────────────────────────────╮
+timer:
+#────────────────────────────────╯
+
+  # ── EXTERNAL CONTROL BUFFER ─────────────────────────────────────────────────
+  #  • Starts when light is turned on externally (without internal flag).
+  #  • While active, all automations in this file leave the light alone.
+
+  office_lights_external_control:
+    name: "Office Lights External Control Buffer"
+    duration: "00:00:30"
+
+
+
+
+#────────────────────────────────╮
+automation:
+#────────────────────────────────╯
+
+  # ── EXTERNAL CONTROL DETECTED ───────────────────────────────────────────────
+  #  • Triggers when light turns on without the internal control flag set.
+  #  • Starts 30 second buffer to prevent automation interference.
+
+  - id: office_lights_external_control_detected
+    alias: "Office - External Control Detected"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: light.bedroom
+        to: "on"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.office_lights_internal_control
+        state: "off"
+    actions:
+      - action: timer.start
+        target:
+          entity_id: timer.office_lights_external_control
+
+
+
+
+  # ── LIGHTS OFF (NO PRESENCE) ────────────────────────────────────────────────
+  #  • Turns off office lights after 10 minutes of no presence.
+  #  • Blocked during external control buffer period.
+
+  - id: office_lights_off_no_presence
+    alias: "Office - Lights Off (No Presence)"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.presence_office
+        to: "off"
+        for:
+          minutes: 10
+    conditions:
+      - condition: state
+        entity_id: timer.office_lights_external_control
+        state: "idle"
+    actions:
+      - action: light.turn_off
+        target:
+          entity_id: light.bedroom
+
+
+
+
+  # ── LIGHTS ON (DOOR OPEN, LOW LUX) ──────────────────────────────────────────
+  #  • Turns on office lights when door opens and lux ≤ 10.
+  #  • Uses below: 11 because numeric_state's below is exclusive.
+  #  • Blocked during external control buffer period.
+  #  • Sets internal control flag to prevent false external detection.
+
+  - id: office_lights_on_door_low_lux
+    alias: "Office - Lights On (Door Open, Low Lux)"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.door_office
+        to: "on"
+    conditions:
+      - condition: numeric_state
+        entity_id: binary_sensor.presence_office
+        attribute: lux
+        below: 11
+      - condition: state
+        entity_id: timer.office_lights_external_control
+        state: "idle"
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.office_lights_internal_control
+      - action: light.turn_on
+        target:
+          entity_id: light.bedroom
+        data:
+          brightness_pct: 100
+          transition: 0
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.office_lights_internal_control
+
+
+
+
+# | END: office_lighting.yaml

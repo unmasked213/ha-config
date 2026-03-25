@@ -1,0 +1,69 @@
+# | START: test_theme.yaml
+# |  PATH: /config/themes/test_theme.yaml
+
+Test-Theme:
+
+
+
+  card-mod-theme: 'Test-Theme'
+
+  card-mod-root-yaml: |
+    .:                                                                                  /* Target the root element */
+      * {                                                                               /* For every single thing you can see */
+        font-family: Poppins, Raleway, SF Pro Text, sans-serif, system-ui !important;   /* set the font family */
+      }
+
+
+
+  card-mod-sidebar-yaml: |
+    .menu .title {                                                                      /* Target the title at the top of the side bar */
+      font-weight: 600;                                                                 /* make the font bold */
+    }
+
+    :host([expanded]) paper-icon-item {                                                 /* When the side bar is stretched wide */
+      width: 100%;                                                                      /* let each menu button fill the whole width */
+    }
+
+    .iron-selected paper-icon-item {                                                    /* For the menu button that's been clicked */
+      border-left: 3px solid var(--accent-color) !important;                            /* draw a 3 px coloured strip on its left */
+      border-radius: var(--ha-card-border-radius) !important;                           /* round its corners the same way as cards */
+      padding-left: 9px !important;                                                     /* nudge its content right so the coloured strip aligns */
+    }
+
+    .profile.iron-selected paper-icon-item {                                            /* If the profile button gets clicked */
+      padding-left: 1px !important;                                                     /* nudge it only 1 px (tiny strip, tiny nudge) */
+    }
+
+    paper-icon-item span {                                                              /* Inside every menu button, for the text part */
+      font-weight: normal !important;                                                   /* dont bold the text */
+    }
+
+
+
+  card-mod-more-info-yaml: |
+    :host([card]) .content .container {                                                 /* Inside pop-up info cards */
+      padding: 0px !important;                                                          /* remove padding so the content touches the edges */
+    }
+
+    ha-dialog {                                                                         /* Target the pop-up window itself (every 'dialog') */
+      --vertical-align-dialog: var(--tablet-popup-align-dialog) !important;             /* Line it up vertically the same way tablets do */
+      --dialog-surface-margin-top: var(--tablet-popup-margin-top) !important;           /* Give it the same top gap tablets expect */
+      --dialog-box-shadow: 0 0px 16px 4px rgba(101,115,134,.15), 0 16px 64px 32px rgba(101,115,134,.5) !important;  /* Add shadow */
+      --mdc-theme-surface: transparent !important;                                      /* Make its base transparent */
+      --bar-card-border-radius: 12px !important;                                        /* Any bar-cards inside get 12 px rounded corners */
+      --ha-card-border-radius: 0px !important;                                          /* remove curved corners for Native Home Assistant cards */
+      --ha-card-background: none !important;                                            /* Strip the white background so custom styles show */
+      --button-card-border-radius: 10%;                                                 /* Buttons inside become slightly rounded (10 % curve) */
+    }
+
+    ha-dialog *:focus-visible {                                                         /* When an item in the pop-up gains keyboard focus */
+      outline: none !important;                                                         /* don't draw blue outline ring */
+    }
+
+    @media (max-width: 800px), (max-height: 500px) {                                    /* If the screen is small (phone-sized) */
+      ha-dialog {                                                                       /* Target the pop-up window */
+        --mdc-dialog-min-width: 100vw !important;                                       /* Make it stretch the full screen width */
+        --mdc-dialog-min-height: 100vh !important;                                      /* Make it stretch the full screen height */
+        --popup-border-radius: 0 !important;                                            /* Flatten corners to mimic full-screen page */
+      }
+    }

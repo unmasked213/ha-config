@@ -1,0 +1,84 @@
+# | START: mobile_device.yaml
+# |  PATH: /config/packages/device/mobile_device.yaml
+
+
+#  ╭────────────────────╮
+#  │   INPUT NUMBER
+#  ╰────────────────────╯
+input_number:
+
+# ➔ C phone volumes
+  phone_c_volume_ringer:
+    name: C Phone Ringer Volume
+    min: 0
+    max: 100
+    step: 1
+  phone_c_volume_media:
+    name: C Phone Media Volume
+    min: 0
+    max: 100
+    step: 1
+  phone_c_volume_notification:
+    name: C Phone Notification Volume
+    min: 0
+    max: 100
+    step: 1
+  phone_c_volume_system:
+    name: C Phone System Volume
+    min: 0
+    max: 100
+    step: 1
+
+
+# ➔ E phone volumes
+  phone_e_volume_ringer:
+    name: E Phone Ringer Volume
+    min: 0
+    max: 100
+    step: 1
+  phone_e_volume_media:
+    name: E Phone Media Volume
+    min: 0
+    max: 100
+    step: 1
+  phone_e_volume_notification:
+    name: E Phone Notification Volume
+    min: 0
+    max: 100
+    step: 1
+  phone_e_volume_system:
+    name: E Phone System Volume
+    min: 0
+    max: 100
+    step: 1
+
+
+
+
+
+#  ╭────────────────────╮
+#  │   INPUT BOOLEAN
+#  ╰────────────────────╯
+input_boolean:
+
+# ➔ C device display notifications
+  c_phone_display_notifications:
+    name: "C Phone Display Notifications"
+  c_tablet_display_notifications:
+    name: "C Tablet Display Notifications"
+
+# ➔ E device display notifications
+  e_phone_display_notifications:
+    name: "E Phone Display Notifications"
+  e_tablet_display_notifications:
+    name: "E Tablet Display Notifications"
+
+# ➔ Location update trigger
+  location_update_trigger:
+    name: "Request Location Update"
+    initial: "off"
+    icon: "mdi:map-marker-alert"
+
+
+
+# |   END: mobile_device.yaml

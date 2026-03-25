@@ -1,0 +1,125 @@
+# | START: driveway_detection.yaml
+# |  PATH: /config/packages/device/driveway_detection.yaml
+
+
+# ╭────────────────────────────────────────────────────────────────────────────╮
+# │   DRIVEWAY CAR DETECTION                                                    │
+# │   Detects dad's white car using image analysis on C10 camera                │
+# │   Primary: max_delta (contrast) + white% (car roof)                         │
+# │   Fallback: OpenAI Vision API for uncertain cases                           │
+# ╰────────────────────────────────────────────────────────────────────────────╯
+
+# Detection logic lives in pyscript/dad_car_detection.py
+
+
+# ╭────────────────────╮
+# │   INPUT BOOLEAN
+# ╰────────────────────╯
+input_boolean:
+
+  dad_car_home:
+    name: Dad's Car Home
+    icon: mdi:car
+
+  dad_car_ai_enabled:
+    name: Dad Car AI Fallback
+    icon: mdi:robot
+
+
+# ╭────────────────────╮
+# │   COUNTER
+# ╰────────────────────╯
+counter:
+
+  dad_car_ai_calls:
+    name: Dad Car AI Calls
+    icon: mdi:counter
+    initial: 0
+    step: 1
+
+
+# ╭────────────────────╮
+# │   INPUT TEXT (Debug)
+# ╰────────────────────╯
+input_text:
+
+  dad_car_last_detection:
+    name: Dad Car Last Detection
+    max: 255
+    icon: mdi:bug
+
+
+# ╭────────────────────╮
+# │   INPUT NUMBER
+# ╰────────────────────╯
+input_number:
+
+  # Max delta threshold - car creates high contrast edges (white vs dark)
+  # Car present: 178-219, Absent: 115
+  dad_car_max_delta_threshold:
+    name: Dad Car Max Delta Threshold
+    min: 100
+    max: 200
+    step: 5
+    initial: 150
+    mode: slider
+    icon: mdi:contrast-box
+
+  # White pixel percentage - car roof shows as bright white
+  # Car present: 10-18%, Absent: 5%
+  dad_car_white_pct_threshold:
+    name: Dad Car White % Threshold
+    min: 5
+    max: 15
+    step: 0.5
+    initial: 8
+    unit_of_measurement: "%"
+    mode: slider
+    icon: mdi:white-balance-sunny
+
+  # Rain detection - very low contrast indicates rain/fog
+  dad_car_rain_delta_threshold:
+    name: Dad Car Rain Delta Threshold
+    min: 30
+    max: 100
+    step: 5
+    initial: 60
+    mode: slider
+    icon: mdi:weather-rainy
+
+
+# ╭────────────────────╮
+# │   TEMPLATE ENTITIES
+# ╰────────────────────╯
+template:
+  - binary_sensor:
+      - name: "Dad's Car on Driveway"
+        unique_id: dad_car_on_driveway
+        device_class: presence
+        icon: "{{ 'mdi:car' if is_state('input_boolean.dad_car_home', 'on') else 'mdi:car-off' }}"
+        state: "{{ is_state('input_boolean.dad_car_home', 'on') }}"
+        attributes:
+          detection_method: "contrast + white%"
+          ai_enabled: "{{ is_state('input_boolean.dad_car_ai_enabled', 'on') }}"
+          ai_calls_today: "{{ states('counter.dad_car_ai_calls') }}"
+          camera: "camera.c10_snapshots_clear"
+          note: >-
+            {% if is_state('sun.sun', 'below_horizon') %}
+              Detection paused (nighttime)
+            {% elif is_state('input_boolean.dad_car_ai_enabled', 'on') %}
+              Local + AI fallback active
+            {% else %}
+              Local detection only
+            {% endif %}
+
+  - button:
+      - name: "Check Dad's Car Now"
+        unique_id: check_dad_car_now
+        icon: mdi:car-search
+        press:
+          - service: pyscript.check_dad_car
+            data:
+              force: true
+
+
+# | END: driveway_detection.yaml

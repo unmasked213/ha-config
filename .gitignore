@@ -1,0 +1,99 @@
+# --------------------------------------------
+# Ignore folders - storage dashboards and whatsapp addon allowed
+# --------------------------------------------
+cloud/
+.cursor/
+.vscode/
+.cloud/
+.storage/
+!.storage/lovelace.*
+!.storage/lovelace_*
+addons/
+!addons/ha-addons/
+!addons/whatsapp_addon/
+custom_icons/
+deps/
+downloads/
+image/
+llmvision/
+media/
+tts/
+
+custom_components/
+!custom_components/prompt_manager/
+!custom_components/chatreader/
+!custom_components/whatsapp_chat/
+!custom_components/whatsapp/
+
+docs/*
+!docs/reports/
+
+# --------------------------------------------
+# WWW rules — track root, but ignore subfolders (recursive)
+# --------------------------------------------
+www/**/
+
+# --------------------------------------------
+# Ignore Python cache
+# --------------------------------------------
+__pycache__/
+*.pyc
+
+# --------------------------------------------
+# Ignore specific file types (global)
+# --------------------------------------------
+*.tsx
+*.txt
+*.jpg
+*.JPG
+*.jpeg
+*.JPEG
+*.png
+*.PNG
+*.svg
+*.mp4
+*.mp3
+*.wav
+*.m4a
+*.aac
+*.ogg
+*.flac
+
+
+# --------------------------------------------
+# Ignore anything with "backup" in the name
+# --------------------------------------------
+*backup*
+*Backup*
+*BACKUP*
+
+
+# --------------------------------------------
+# Ignore individual files
+# --------------------------------------------
+.activities_list.json
+.cursorignore
+.HA_VERSION
+.shopping_list.json
+go2rtc-1.9.4
+home-assistant.log
+home-assistant*
+home-assistant_backup_default
+home-assistant_v2.db
+home-assistant_v2.db-shm
+home-assistant_v2.db-wal
+secrets.yaml
+scripts/.imap_env
+.claude/ha_token
+theme_variables.md
+ui_conversation.md
+ui_research.md
+ui_setup.md
+ui_setup_v2.md
+zigbee.db
+zigbee.db-shm
+zigbee.db-wal
+frigate.yml
+git_sync.sh
+git_sync_result.txt
+*.log

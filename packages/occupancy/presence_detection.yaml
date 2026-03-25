@@ -1,0 +1,588 @@
+# | START: presence_detection.yaml
+# | PATH: /config/packages/occupancy/presence_detection.yaml
+
+
+
+# ── TEMPLATE SENSOR ──────────────────────────────────────────────────────────
+template:
+  - binary_sensor:
+
+    # ➔ Area presence aggregation
+    # - Combines motion/occupancy (steady) with unified doors (edge).
+    # - Edge events extend presence for edge_hold seconds from their last CHANGE.
+    # - Attributes report contributors, active sensors, last movement, and average illuminance.
+
+
+
+    # ➔ PRESENCE AREA BASE ────────────────────────────────────────────────────
+    - &presence_area_base
+      device_class: occupancy
+
+
+
+      # ➔ VARIABLES ──────────────────────────────────────────────────────────
+      variables:
+        area: null  # Home Assistant area ID to monitor
+        edge_hold: 30  # Seconds to extend presence after door edge event
+        excluded_entities: []  # List of entity IDs to ignore in presence calculation
+        icon_on: mdi:walk  # Icon when presence is detected
+        icon_off: mdi:walk-off  # Icon when no presence detected
+        auto_exclude_raw: true  # expensive; set false per-area if heavy
+        test_entity: null  # input_boolean for virtual presence testing (pac_test_presence_*)
+
+
+
+      # ➔ ICON ───────────────────────────────────────────────────────────────
+      icon: >
+        {{ icon_on if is_state(this.entity_id, 'on') else icon_off }}
+
+
+
+      # ➔ STATE ──────────────────────────────────────────────────────────────
+      state: >
+        {# Initialize variables from template parameters #}
+        {% set AREA = area %}
+        {% set HOLD = edge_hold | default(30) | int %}
+        {% set EXC = excluded_entities | default([]) %}
+        {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+
+        {# Get all entities in the area, return false if area has no entities #}
+        {% set ents = area_entities(AREA) or [] %}
+        {% if not ents %} false {% else %}
+          {# Auto-exclude raw door contributors if enabled #}
+          {# Collects raw sensor IDs from door sensors to avoid double-counting #}
+          {% set ns_raw = namespace(items=[]) %}
+          {% if auto_exclude_raw %}
+            {% set all_doors = expand(ents)
+                 | selectattr('entity_id','match','^binary_sensor\.')
+                 | selectattr('attributes.device_class','equalto','door')
+                 | list %}
+            {% for d in all_doors %}
+              {# Extract raw sensor list from door attribute, handling both list and JSON string formats #}
+              {% set raw = d.attributes.contributing_raw_sensors %}
+              {% set raw_list = [] %}
+              {% if raw is iterable and raw is not string %}
+                {% set raw_list = raw %}
+              {% elif raw is string %}
+                {% set s = raw | trim %}
+                {% if s.startswith('[') and s.endswith(']') %}
+                  {% set raw_list = s | from_json %}
+                {% endif %}
+              {% endif %}
+              {% if raw_list %}
+                {% for r in raw_list %}
+                  {% if r not in ns_raw.items %}{% set ns_raw.items = ns_raw.items + [r] %}{% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {# Core filtered list - computed once #}
+          {# Filter binary sensors: exclude self, presence_sensor_1 patterns, undefined device classes, excluded entities, and auto-excluded raw sensors #}
+          {% set all_bin = expand(ents)
+            | selectattr('entity_id','match','^binary_sensor\.')
+            | rejectattr('entity_id','equalto', this.entity_id)
+            | rejectattr('entity_id','match','_presence_sensor_1$')
+            | selectattr('attributes.device_class','defined')
+            | rejectattr('entity_id','in', EXC)
+            | rejectattr('entity_id','in', ns_raw.items)
+            | list %}
+
+          {# Derive steady and edge from shared base #}
+          {# Steady sensors: presence/occupancy/motion (continuous state) #}
+          {% set steady = all_bin
+            | selectattr('attributes.device_class','in',['presence','occupancy','motion'])
+            | list %}
+          {# Edge sensors: door sensors (momentary events) #}
+          {% set edge = all_bin
+            | selectattr('attributes.device_class','equalto','door')
+            | list %}
+
+          {# Check if any steady sensor is currently on #}
+          {% set any_steady_on = steady | selectattr('state','eq','on') | list | count > 0 %}
+          {# Check if any edge sensor changed within the hold window #}
+          {% set now_ts = as_timestamp(now()) %}
+          {% set recent_edge = edge
+            | map(attribute='last_changed')
+            | map('as_timestamp')
+            | select('number')
+            | select('gt', now_ts - HOLD)
+            | list | count > 0 %}
+
+          {# Check virtual test entity (pac_test_presence_*) #}
+          {% set test_on = test_entity is not none and is_state(test_entity, 'on') %}
+
+          {# Presence is true if steady sensor is on OR recent door event OR test entity on #}
+          {{ any_steady_on or recent_edge or test_on }}
+        {% endif %}
+
+
+
+      # ➔ AVAILABILITY ───────────────────────────────────────────────────────
+      availability: >
+        {# Sensor is available if area has at least one valid binary sensor #}
+        {% set AREA = area %}
+        {% set EXC = excluded_entities | default([]) %}
+        {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+        {% set ents = area_entities(AREA) or [] %}
+        {% if not ents %} false {% else %}
+          {# Check if any valid binary sensors exist in the area (excluding self and patterns) #}
+          {% set ok = expand(ents)
+            | selectattr('entity_id','match','^binary_sensor\.')
+            | rejectattr('entity_id','equalto', this.entity_id)
+            | rejectattr('entity_id','match','_presence_sensor_1$')
+            | selectattr('attributes.device_class','defined')
+            | rejectattr('entity_id','in', EXC)
+            | list | count > 0 %}
+          {{ ok }}
+        {% endif %}
+
+
+
+      # ➔ ATTRIBUTES ─────────────────────────────────────────────────────────
+      attributes:
+
+        area_id: "{{ area }}"  # Home Assistant area identifier
+
+        area_name: "{{ area_name(area) }}"  # Human-readable area name
+
+        edge_hold_seconds: "{{ edge_hold | default(30) }}"  # Duration door events extend presence
+
+        steady_classes: "presence, occupancy, motion"  # Device classes that provide continuous state
+
+        edge_classes: "door"  # Device class that provides momentary events
+
+        contributing_sensors: >
+          {# Returns JSON array of all sensors that contribute to presence calculation #}
+          {% set AREA = area %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+
+          {# Collect auto-excluded raw sensors from door attributes #}
+          {% set ns_raw = namespace(items=[]) %}
+          {% if auto_exclude_raw %}
+            {% set all_doors = expand(ents)
+                 | selectattr('entity_id','match','^binary_sensor\.')
+                 | selectattr('attributes.device_class','equalto','door')
+                 | list %}
+            {% for d in all_doors %}
+              {% set raw = d.attributes.contributing_raw_sensors %}
+              {% set raw_list = [] %}
+              {% if raw is iterable and raw is not string %}
+                {% set raw_list = raw %}
+              {% elif raw is string %}
+                {% set s = raw | trim %}
+                {% if s.startswith('[') and s.endswith(']') %}
+                  {% set raw_list = s | from_json %}
+                {% endif %}
+              {% endif %}
+              {% if raw_list %}
+                {% for r in raw_list %}
+                  {% if r not in ns_raw.items %}{% set ns_raw.items = ns_raw.items + [r] %}{% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {# Filter valid binary sensors #}
+          {% set all_bin = expand(ents)
+             | selectattr('entity_id','match','^binary_sensor\.')
+             | rejectattr('entity_id','equalto', this.entity_id)
+             | rejectattr('entity_id','match','_presence_sensor_1$')
+             | selectattr('attributes.device_class','defined')
+             | rejectattr('entity_id','in', EXC)
+             | rejectattr('entity_id','in', ns_raw.items)
+             | list %}
+          {# Combine steady and edge sensors, return sorted entity IDs as JSON #}
+          {% set sensors = (all_bin
+               | selectattr('attributes.device_class','in',['presence','occupancy','motion'])
+               | list)
+               + (all_bin | selectattr('attributes.device_class','equalto','door') | list) %}
+          {{ (sensors | map(attribute='entity_id') | list | sort) | tojson }}
+
+        active_sensors: >
+          {# Returns JSON array of sensors currently in 'on' state #}
+          {% set AREA = area %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+
+          {# Collect auto-excluded raw sensors from door attributes #}
+          {% set ns_raw = namespace(items=[]) %}
+          {% if auto_exclude_raw %}
+            {% set all_doors = expand(ents)
+                 | selectattr('entity_id','match','^binary_sensor\.')
+                 | selectattr('attributes.device_class','equalto','door')
+                 | list %}
+            {% for d in all_doors %}
+              {% set raw = d.attributes.contributing_raw_sensors %}
+              {% set raw_list = [] %}
+              {% if raw is iterable and raw is not string %}
+                {% set raw_list = raw %}
+              {% elif raw is string %}
+                {% set s = raw | trim %}
+                {% if s.startswith('[') and s.endswith(']') %}
+                  {% set raw_list = s | from_json %}
+                {% endif %}
+              {% endif %}
+              {% if raw_list %}
+                {% for r in raw_list %}
+                  {% if r not in ns_raw.items %}{% set ns_raw.items = ns_raw.items + [r] %}{% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {# Filter valid binary sensors #}
+          {% set all_bin = expand(ents)
+             | selectattr('entity_id','match','^binary_sensor\.')
+             | rejectattr('entity_id','equalto', this.entity_id)
+             | rejectattr('entity_id','match','_presence_sensor_1$')
+             | selectattr('attributes.device_class','defined')
+             | rejectattr('entity_id','in', EXC)
+             | rejectattr('entity_id','in', ns_raw.items)
+             | list %}
+          {# Filter to only sensors that are currently 'on', return sorted entity IDs as JSON #}
+          {% set act = all_bin
+             | selectattr('attributes.device_class','in',['presence','occupancy','motion','door'])
+             | selectattr('state','eq','on')
+             | map(attribute='entity_id') | list %}
+          {# Include virtual test entity if active #}
+          {% if test_entity is not none and is_state(test_entity, 'on') %}
+            {% set act = act + [test_entity] %}
+          {% endif %}
+          {{ (act | sort) | tojson }}
+
+        recent_edge_sensors: >
+          {# Returns JSON array of door sensors that changed within the edge_hold window #}
+          {% set AREA = area %}
+          {% set HOLD = edge_hold | default(30) | int %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+          {% set now_ts = as_timestamp(now()) %}
+
+          {# Collect auto-excluded raw sensors from door attributes #}
+          {% set ns_raw = namespace(items=[]) %}
+          {% if auto_exclude_raw %}
+            {% set all_doors = expand(ents)
+                 | selectattr('entity_id','match','^binary_sensor\.')
+                 | selectattr('attributes.device_class','equalto','door')
+                 | list %}
+            {% for d in all_doors %}
+              {% set raw = d.attributes.contributing_raw_sensors %}
+              {% set raw_list = [] %}
+              {% if raw is iterable and raw is not string %}
+                {% set raw_list = raw %}
+              {% elif raw is string %}
+                {% set s = raw | trim %}
+                {% if s.startswith('[') and s.endswith(']') %}
+                  {% set raw_list = s | from_json %}
+                {% endif %}
+              {% endif %}
+              {% if raw_list %}
+                {% for r in raw_list %}
+                  {% if r not in ns_raw.items %}{% set ns_raw.items = ns_raw.items + [r] %}{% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {# Filter door sensors, then check which changed within hold window #}
+          {% set doors = expand(ents)
+             | selectattr('entity_id','match','^binary_sensor\.')
+             | selectattr('attributes.device_class','equalto','door')
+             | rejectattr('entity_id','in', EXC)
+             | rejectattr('entity_id','in', ns_raw.items)
+             | list %}
+          {% set ns_ids = namespace(items=[]) %}
+          {% for s in doors %}
+            {% set ts = as_timestamp(s.last_changed) %}
+            {# Include door if it changed within the hold time window #}
+            {% if ts is number and ts > now_ts - HOLD %}
+              {% set ns_ids.items = ns_ids.items + [s.entity_id] %}
+            {% endif %}
+          {% endfor %}
+          {{ (ns_ids.items | sort) | tojson }}
+
+
+
+
+        recently_off_sensors: >
+          {# Returns JSON array of sensors that are OFF but changed within the recent window #}
+          {# The card controls visual fade duration client-side; this uses a generous 1800s ceiling #}
+          {% set AREA = area %}
+          {% set WINDOW = 1800 %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+          {% set now_ts = as_timestamp(now()) %}
+          {% set ns_raw = namespace(items=[]) %}
+          {% if auto_exclude_raw %}
+            {% set all_doors = expand(ents)
+                 | selectattr('entity_id','match','^binary_sensor\.')
+                 | selectattr('attributes.device_class','equalto','door')
+                 | list %}
+            {% for d in all_doors %}
+              {% set raw = d.attributes.contributing_raw_sensors %}
+              {% set raw_list = [] %}
+              {% if raw is iterable and raw is not string %}
+                {% set raw_list = raw %}
+              {% elif raw is string %}
+                {% set s = raw | trim %}
+                {% if s.startswith('[') and s.endswith(']') %}
+                  {% set raw_list = s | from_json %}
+                {% endif %}
+              {% endif %}
+              {% if raw_list %}
+                {% for r in raw_list %}
+                  {% if r not in ns_raw.items %}{% set ns_raw.items = ns_raw.items + [r] %}{% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+          {% set all_bin = expand(ents)
+             | selectattr('entity_id','match','^binary_sensor\.')
+             | rejectattr('entity_id','equalto', this.entity_id)
+             | rejectattr('entity_id','match','_presence_sensor_1$')
+             | selectattr('attributes.device_class','defined')
+             | rejectattr('entity_id','in', EXC)
+             | rejectattr('entity_id','in', ns_raw.items)
+             | list %}
+          {% set candidates = all_bin
+             | selectattr('attributes.device_class','in',['presence','occupancy','motion','door'])
+             | selectattr('state','eq','off')
+             | list %}
+          {% set ns_ids = namespace(items=[]) %}
+          {% for s in candidates %}
+            {% set ts = as_timestamp(s.last_changed) %}
+            {% if ts is number and ts > now_ts - WINDOW %}
+              {% set ns_ids.items = ns_ids.items + [s.entity_id] %}
+            {% endif %}
+          {% endfor %}
+          {# Include virtual test entity if recently turned off #}
+          {% if test_entity is not none and is_state(test_entity, 'off') %}
+            {% set ts = as_timestamp(states[test_entity].last_changed) if states[test_entity] else 0 %}
+            {% if ts is number and ts > now_ts - WINDOW %}
+              {% set ns_ids.items = ns_ids.items + [test_entity] %}
+            {% endif %}
+          {% endif %}
+          {{ (ns_ids.items | sort) | tojson }}
+
+
+
+
+
+        lux: >
+          {# Returns average illuminance (lux) from all illuminance sensors in the area #}
+          {% set AREA = area %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+          {# Find all illuminance sensors, excluding patterns and excluded entities #}
+          {% set lux_sensors = expand(ents)
+             | selectattr('entity_id','match','^sensor\.')
+             | selectattr('attributes.device_class','equalto','illuminance')
+             | rejectattr('entity_id','match','_presence_sensor_1$')
+             | rejectattr('entity_id','in', EXC)
+             | list %}
+          {% if lux_sensors | count > 0 %}
+            {# Extract numeric values, remove 'lx' units, convert to float, calculate average #}
+            {% set vals = lux_sensors
+               | map(attribute='state')
+               | map('replace',' lx','') | map('replace','lx','')
+               | map('float', none) | select('number') | list %}
+            {{ ((vals | sum) / (vals | count)) | round(1) if vals else none }}
+          {% else %} none {% endif %}
+
+        contributing_lux_sensors: >
+          {# Returns JSON array of all illuminance sensor entity IDs in the area #}
+          {% set AREA = area %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+          {# Filter illuminance sensors, extract entity IDs, sort and return as JSON #}
+          {{ (expand(ents)
+             | selectattr('entity_id','match','^sensor\.')
+             | selectattr('attributes.device_class','equalto','illuminance')
+             | rejectattr('entity_id','match','_presence_sensor_1$')
+             | rejectattr('entity_id','in', EXC)
+             | map(attribute='entity_id') | list | sort) | tojson }}
+
+        last_movement: >
+          {# Returns ISO datetime string of the most recent sensor state change in the area #}
+          {% set AREA = area %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+
+          {# Collect auto-excluded raw sensors from door attributes #}
+          {% set ns_raw = namespace(items=[]) %}
+          {% if auto_exclude_raw %}
+            {% set all_doors = expand(ents)
+                 | selectattr('entity_id','match','^binary_sensor\.')
+                 | selectattr('attributes.device_class','equalto','door')
+                 | list %}
+            {% for d in all_doors %}
+              {% set raw = d.attributes.contributing_raw_sensors %}
+              {% set raw_list = [] %}
+              {% if raw is iterable and raw is not string %}
+                {% set raw_list = raw %}
+              {% elif raw is string %}
+                {% set s = raw | trim %}
+                {% if s.startswith('[') and s.endswith(']') %}
+                  {% set raw_list = s | from_json %}
+                {% endif %}
+              {% endif %}
+              {% if raw_list %}
+                {% for r in raw_list %}
+                  {% if r not in ns_raw.items %}{% set ns_raw.items = ns_raw.items + [r] %}{% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {# Filter valid binary sensors #}
+          {% set sensors = expand(ents)
+             | selectattr('entity_id','match','^binary_sensor\.')
+             | rejectattr('entity_id','equalto', this.entity_id)
+             | rejectattr('entity_id','match','_presence_sensor_1$')
+             | selectattr('attributes.device_class','defined')
+             | rejectattr('entity_id','in', EXC)
+             | rejectattr('entity_id','in', ns_raw.items)
+             | list %}
+          {# Find the maximum (most recent) timestamp from all sensor last_changed times #}
+          {% set ts = sensors
+             | map(attribute='last_changed')
+             | map('as_timestamp')
+             | select('number') | list %}
+          {{ as_datetime(ts | max) | string if ts else none }}
+
+        last_updated_sensor: >
+          {# Returns entity ID of the sensor that was updated most recently #}
+          {% set AREA = area %}
+          {% set EXC = excluded_entities | default([]) %}
+          {% if EXC is string %}{% set EXC = [EXC] %}{% endif %}
+          {% set ents = area_entities(AREA) or [] %}
+
+          {# Collect auto-excluded raw sensors from door attributes #}
+          {% set ns_raw = namespace(items=[]) %}
+          {% if auto_exclude_raw %}
+            {% set all_doors = expand(ents)
+                 | selectattr('entity_id','match','^binary_sensor\.')
+                 | selectattr('attributes.device_class','equalto','door')
+                 | list %}
+            {% for d in all_doors %}
+              {% set raw = d.attributes.contributing_raw_sensors %}
+              {% set raw_list = [] %}
+              {% if raw is iterable and raw is not string %}
+                {% set raw_list = raw %}
+              {% elif raw is string %}
+                {% set s = raw | trim %}
+                {% if s.startswith('[') and s.endswith(']') %}
+                  {% set raw_list = s | from_json %}
+                {% endif %}
+              {% endif %}
+              {% if raw_list %}
+                {% for r in raw_list %}
+                  {% if r not in ns_raw.items %}{% set ns_raw.items = ns_raw.items + [r] %}{% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {# Filter valid binary sensors #}
+          {% set sensors = expand(ents)
+             | selectattr('entity_id','match','^binary_sensor\.')
+             | rejectattr('entity_id','equalto', this.entity_id)
+             | rejectattr('entity_id','match','_presence_sensor_1$')
+             | selectattr('attributes.device_class','defined')
+             | rejectattr('entity_id','in', EXC)
+             | rejectattr('entity_id','in', ns_raw.items)
+             | list %}
+          {# Sort by last_changed descending and return the first (most recent) sensor's entity_id #}
+          {% set recent = sensors | sort(attribute='last_changed', reverse=true) | first %}
+          {{ recent.entity_id if recent else none }}
+
+
+
+    # ➔ AREA SENSORS ──────────────────────────────────────────────────────────
+    # Area-specific presence sensors that inherit from the base template
+
+    - <<: *presence_area_base
+      name: "Presence: Floor 02"
+      unique_id: presence_area_2nd_floor
+      variables:
+        area: 2nd_floor
+        edge_hold: 20  # faster decay for high-traffic corridor
+        icon_on: mdi:walk
+        icon_off: mdi:walk-off
+        test_entity: input_boolean.pac_test_presence_2nd_floor
+        excluded_entities:  # Sensors to exclude from presence calculation
+          - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_1
+          - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_9
+          - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_4
+          - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_2
+          - binary_sensor.presence_sensor_fp2_9c35_presence_sensor_3
+          - binary_sensor.c09_motion
+          - binary_sensor.c09_person
+          - binary_sensor.c09_vehicle
+
+
+
+    - <<: *presence_area_base
+      name: "Presence: Bedroom"
+      unique_id: presence_area_bedroom
+      variables:
+        area: bedroom_2
+        edge_hold: 30  # standard hold for static room
+        icon_on: mdi:walk
+        icon_off: mdi:walk-off
+        auto_exclude_raw: true
+        test_entity: input_boolean.pac_test_presence_bedroom
+        excluded_entities:  # Sensors to exclude from presence calculation
+          - binary_sensor.c07_motion_alarm
+
+
+
+    - <<: *presence_area_base
+      name: "Presence: Office"
+      unique_id: presence_area_office
+      variables:
+        area: office
+        edge_hold: 30  # standard hold for static room
+        icon_on: mdi:walk
+        icon_off: mdi:walk-off
+        auto_exclude_raw: true
+        test_entity: input_boolean.pac_test_presence_office
+
+
+
+    - <<: *presence_area_base
+      name: "Presence: Floor 01"
+      unique_id: presence_area_1st_floor
+      variables:
+        area: 1st_floor
+        edge_hold: 30  # standard hold for mixed-use floor
+        icon_on: mdi:walk
+        icon_off: mdi:walk-off
+        test_entity: input_boolean.pac_test_presence_1st_floor
+        # No excluded_entities specified - all valid sensors in area are used
+
+
+
+    - <<: *presence_area_base
+      name: "Presence: Floor 00"
+      unique_id: presence_area_ground_floor
+      variables:
+        area: ground_floor
+        edge_hold: 30
+        icon_on: mdi:walk
+        icon_off: mdi:walk-off
+        test_entity: input_boolean.pac_test_presence_ground_floor
+
+
+
+
+# | END: presence_detection.yaml

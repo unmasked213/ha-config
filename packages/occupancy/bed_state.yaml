@@ -1,0 +1,113 @@
+
+# | START: bed_state.yaml
+# |  PATH: /config/packages/occupancy/bed_state.yaml
+
+
+
+
+# ── INFO ─────────────────────────────────────────────────────────────────────
+#  • Binary gate for bedroom automations based on bed-related sleep likelihood.
+#  • ON  = Asleep-likely context; automations must avoid bright/abrupt changes.
+#  • OFF = Awake-likely context; normal automation rules may be applied.
+#  • Bed occupancy always dominates regardless of time-of-day.
+#  • During 22:00–09:00, unknown bed or room presence is treated as asleep-likely.
+#  • Door and activity signals never reduce asleep likelihood.
+
+
+
+
+# ── TEMPLATE SENSOR ──────────────────────────────────────────────────────────
+template:
+  - binary_sensor:
+
+
+        # -- CORE -------------------------------------------------------------
+
+      - name: "Bed State: Asleep Likely"
+        unique_id: bed_state_asleep_likely_bedroom
+        device_class: safety
+
+
+        # -- STATE ------------------------------------------------------------
+
+        # - true  = asleep-likely, treat bedroom as sensitive.
+        # - false = awake-likely, bedroom can behave like a normal room.
+        state: >
+          {% set bed_group = 'group.bed_occupancy_sensors' %}
+          {% set bed_state = states(bed_group) %}
+          {% set bed_occupied = (bed_state == 'on') %}
+          {% set bed_unknown = bed_state in ['unknown', 'unavailable'] %}
+
+          {% set presence_entity = 'binary_sensor.presence_bedroom' %}
+          {% set presence_on = is_state(presence_entity, 'on') %}
+
+          {% set h = now().hour %}
+          {% set in_sleep_window = (h >= 22 or h < 9) %}
+
+          {# 1. Bed occupied always → asleep-likely #}
+          {% if bed_occupied %}
+            true
+
+          {# 2. In sleep window: unknown bed or any room presence → asleep-likely #}
+          {% elif in_sleep_window and (bed_unknown or presence_on) %}
+            true
+
+          {# 3. Otherwise: assume awake-likely #}
+          {% else %}
+            false
+          {% endif %}
+
+
+        # -- AVAILABILITY -----------------------------------------------------
+
+        # Always available; any missing inputs are handled in the state logic.
+        availability: >
+          true
+
+
+        # -- ATTRIBUTES -------------------------------------------------------
+
+        attributes:
+          area_id: "bedroom_2"
+          # Bed-related inputs
+          bed_group_entity: "group.bed_occupancy_sensors"
+          bed_group_state: "{{ states('group.bed_occupancy_sensors') }}"
+          bed_occupied: "{{ states('group.bed_occupancy_sensors') == 'on' }}"
+          bed_unknown: "{{ states('group.bed_occupancy_sensors') in ['unknown','unavailable'] }}"
+          # Presence
+          bedroom_presence_entity: "binary_sensor.presence_bedroom"
+          bedroom_presence: "{{ is_state('binary_sensor.presence_bedroom', 'on') }}"
+          # Time context
+          hour: "{{ now().hour }}"
+          in_sleep_window: "{{ now().hour >= 22 or now().hour < 9 }}"
+          # Door exposed for debugging only, never used in the gate decision.
+          door_entity: "binary_sensor.door_bedroom"
+          door_state: "{{ states('binary_sensor.door_bedroom') }}"
+          door_last_changed_age_s: >
+            {% set d = states.binary_sensor.door_bedroom %}
+            {% if d is not none %}
+              {{ (as_timestamp(now()) - as_timestamp(d.last_changed)) | round(0) }}
+            {% else %}
+              -1
+            {% endif %}
+          gate_state: "{{ 'asleep_likely' if is_state(this.entity_id, 'on') else 'awake_likely' }}"
+          debug_summary: >
+            Asleep-likely when bed occupancy group is 'on' at any time, or when in the
+            22:00–09:00 window with either unknown bed state or bedroom presence ON.
+            All other conditions are treated as awake-likely. Door and movement are
+            never used to downgrade asleep likelihood.
+
+
+
+
+# ── GROUP ──────────────────────────────────────────────────────────────────────
+group:
+  bed_occupancy_sensors:
+    name: "Bed Occupancy Sensors"
+    entities:
+      - binary_sensor.withings_c_in_bed
+      - binary_sensor.withings_e_in_bed
+
+
+# |   END: bed_state.yaml
+

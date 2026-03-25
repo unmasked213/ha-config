@@ -1,0 +1,238 @@
+# | START: transcript_pipeline.yaml
+# |  PATH: /config/packages/communication/transcript_pipeline.yaml
+
+
+
+# Transcript Pipeline
+# Fetches Plaud transcripts from Gmail via IMAP and makes them available
+# to both HA (via sensor attributes) and Claude (via todo description).
+#
+# Flow:
+#   1. Plaud auto-emails transcript + summary to Gmail after recording
+#   2. HA's IMAP integration detects the new email and fires an imap_content event
+#   3. This automation catches the event, validates the subject contains [Plaud-AutoFlow]
+#   4. Extracts UID and subject; stores UID in an input_text helper
+#   5. Shell command reads the UID and runs the fetcher script
+#   6. 15-second delay — shell_command is fire-and-forget, so the automation
+#      must wait for the fetcher to finish before checking results
+#   7. The script connects to Gmail, downloads .txt attachments by UID
+#   8. Transcript and summary files land in /config/www/transcripts/
+#   9. Command-line sensor refreshes; wait_template confirms the sensor
+#      timestamp has changed from its pre-fetch value
+#  10. If the timestamp hasn't changed, the fetcher produced no new files;
+#      a persistent notification fires and the automation stops
+#  11. Summary written to todo.meeting_summaries with due_datetime
+#  12. Full transcript written to todo.meeting_transcripts with matching due_datetime
+#  13. Daily cleanup removes items older than 7 days from both lists
+#
+# The sensor (step 9) stores transcript/summary in attributes for HA use.
+# The todo writes (steps 11-12) make content accessible via todo_get_items.
+#
+# Two todo lists are used:
+#   - todo.meeting_summaries  — lightweight, Claude reads first
+#   - todo.meeting_transcripts — full text, Claude reads on demand
+# Both items share the same due_datetime so Claude can match pairs.
+# Items expire after 7 days via a daily cleanup automation.
+#
+# Dependencies:
+#   - IMAP integration configured for fragment0044@gmail.com
+#   - /config/scripts/fetch_imap_attachments.py (standalone Python fetcher)
+#   - /config/scripts/fetch_transcript.sh (wrapper that sources credentials)
+#   - /config/scripts/.imap_env (credentials file)
+#   - /config/www/transcripts/ directory (created automatically by script)
+#   - todo.meeting_summaries (local_todo list, created via UI)
+#   - todo.meeting_transcripts (local_todo list, created via UI)
+
+# Helper to relay the UID from the automation to the shell command
+# Shell command templates can read entity states but not service call data
+input_text:
+  imap_uid:
+    name: IMAP UID
+    max: 20
+
+# Shell command that calls the fetcher script
+# Reads the UID from the input_text helper since shell_command
+# cannot access service call data directly
+shell_command:
+  fetch_transcript: "/config/scripts/fetch_transcript.sh '{{ states(\"input_text.imap_uid\") }}'"
+
+automation:
+  - id: transcript_fetch_on_email
+    alias: "Transcript • Fetch on email"
+    # Queued mode ensures multiple rapid emails are processed in order, not dropped
+    mode: queued
+    trigger:
+      # Fires every time the IMAP integration receives a new unread email
+      - platform: event
+        event_type: imap_content
+    variables:
+      # Extract the UID and subject from the event data
+      uid: "{{ trigger.event.data.uid | string }}"
+      subject: >-
+        {% set raw = trigger.event.data.subject | default('') | replace('\r\n ', ' ') | trim %}
+        {%- if ']' in raw %}{{ raw.split(']', 1)[1] | trim }}
+        {%- elif raw %}{{ raw }}
+        {%- else %}untitled{% endif %}
+    condition:
+      # Only proceed if the subject contains the Plaud AutoFlow tag and the UID is numeric.
+      # Matching on subject rather than sender allows manually forwarded or composed
+      # emails to pass through the pipeline — just include [Plaud-AutoFlow] in the subject.
+      - condition: template
+        value_template: >
+          {{ '[Plaud-AutoFlow]' in (trigger.event.data.subject | default('')) and
+             uid is match('^\\d+$') }}
+    action:
+      # Set the UID in the input_text helper so the shell command can read it
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.imap_uid
+        data:
+          value: "{{ uid }}"
+      # Snapshot the current sensor timestamp so we can detect when it changes
+      - variables:
+          old_timestamp: "{{ state_attr('sensor.transcript_latest', 'timestamp') | default('') }}"
+      # Call the shell command which reads the UID from the helper.
+      # shell_command is fire-and-forget in HA — it returns immediately,
+      # so we must delay before checking for results.
+      - action: shell_command.fetch_transcript
+      - delay: "00:00:15"
+      # Force the command-line sensor to pick up the new files
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.transcript_latest
+      # Wait for the sensor timestamp to actually change from the pre-fetch value,
+      # confirming the fetcher produced new files and the sensor picked them up
+      - wait_template: >
+          {{ state_attr('sensor.transcript_latest', 'timestamp') not in ['', none] and
+             state_attr('sensor.transcript_latest', 'timestamp') != old_timestamp }}
+        timeout: "00:00:45"
+        continue_on_timeout: true
+      # Check whether the timestamp actually changed — if not, the fetcher
+      # either failed or produced no new files
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ state_attr('sensor.transcript_latest', 'timestamp') in ['', none] or
+                     state_attr('sensor.transcript_latest', 'timestamp') == old_timestamp }}
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Transcript Pipeline Failed"
+                  message: >-
+                    Fetcher did not produce new files for UID {{ states('input_text.imap_uid') }}.
+                    Check automation traces and /config/scripts/ logs.
+                  notification_id: transcript_fetch_failed
+              - stop: "Sensor data is stale — aborting bridge write"
+      # Capture the current timestamp for both todo items so they can be matched as a pair
+      - variables:
+          received_at: "{{ now().strftime('%Y-%m-%dT%H:%M:%S') }}"
+          item_name: "{{ subject }}|{{ state_attr('sensor.transcript_latest', 'filename') | default('unknown') }}"
+      # Write summary to the lightweight list (Claude reads this first)
+      - action: todo.add_item
+        target:
+          entity_id: todo.meeting_summaries
+        data:
+          item: "{{ item_name }}"
+          description: "{{ state_attr('sensor.transcript_latest', 'summary') | default('') }}"
+          due_datetime: "{{ received_at }}"
+      # Write full transcript to the heavy list (Claude reads on demand)
+      - action: todo.add_item
+        target:
+          entity_id: todo.meeting_transcripts
+        data:
+          item: "{{ item_name }}"
+          description: "{{ state_attr('sensor.transcript_latest', 'transcript') | default('') }}"
+          due_datetime: "{{ received_at }}"
+
+  # Daily cleanup — remove transcript/summary todo items older than 7 days.
+  # Uses the due_datetime field (set to receipt time) for age tracking.
+  - id: transcript_todo_cleanup
+    alias: "Transcript • Clean up old items"
+    trigger:
+      - platform: time
+        at: "03:00:00"
+    action:
+      - action: todo.get_items
+        target:
+          entity_id:
+            - todo.meeting_summaries
+            - todo.meeting_transcripts
+        data:
+          status: needs_action
+        response_variable: all_items
+      - variables:
+          cutoff_date: "{{ (now() - timedelta(days=7)).strftime('%Y-%m-%d') }}"
+          expired_summaries: >-
+            {% set ns = namespace(items=[]) %}
+            {% for item in all_items['todo.meeting_summaries']['items']
+               if item.due is defined and item.due is not none and item.due[:10] < cutoff_date %}
+              {% set ns.items = ns.items + [item.summary] %}
+            {% endfor %}
+            {{ ns.items }}
+          expired_transcripts: >-
+            {% set ns = namespace(items=[]) %}
+            {% for item in all_items['todo.meeting_transcripts']['items']
+               if item.due is defined and item.due is not none and item.due[:10] < cutoff_date %}
+              {% set ns.items = ns.items + [item.summary] %}
+            {% endfor %}
+            {{ ns.items }}
+      - repeat:
+          for_each: "{{ expired_summaries }}"
+          sequence:
+            - action: todo.remove_item
+              target:
+                entity_id: todo.meeting_summaries
+              data:
+                item: "{{ repeat.item }}"
+              continue_on_error: true
+      - repeat:
+          for_each: "{{ expired_transcripts }}"
+          sequence:
+            - action: todo.remove_item
+              target:
+                entity_id: todo.meeting_transcripts
+              data:
+                item: "{{ repeat.item }}"
+              continue_on_error: true
+
+
+command_line:
+  - sensor:
+      name: transcript_latest
+      unique_id: transcript_pipeline_latest
+      command: |-
+        python3 -c "
+        import json,os,glob,re
+        from datetime import datetime,timezone
+        try:
+            d='/config/www/transcripts/'
+            t_files=sorted(glob.glob(d+'*transcript*.txt'),key=os.path.getmtime,reverse=True)
+            if not t_files:
+                print(json.dumps({'transcript':'','summary':'','filename':'','timestamp':''}))
+                raise SystemExit(0)
+            tf=t_files[0]
+            tb=os.path.basename(tf)
+            # Find matching summary: same prefix (everything before _transcript or _summary)
+            prefix=re.split(r'_(?:transcript|summary)',tb)[0]
+            s_match=[f for f in glob.glob(d+prefix+'*summary*.txt')]
+            s_match.sort(key=os.path.getmtime,reverse=True)
+            t=open(tf).read()
+            s=open(s_match[0]).read() if s_match else ''
+            ts=os.path.getmtime(tf)
+            stamp=datetime.fromtimestamp(ts,tz=timezone.utc).isoformat()
+            print(json.dumps({'transcript':t,'summary':s,'filename':tb,'timestamp':stamp}))
+        except SystemExit:
+            raise
+        except Exception as e:
+            print(json.dumps({'transcript':'','summary':'','filename':'','timestamp':'','error':str(e)}))"
+      value_template: "{{ value_json.timestamp }}"
+      json_attributes:
+        - transcript
+        - summary
+        - filename
+        - timestamp
+      scan_interval: 3600
+
+
+# |   END: transcript_pipeline.yaml

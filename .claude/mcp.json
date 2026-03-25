@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "homeassistant": {
+      "type": "sse",
+      "url": "https://0lzzezo208hjmjairhsh1gjzwn72kts9.ui.nabu.casa/api/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${HA_TOKEN}",
+        "Content-Type": "application/json"
+      },
+      "dangerouslySkipPermissions": true
+    },
+    "homeassistant-local": {
+      "type": "sse",
+      "url": "http://supervisor/core/api/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer ${SUPERVISOR_TOKEN:-not_available}",
+        "Content-Type": "application/json"
+      },
+      "dangerouslySkipPermissions": true
+    }
+  }
+}

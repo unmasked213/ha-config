@@ -1,0 +1,18 @@
+
+# | START: rota_upload.yaml
+# |  PATH: /config/packages/ai/rota_upload.yaml
+
+
+# ── SENSOR ──────────────────────────────────────────────────────────────────────
+sensor:
+  - platform: folder
+    folder: /config/www/rotas
+
+
+
+# ── SHELL COMMAND ────────────────────────────────────────────────────────────────
+shell_command:
+  delete_latest_rota: rm -f /config/www/rotas/latest_rota.*
+
+
+# | END: rota_upload.yaml

@@ -1,0 +1,129 @@
+
+# | START: health.yaml
+# |  PATH: /config/packages/health/health.yaml
+
+
+#  ╭────────────────────╮
+#  │   TEMPLATE SENSOR
+#  ╰────────────────────╯
+template:
+  - sensor:
+
+# ➔ C Fat Mass Percentage
+#   Percentage of C's fat mass
+      - name: "C Fat Mass Percentage"
+        unit_of_measurement: "%"
+        availability: >
+          {{ states('sensor.withings_c_weight') not in ['unknown', 'unavailable']
+             and states('sensor.withings_c_weight') | float(0) > 0
+             and states('sensor.withings_c_fat_mass') not in ['unknown', 'unavailable'] }}
+        state: >
+          {{ ((states('sensor.withings_c_fat_mass') | float(0) / states('sensor.withings_c_weight') | float(1)) * 100) | round(2) }}
+
+# ➔ C Fat-Free Mass Percentage
+#   Percentage of C's fat-free mass
+      - name: "C Fat-Free Mass Percentage"
+        unit_of_measurement: "%"
+        availability: >
+          {{ states('sensor.withings_c_weight') not in ['unknown', 'unavailable']
+             and states('sensor.withings_c_weight') | float(0) > 0
+             and states('sensor.withings_c_fat_free_mass') not in ['unknown', 'unavailable'] }}
+        state: >
+          {{ ((states('sensor.withings_c_fat_free_mass') | float(0) / states('sensor.withings_c_weight') | float(1)) * 100) | round(2) }}
+
+# ➔ C Muscle Mass Percentage
+#   Percentage of C's muscle mass
+      - name: "C Muscle Mass Percentage"
+        unit_of_measurement: "%"
+        availability: >
+          {{ states('sensor.withings_c_weight') not in ['unknown', 'unavailable']
+             and states('sensor.withings_c_weight') | float(0) > 0
+             and states('sensor.withings_c_muscle_mass') not in ['unknown', 'unavailable'] }}
+        state: >
+          {{ ((states('sensor.withings_c_muscle_mass') | float(0) / states('sensor.withings_c_weight') | float(1)) * 100) | round(2) }}
+
+# ➔ C Bone Mass Percentage
+#   Percentage of C's bone mass
+      - name: "C Bone Mass Percentage"
+        unit_of_measurement: "%"
+        availability: >
+          {{ states('sensor.withings_c_weight') not in ['unknown', 'unavailable']
+             and states('sensor.withings_c_weight') | float(0) > 0
+             and states('sensor.withings_c_bone_mass') not in ['unknown', 'unavailable'] }}
+        state: >
+          {{ ((states('sensor.withings_c_bone_mass') | float(0) / states('sensor.withings_c_weight') | float(1)) * 100) | round(2) }}
+
+# ➔ C Hydration Percentage
+#   Percentage of C's hydration
+      - name: "C Hydration Percentage"
+        unit_of_measurement: "%"
+        availability: >
+          {{ states('sensor.withings_c_weight') not in ['unknown', 'unavailable']
+             and states('sensor.withings_c_weight') | float(0) > 0
+             and states('sensor.withings_c_hydration') not in ['unknown', 'unavailable'] }}
+        state: >
+          {{ ((states('sensor.withings_c_hydration') | float(0) / states('sensor.withings_c_weight') | float(1)) * 100) | round(2) }}
+
+# ➔ C BMI
+#   Body Mass Index of C
+      - name: "C BMI"
+        unit_of_measurement: "kg/m²"
+        state: >
+          {% set height_in_meters = 1.83 %}
+          {{ (states('sensor.withings_c_weight')|float / (height_in_meters**2)) | round(2) }}
+
+# ➔ C Lean Body Mass
+#   Lean Body Mass of C
+      - name: "C Lean Body Mass"
+        unit_of_measurement: "kg"
+        state: >
+          {{ states('sensor.withings_c_fat_free_mass')|float }}
+
+# ➔ C Body Surface Area
+#   Body Surface Area of C
+      - name: "C Body Surface Area"
+        unit_of_measurement: "m²"
+        state: >
+          {% set height_in_meters = 1.83 %}
+          {{ (0.007184 * (states('sensor.withings_c_weight')|float**0.425) * (height_in_meters**0.725)) | round(2) }}
+
+# ➔ C Body Fat Mass Index
+#   Body Fat Mass Index of C
+      - name: "C Body Fat Mass Index"
+        unit_of_measurement: "kg/m²"
+        state: >
+          {% set height_in_meters = 1.83 %}
+          {{ (states('sensor.withings_c_fat_mass')|float / (height_in_meters**2)) | round(2) }}
+
+# ➔ C Lean Mass Index
+#   Lean Mass Index of C
+      - name: "C Lean Mass Index"
+        unit_of_measurement: "kg/m²"
+        state: >
+          {% set height_in_meters = 1.83 %}
+          {{ (states('sensor.withings_c_fat_free_mass')|float / (height_in_meters**2)) | round(2) }}
+
+# ➔ C Body Fat to Muscle Ratio
+#   Body Fat to Muscle Ratio of C
+      - name: "C Body Fat to Muscle Ratio"
+        unit_of_measurement: "ratio"
+        availability: >
+          {{ states('sensor.withings_c_muscle_mass') not in ['unknown', 'unavailable']
+             and states('sensor.withings_c_muscle_mass') | float(0) > 0
+             and states('sensor.withings_c_fat_mass') not in ['unknown', 'unavailable'] }}
+        state: >
+          {{ (states('sensor.withings_c_fat_mass') | float(0) / states('sensor.withings_c_muscle_mass') | float(1)) | round(2) }}
+
+# ➔ C Fat Mass to Lean Mass Ratio
+#   Fat Mass to Lean Mass Ratio of C
+      - name: "C Fat Mass to Lean Mass Ratio"
+        unit_of_measurement: "ratio"
+        availability: >
+          {{ states('sensor.withings_c_fat_free_mass') not in ['unknown', 'unavailable']
+             and states('sensor.withings_c_fat_free_mass') | float(0) > 0
+             and states('sensor.withings_c_fat_mass') not in ['unknown', 'unavailable'] }}
+        state: >
+          {{ (states('sensor.withings_c_fat_mass') | float(0) / states('sensor.withings_c_fat_free_mass') | float(1)) | round(2) }}
+
+
+# |   END: health.yaml

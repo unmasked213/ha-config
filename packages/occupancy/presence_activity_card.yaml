@@ -1,0 +1,253 @@
+# | START: presence_activity_card.yaml
+# |  PATH: /config/packages/occupancy/presence_activity_card.yaml
+
+
+
+
+#  ╔═════════════════════════════════════════════════════════════════════════╗
+#  ║     PRESENCE ACTIVITY CARD - SETTINGS HELPERS                           ║
+#  ╚═════════════════════════════════════════════════════════════════════════╝
+
+#  Settings persistence for the presence-activity-card custom component.
+#  These helpers allow card settings to survive browser refreshes and be
+#  readable by automations (e.g., for notification routing decisions).
+#
+#  The card reads these values on load and writes them when changed via
+#  the settings panel. All helpers use the 'pac_' prefix for namespacing.
+#
+#  USAGE IN CARD CONFIG:
+#    The card automatically binds to these helpers if they exist.
+#    No additional configuration required in the card YAML.
+#
+#  USAGE IN AUTOMATIONS:
+#    condition:
+#      - condition: state
+#        entity_id: input_boolean.pac_toast_notifications
+#        state: 'on'
+
+
+
+
+#────────────────────────────────────────────────────────────────────────────╮
+#  LAYOUT SETTINGS                                                           │
+#────────────────────────────────────────────────────────────────────────────╯
+
+#  Controls the visual layout of the card - row counts and section sizing.
+#  These affect how much vertical space each section occupies.
+
+
+input_number:
+
+  # ── ACTIVE SECTION ROWS ──────────────────────────────────────────────────
+  #  Number of rows visible in the "currently active" (top) section.
+  #  More rows = taller section, shows more simultaneous activity.
+  #  Range: 1-10, Default: 5
+
+  pac_active_rows:
+    name: "PAC: Active Section Rows"
+    icon: mdi:table-row
+    min: 1
+    max: 20
+    step: 1
+    mode: box
+
+
+  # ── RECENT SECTION ROWS ──────────────────────────────────────────────────
+  #  Number of rows visible in the "recently off" (bottom) section.
+  #  More rows = taller section, shows more historical activity.
+  #  Range: 1-20, Default: 5
+
+  pac_recent_rows:
+    name: "PAC: Recent Section Rows"
+    icon: mdi:table-row
+    min: 1
+    max: 20
+    step: 1
+    mode: box
+
+
+  # ── ACTIVE MAX ITEMS ────────────────────────────────────────────────────
+  #  Maximum number of items in the active list.
+  #  Controls how many sensors can appear, regardless of scroll height.
+  #  Range: 1-50, Default: 10
+
+  pac_active_max_items:
+    name: "PAC: Active Max Items"
+    icon: mdi:format-list-numbered
+    min: 5
+    max: 50
+    step: 5
+    mode: box
+
+
+  # ── RECENT MAX ITEMS ────────────────────────────────────────────────────
+  #  Maximum number of items in the recent list.
+  #  Controls how many recently-off sensors are tracked.
+  #  Range: 1-50, Default: 10
+
+  pac_recent_max_items:
+    name: "PAC: Recent Max Items"
+    icon: mdi:format-list-numbered
+    min: 5
+    max: 50
+    step: 5
+    mode: box
+
+
+  # ── RECENT FADE DURATION ─────────────────────────────────────────────────
+  #  How long (in seconds) items in the recent section take to fully fade.
+  #  Longer duration = slower fade, items stay readable longer.
+  #  Range: 60-600 (1-10 minutes), Default: 300 (5 minutes)
+
+  pac_recent_fade_duration:
+    name: "PAC: Recent Fade Duration"
+    icon: mdi:timer-outline
+    min: 60
+    max: 1800
+    step: 30
+    unit_of_measurement: "s"
+    mode: slider
+
+
+  # ── ACTIVE THRESHOLD ─────────────────────────────────────────────────────
+  #  Time (in seconds) before an active item is considered "stale".
+  #  Items active longer than this get dimmed styling.
+  #  Range: 30-300 (0.5-5 minutes), Default: 60 (1 minute)
+
+  pac_active_threshold:
+    name: "PAC: Active Threshold"
+    icon: mdi:timer-alert-outline
+    min: 60
+    max: 1800
+    step: 30
+    unit_of_measurement: "s"
+    mode: slider
+
+
+
+
+#────────────────────────────────────────────────────────────────────────────╮
+#  FILTER SETTINGS                                                           │
+#────────────────────────────────────────────────────────────────────────────╯
+
+#  Controls which sensors appear in the card based on area, door, or camera.
+#  When OFF, matching sensors are hidden from the display.
+
+
+input_boolean:
+
+
+  # ── AREA FILTERS ────────────────────────────────────────────────────────
+  #  Controls which areas appear in the card.
+  #  When OFF, all sensors from that area are hidden.
+
+  pac_filter_area_bedroom:
+    name: "PAC: Show Bedroom"
+    icon: mdi:bed
+
+  pac_filter_area_office:
+    name: "PAC: Show Office"
+    icon: mdi:desk
+
+  pac_filter_area_2nd_floor:
+    name: "PAC: Show 2nd Floor"
+    icon: mdi:home-floor-2
+
+  pac_filter_area_1st_floor:
+    name: "PAC: Show 1st Floor"
+    icon: mdi:home-floor-1
+
+  pac_filter_area_ground_floor:
+    name: "PAC: Show Ground Floor"
+    icon: mdi:home-floor-g
+
+
+  # ── DOOR FILTERS ────────────────────────────────────────────────────────
+  #  Controls visibility of specific door sensors.
+  #  When OFF, that door sensor is excluded from the card.
+
+  pac_filter_door_office:
+    name: "PAC: Show Office Door"
+    icon: mdi:door
+
+  pac_filter_door_bedroom:
+    name: "PAC: Show Bedroom Door"
+    icon: mdi:door
+
+  pac_filter_door_house:
+    name: "PAC: Show House Door"
+    icon: mdi:door
+
+
+  # ── CAMERA FILTER ───────────────────────────────────────────────────────
+  #  Controls visibility of camera motion/person/vehicle sensors.
+  #  Matches entities like binary_sensor.c08_motion, c09_person, etc.
+  #  OFF by default to reduce clutter.
+
+  pac_filter_cameras:
+    name: "PAC: Show Camera Sensors"
+    icon: mdi:cctv
+
+
+
+
+#────────────────────────────────────────────────────────────────────────────╮
+#  TOAST NOTIFICATIONS                                                        │
+#────────────────────────────────────────────────────────────────────────────╯
+
+#  Controls browser-based visual notifications for activity events.
+#  These are purely client-side (no HA automations involved).
+
+
+  # ── BROWSER TOAST NOTIFICATIONS ─────────────────────────────────────────
+  #  Show toast popup in the browser when activity is detected.
+  #  Uses the shared UI toast system (www/base/toasts.js).
+  #  Browser-only; won't appear on other devices.
+
+  pac_toast_notifications:
+    name: "PAC: Browser Toasts"
+    icon: mdi:message-badge
+
+
+  # ── SCREEN BORDER FLASH ─────────────────────────────────────────────────
+  #  Flash a colored border around the screen alongside toasts.
+  #  Adds extra visibility for important activity events.
+  #  Only has effect when browser toasts are also enabled.
+
+  pac_toast_screen_border:
+    name: "PAC: Screen Border Flash"
+    icon: mdi:border-all
+
+
+
+
+#────────────────────────────────────────────────────────────────────────────╮
+#  TEST MODE                                                                   │
+#────────────────────────────────────────────────────────────────────────────╯
+
+#  Virtual presence toggles for testing. When ON, the corresponding area
+#  presence sensor (presence_detection.yaml) treats it as an active motion
+#  sensor, making the area show as occupied. Toggle OFF to clear.
+
+  pac_test_presence_bedroom:
+    name: "PAC: Test Presence — Bedroom"
+    icon: mdi:test-tube
+
+  pac_test_presence_office:
+    name: "PAC: Test Presence — Office"
+    icon: mdi:test-tube
+
+  pac_test_presence_2nd_floor:
+    name: "PAC: Test Presence — 2nd Floor"
+    icon: mdi:test-tube
+
+  pac_test_presence_1st_floor:
+    name: "PAC: Test Presence — 1st Floor"
+    icon: mdi:test-tube
+
+  pac_test_presence_ground_floor:
+    name: "PAC: Test Presence — Ground Floor"
+    icon: mdi:test-tube
+
+
+# | END: presence_activity_card.yaml

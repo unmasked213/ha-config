@@ -1,0 +1,144 @@
+
+# | START: lights_bedroom.yaml
+# |  PATH: /config/packages/light/lights_bedroom.yaml
+
+
+# ╭────────────────────╮
+# │   GROUP
+# ╰────────────────────╯
+group:
+
+# ➔ Both Elgato light panels
+  elgato_panels:
+    name: Elgato Panels
+    entities:
+      - light.elgato_panel_01
+      - light.elgato_panel_02
+    all: true
+
+# ➔ Both lightstrips under each side of bed
+  bedframe_lightstrips:
+    name: Bedframe Lightstrips
+    entities:
+      - light.hue_lightstrip_bed_c_side
+      - light.hue_lightstrip_bed_e_side
+    all: true
+
+
+
+# ╭────────────────────╮
+# │   INPUT DATETIME
+# ╰────────────────────╯
+input_datetime:
+
+# ➔ Last Bedroom Entry
+  last_bedroom_entry:
+    name: Last Bedroom Entry
+    has_date: true
+    has_time: true
+
+# ➔ Last Manual Override
+  last_manual_override:
+    name: Last Manual Override
+    has_date: true
+    has_time: true
+
+
+
+
+
+
+
+
+# ╭────────────────────╮
+# │   TEMPLATE SENSOR
+# ╰────────────────────╯
+template:
+
+# ➔ Backend code for the gradient light card on dashboard
+#    Card blends the colours of the lights into an aesthetic card
+  - sensor:
+      - name: Room 02 Light Gradient
+        unique_id: room_02_light_gradient
+        state: >
+          {% set room = 'light.room_02' %}
+          {% set ids = state_attr(room, 'entity_id') or [] %}
+          {% set lights = expand(ids) %}
+          {% set on = lights
+            | selectattr('state', 'equalto', 'on')
+            | rejectattr('attributes.type', 'equalto', 'browser_mod')
+            | list %}
+          {% if on|length == 0 %}
+            linear-gradient(135deg, var(--contrast2) 0%, var(--contrast1) 100%)
+          {% else %}
+            {# --- helpers --- #}
+            {% macro clamp01(v) -%}
+              {{ 0 if v < 0 else (1 if v > 1 else v) }}
+            {%- endmacro %}
+            {% macro compand(v) -%}
+              {{ (12.92*v) if v <= 0.0031308 else (1.055 * (v ** (1/2.4)) - 0.055) }}
+            {%- endmacro %}
+            {% macro xy_to_rgba(x, y, bri) -%}
+              {% set x = x|float(0) %}
+              {% set y = y|float(0.0001) %}
+              {% set z = 1 - x - y %}
+              {% set Y = bri %}
+              {% set X = (Y / y) * x %}
+              {% set Z = (Y / y) * z %}
+              {% set r = clamp01(compand(X * 1.656492 - Y * 0.354851 - Z * 0.255038)) %}
+              {% set g = clamp01(compand(-X * 0.707196 + Y * 1.655397 + Z * 0.036152)) %}
+              {% set b = clamp01(compand(X * 0.051713 - Y * 0.121364 + Z * 1.01153)) %}
+              rgba({{ (r*255)|round(0)|int }},{{ (g*255)|round(0)|int }},{{ (b*255)|round(0)|int }},{{ bri }})
+            {%- endmacro %}
+            {# --- layout --- #}
+            {% set positions = [
+              '20% 20%','80% 20%','50% 50%','20% 80%','80% 80%',
+              '35% 35%','65% 35%','35% 65%','65% 65%'
+            ] %}
+            {% set base = 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.95) 100%)' %}
+            {% set ns = namespace(layers=[base]) %}
+            {% set max_layers = [on|length, positions|length]|min %}
+            {% for i in range(0, max_layers) %}
+              {% set s = on[i] %}
+              {% set bri = (s.attributes.brightness|int(255) / 255) %}
+              {% if s.attributes.rgb_color is defined %}
+                {% set rgba = 'rgba(' ~
+                  (s.attributes.rgb_color[0]|int) ~ ',' ~
+                  (s.attributes.rgb_color[1]|int) ~ ',' ~
+                  (s.attributes.rgb_color[2]|int) ~ ',' ~
+                  bri ~ ')' %}
+              {% elif s.attributes.xy_color is defined %}
+                {% set rgba = xy_to_rgba(s.attributes.xy_color[0], s.attributes.xy_color[1], bri) %}
+              {% elif s.attributes.color_temp is defined %}
+                {% set rgba = 'rgba(255,255,240,' ~ bri ~ ')' %}
+              {% else %}
+                {% set rgba = 'rgba(255,255,255,' ~ bri ~ ')' %}
+              {% endif %}
+              {% set size = 50 if (i % 3 == 0) else (70 if (i % 3 == 1) else 90) %}
+              {% set ns.layers = ns.layers + [
+                'radial-gradient(circle at ' ~ positions[i] ~ ', ' ~ rgba ~ ' 0%, transparent ' ~ size ~ '%)'
+              ] %}
+            {% endfor %}
+            {{ ns.layers | join(', ') }}
+          {% endif %}
+
+      - name: Room 02 Light Blend
+        unique_id: room_02_light_blend
+        state: >
+          {% set ids = state_attr('light.room_02', 'entity_id') or [] %}
+          {% set count = ids|length %}
+          {{ 'lighten, screen, overlay, color-dodge' if count > 6
+             else ('lighten, screen, overlay' if count > 3 else 'lighten, screen') }}
+
+      - name: Room 02 Light Opacity
+        unique_id: room_02_light_opacity
+        state: >
+          {% set b = state_attr('light.room_02','brightness')|int(0) %}
+          {{ (b/255)|round(2) }}
+
+
+
+
+
+# | END: lights_bedroom.yaml
+

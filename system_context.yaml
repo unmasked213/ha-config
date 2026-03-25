@@ -1,0 +1,368 @@
+# /config/system_context.yaml
+# Single source of truth for static HA system context.
+# Read by pyscript/system_context.py → published as sensor.ha_system_context
+# DO NOT duplicate this content elsewhere.
+
+executive_context:
+  System intent: >-
+    This Home Assistant instance is intentionally large, UI-heavy, and
+    architecture-driven. Scale, abstraction, and layering are deliberate design
+    choices, not indicators of organic sprawl or misconfiguration.
+  Stability assumption: >-
+    Unless explicitly stated otherwise, the system should be assumed
+    operationally stable. Elevated warnings, unavailable entities, and test
+    artefacts primarily reflect active development, staged migrations, and
+    retired hardware.
+  Analysis guidance: >-
+    Prefer localized, surgical changes. Do not default to simplification or
+    refactoring. Treat packages/ and www/base/ as first-class architecture with
+    prior design intent.
+
+gotchas:
+  Presence sensors: Templates aggregating multiple inputs, not raw device entities
+  Automations location: Split between automations.yaml AND packages/ files
+  Dashboard format: JSON in .storage/lovelace.*, not YAML files
+  Token system: Lives in www/base/foundation.js, not theme files
+  Door sensors: Template sensors combining contact + vibration, not raw
+  WhatsApp contacts: Mapped via sensor attributes, not config file
+  Integration count: Includes frontend cards, not just backend services
+  Floor 01 lighting: >-
+    Uses raw FP2 entity IDs, bypassing presence abstraction — rename breaks
+    silently
+  System prompts: >-
+    Stored in sensor attributes (not input_text) to bypass 255 char limit
+  CLAUDE.md structure: >-
+    Root file plus domain-specific files in all 14 packages/ subdirectories
+    (ai, communication, dashboard, device, health, lights, network, occupancy,
+    server, shopping, time, travel, weather) and www/base/docs/
+  Audit reports: >-
+    Generated periodically via prompts — config-intel for metrics, failure-mode
+    for resilience, meta-insights for unused capabilities, plus project-audit,
+    components-review, and shared-ui-audit
+  YAML anchor pattern: >-
+    &presence_area_base changes ripple to all area presence sensors (bedroom,
+    office, all floors)
+  Edge_hold behavior: >-
+    Doors extend presence 30s after last change (15s high-traffic) — intentional
+    for in-transit scenarios
+  Override timer persistence: timer.light_override has restore:true — survives HA restarts
+  First-on-only brightness: >-
+    Lighting automation sets brightness only on OFF→ON transition, not
+    mid-session
+  WhatsApp client isolation: clientId "c" and "e" are separate integrations — never mix
+  WhatsApp unread state: Both input_number AND input_boolean must be cleared together
+  Alexa TTS: Requires SSML wrapping — bare text won't work
+  Sleep context sensor: >-
+    bed_state_asleep_likely_bedroom uses device_class:safety — bed occupancy
+    dominates time-of-day logic
+  Claude Bridge transport: >-
+    Uses todo lists as message bus, NOT a direct API — write to
+    todo.claude_bridge, read from todo.claude_bridge_response
+  Transcript content: >-
+    sensor.transcript_latest stores transcript, summary, filename, and
+    timestamp as attributes — files in www/transcripts/ are archival only.
+    Summaries also written to todo.meeting_summaries, which triggers the
+    action extraction pipeline downstream
+  Action extraction identity: >-
+    todo.update_item matches by summary text, not UID — summary collisions
+    disambiguated by appending (meeting_date)
+  Action extraction manual edits: >-
+    Pipeline tracks its own last-written state via SHA-256 hash. If user edits
+    an item in todo.work_actions, pipeline appends context instead of
+    overwriting
+  Action extraction ledger: >-
+    todo.action_pipeline_ledger uses two-phase lease (processing → complete)
+    with 300s TTL — prevents double-writes and recovers from crashed runs.
+    Failed entries require manual deletion to retry
+  MCP access from claude.ai: >-
+    Does not exist — Claude Bridge is the workaround for claude.ai to HA
+    communication
+  Pico keyboard emulator: >-
+    Appears as a standard USB keyboard (HID only), not as a Raspberry Pi
+    device — boot.py strips serial, mouse, consumer control, and storage in
+    normal mode
+  Toast notifications: >-
+    Script-based system with SVG screen border effects — not a simple
+    browser_mod notification
+  YAML dashboard: >-
+    Exists but is load-bearing as the global resource registry
+    (ui/ui_lovelace_resources.yaml) — cannot be removed without migrating that
+    registry
+  Tooltip dark mode: >-
+    tooltips.js TOOLTIP_STYLES block (lines ~590-630) contains hardcoded
+    rgb()/rgba() fallback values that must stay in sync with foundation.js
+    tokens — CSS var() fallbacks are not automatically updated
+  Prompt scoring: >-
+    Category-scoped structural reliability scoring (1.0–10.0) with hard ceiling
+    thresholds (7.0/8.0/8.9/9.5), not subjective quality rating — scoring calls
+    script.score_prompt via hass.callService and polls for async result
+
+file_locations:
+  AI context (root): CLAUDE.md (session protocol, universal rules)
+  AI context (domains): packages/*/CLAUDE.md, www/base/docs/CLAUDE.md
+  Audit reports: >-
+    docs/reports/ — config-intel/ (YYYY-MM-DD-HH-MM-config-intel.md),
+    failure-mode/ (FAILURE_MODE_REPORT_YYYY-MM-DD.md), meta-insights/
+    (YYYY-MM-DD-HH-MM-meta-insights.md), project-audit/, components-review/,
+    shared-ui-audit/
+  Session management: .claude/ (session.md, session_history.md)
+  Two-Claude workspace: ai_adversarial_system/ (handoff.md, workspace/)
+  AI generated images: www/media/image/ai_generated/
+  Core config: configuration.yaml (minimal loader)
+  Automations: automations.yaml + packages/**/*.yaml
+  Scripts: scripts.yaml
+  Packages root: packages/ (primary edit location)
+  Presence system: packages/occupancy/presence_detection.yaml
+  Door monitoring: packages/occupancy/doors.yaml
+  Bed state: packages/occupancy/bed_state.yaml
+  Desk occupancy: packages/occupancy/presence_desks.yaml
+  Room transitions: packages/occupancy/floor02_travel_tracking.yaml
+  Lighting: packages/lights/*.yaml
+  WhatsApp: packages/communication/whatsapp_config.yaml
+  Alerts: packages/communication/alerts.yaml
+  Transcript pipeline: packages/communication/transcript_pipeline.yaml
+  Transcript files: www/transcripts/ (date-prefixed .txt files)
+  Fetcher scripts: >-
+    scripts/fetch_imap_attachments.py, scripts/fetch_transcript.sh,
+    scripts/.imap_env
+  Work actions pipeline: >-
+    packages/work/work.yaml (trigger automation),
+    pyscript/action_extraction_pipeline.py (1,355-line pipeline),
+    packages/work/CLAUDE.md (domain docs)
+  Work actions card: >-
+    www/cards/work-actions-card/work-actions-card.js (UI),
+    packages/work/work_actions_card.yaml (6 HA setting helpers)
+  Work actions entities: >-
+    todo.work_actions (C's action list), todo.meeting_summaries (source),
+    todo.meeting_transcripts (reference), todo.action_pipeline_ledger
+    (idempotency)
+  Work actions design docs: >-
+    tmp/action-extraction-plan-v2.1-final.md (architecture),
+    tmp/action-extraction-implementation-spec.md (implementation guide)
+  AI services: packages/ai/*.yaml
+  Claude Bridge relay: packages/ai/claude_bridge.yaml
+  HA system snapshot: packages/server/ha_snapshot_sensor.yaml
+  Prompt manager: custom_components/prompt_manager/ + packages/ai/prompt_manager.yaml
+  Cameras: packages/device/cameras.yaml + frigate.yml
+  Driveway detection: packages/device/driveway_detection.yaml
+  Dashboards: .storage/lovelace.* (JSON, UI-managed)
+  Custom components: custom_components/
+  Frontend resources: www/base/ (shared UI system)
+  Resource registry: ui/ui_lovelace_resources.yaml
+  Shared UI repo: github.com/unmasked213/HA-UI-System
+  Themes: >-
+    themes/ (material_you/ primary, set on boot via
+    frontend_theme_management.yaml)
+  Secrets: secrets.yaml
+  Toast notification: scripts.yaml (alias Show Toast Notification)
+  Claude Bridge entities: todo.claude_bridge (write), todo.claude_bridge_response (read)
+  Claude Code addon: HA sidebar (ESJavadex/claude-code-ha fork)
+  MCP server: Official HA MCP Server integration (Assist API access)
+  Server frontend: >-
+    packages/server/frontend/ (10 YAML files — stats, themes, camera views,
+    TTS, auto-refresh)
+
+naming:
+  Lights: light.<location>_<descriptor>
+  Presence: binary_sensor.presence_<area>
+  Doors: binary_sensor.door_<location> (unified template sensors)
+  Cameras: camera.c<NN> (zero-padded index)
+  Camera helpers: input_*.c<NN>_<setting>
+  WhatsApp: input_*.whatsapp_c_<feature>
+  Input booleans: input_boolean.<feature>_<modifier>
+  Automations: <Domain> - <Feature> or <Domain> • <Feature> (newer)
+  Scripts: <device>_<action>_<target> (snake_case)
+  Packages: packages/<domain>/<specific_feature>.yaml
+  Phone numbers: 447XXXXXXXXX@s.whatsapp.net (no leading +)
+
+subsystems:
+  Presence detection: >-
+    Mature. Presence + motion + doors aggregated via YAML anchors.
+    packages/occupancy/
+  Lighting automation: >-
+    Active development. Presence-based, lux-aware, manual override detection.
+    packages/lights/
+  Door monitoring: >-
+    Mature. Unified sensors (contact + vibration + fallback).
+    packages/occupancy/doors.yaml
+  Bed state: >-
+    Mature. Sleep context via bed occupancy + time-of-day. Produces
+    binary_sensor.bed_state_asleep_likely_bedroom (device_class:safety).
+    packages/occupancy/bed_state.yaml
+  WhatsApp: >-
+    Mature. Contact mapping, chat history, AI reply suggestions.
+    packages/communication/
+  AI text generation: Mature. Multiple providers via ha_text_ai. packages/ai/
+  Camera/Frigate: Stable. Object detection, day/night switching. frigate.yml
+  Driveway detection: >-
+    Stable. CV-based car detection using pyscript/dad_car_detection.py with
+    OpenAI Vision fallback. packages/device/driveway_detection.yaml
+  TTS/Alexa: >-
+    Stable. TTS via Sonos, Alexa command routing. packages/ai/alexa.yaml
+  Claude Bridge: >-
+    Stable. Bidirectional text channel between claude.ai and HA via todo lists.
+    Write path: claude.ai → HassListAddItem → todo.claude_bridge → relay
+    automation (packages/ai/claude_bridge.yaml) →
+    input_text.claude_bridge_payload. Read path: HA → todo.add_item →
+    todo.claude_bridge_response (label=summary, description=full payload).
+    Plaud transcripts auto-land here.
+  Transcript pipeline: >-
+    Stable. Plaud → Gmail (fragment0044) → IMAP integration → fetch automation
+    → www/transcripts/ → command_line sensor (sensor.transcript_latest) +
+    summary written to todo.meeting_summaries + full text to
+    todo.meeting_transcripts (both with due_datetime, 7-day auto-cleanup).
+    packages/communication/transcript_pipeline.yaml
+  Work actions pipeline: >-
+    Stable. 5-phase AI-assisted extraction (trigger → extract → fetch →
+    classify → write). Trigger automation (packages/work/work.yaml, mode:
+    single) fires on todo.meeting_summaries state change. Pyscript
+    (pyscript/action_extraction_pipeline.py) parses ## Actions section,
+    fetches existing items from todo.work_actions, classifies each candidate
+    via ai_task.openai_ai_task as NEW/PROGRESSION/DUPLICATE, then writes
+    results. Safety: idempotency ledger with 300s lease TTL, manual edit
+    protection via SHA-256 hashing, >50% parse failure aborts, uncertain
+    defaults to NEW. packages/work/
+  Work actions card: >-
+    Stable. Custom Shadow DOM card (www/cards/work-actions-card/) purpose-built
+    for todo.work_actions. Patch-based diffing
+    (no full re-render), optimistic UI with rollback, edit modal
+    (double-tap for title + due date + delete), meeting summary drawer
+    (right-side panel with source context), dropdown menu (sort, filters,
+    settings), new-item indicators (pink dot, localStorage, auto-expire),
+    completed shelf-life auto-hiding, firework celebration on completion,
+    FLIP reflow with staggered entry/exit animations, touch interactions
+    (long-press tooltip, double-tap edit), reduced-motion support.
+    6 HA helper entities (wac_*) for persistent settings. Deep integration
+    with shared UI system (foundation.js, components.js, helpers.js,
+    tooltips.js, drawer.js, modals.js).
+  Toast notifications: >-
+    Stable. Custom script with configurable toast stacking, protruding icons,
+    SVG screen border flash with cutout geometry. scripts.yaml
+  Prompt manager: >-
+    Active development. HACS custom component with category-scoped scoring
+    (script.score_prompt → async poll → numerical score 1.0–10.0 with ceiling
+    thresholds), prompt optimization (script.optimize_prompt with scope
+    directives), event-driven field generation (prompt_ai_request →
+    prompt_ai_response), and HA snapshot injection.
+    custom_components/prompt_manager/ + packages/ai/prompt_manager.yaml
+  Server frontend: >-
+    Stable. ~10 YAML files in packages/server/frontend/ covering server stats,
+    theme management, camera view selectors, auto-refresh, TTS helpers, dad
+    jokes, animated headers, tester entities, and bubble module storage.
+  Shared UI system: >-
+    Active development. ~650 design tokens in foundation.js, components.js,
+    toggles.js, tooltips.js. Shadow DOM web components. Production cards
+    (specs-card, phone-card, presence-activity-card).
+    github.com/unmasked213/HA-UI-System
+
+data_flows:
+  Presence to Lighting: >-
+    FP2/motion → binary_sensor.presence_* → packages/lights/ → light.*
+  Door to Presence: >-
+    Contact/vibration → binary_sensor.door_* → presence hold extended
+  WhatsApp inbound: >-
+    Event → contact lookup → unread increment → shell_command append →
+    sensor.whatsapp_chat_history_*
+  WhatsApp AI replies: >-
+    View chat → script → ai_task.generate_data →
+    input_text.whatsapp_reply_option_*
+  Manual override: >-
+    Physical switch → timer.light_override.start → auto lights suspended
+  TTS alerts: >-
+    Trigger → automation → media_player.volume_set → tts → Sonos
+  Camera day/night: >-
+    sun.sun → automation → select.c*_day_night_mode
+  Prompt Manager: >-
+    UI fires prompt_ai_request → automation → prompt_ai_response
+  Claude Bridge write: >-
+    claude.ai → HassListAddItem → todo.claude_bridge → relay automation
+    (packages/ai/claude_bridge.yaml, timestamps + copies) →
+    input_text.claude_bridge_payload → HA scripts/automations
+  Claude Bridge read: >-
+    HA → todo.add_item → todo.claude_bridge_response (label=summary,
+    description=full payload) → claude.ai reads via todo_get_items
+  Transcript pipeline: >-
+    Plaud recording → Plaud auto-email → Gmail (fragment0044) → IMAP event →
+    fetch automation → www/transcripts/*.txt → sensor.transcript_latest +
+    summary → todo.meeting_summaries + transcript → todo.meeting_transcripts
+    (both with due_datetime for 7-day cleanup)
+  Action extraction: >-
+    todo.meeting_summaries state change → trigger automation (mode: single,
+    5s debounce) → pyscript.action_extraction_pipeline → ledger lease
+    acquired → parse ## Actions section → fetch existing todo.work_actions
+    (active + completed within 90 days) → AI classification per candidate
+    (ai_task.openai_ai_task → NEW/PROGRESSION/DUPLICATE) → collision
+    resolution → write to todo.work_actions (new items added, progressions
+    update matched items respecting manual edits, duplicates skipped) →
+    ledger marked complete → persistent notification
+  Prompt scoring: >-
+    Prompt content → script.score_prompt (category-scoped) →
+    ai_task.generate_data → async poll for score → numerical 1.0–10.0 with
+    ceiling thresholds (7.0/8.0/8.9/9.5) → prompt_manager UI. Also:
+    script.optimize_prompt for rewrite with scope directives.
+  Toast to border: >-
+    Script variables → browser_mod JS → toast container + SVG border overlay
+    with optional cutout geometry
+
+capabilities:
+  Automation: Node-RED, Pyscript
+  AI: ha_text_ai (multiple providers), LLM Vision
+  Frontend: Custom UI stack (www/base/), button-card, card-mod, layout-card
+  Cameras: Frigate (object detection), WebRTC
+  Integrations: MQTT, Zigbee, BLE passive monitoring
+  Media: Sonos, Alexa media player
+  Token governance: foundation.js is READ-ONLY, 48px touch target minimum
+  MCP Server: >-
+    Official HA integration (Assist API). Claude Code addon has local access via
+    supervisor URL. Claude Desktop connections remain problematic.
+  Claude Code: >-
+    ESJavadex/claude-code-ha addon, runs in sidebar, accessible from any device
+    via browser
+  Claude Bridge: Bidirectional text channel (claude.ai ↔ HA) via todo lists
+  IMAP: Gmail integration for automated transcript ingestion
+  Work actions: >-
+    AI-assisted meeting action extraction (pyscript + ai_task) with animated
+    todo card (work-actions-card). 5-phase pipeline with idempotency ledger,
+    manual edit protection, and safety-biased classification
+  Pico keyboard emulator: >-
+    Two devices — one serial-load (minutes delivery to work laptop), one
+    wireless with web UI (Wi-Fi text loading). CircuitPython, UK keymap,
+    HID-only in normal mode.
+
+known_issues:
+  Unavailable entities: >-
+    Elevated due to offline devices, stale integrations, and orphaned entities
+  Dashboard duplication: Confirmed overlap between default and dashboard_home
+  Test dashboards: Multiple test dashboards exist; not candidates for removal
+  Entity sprawl: Mix of legitimate helpers and potentially dead entities
+  Dashboard styling: >-
+    Dashboard JS uses raw hex/rgba, www/base uses tokens — two paradigms
+    coexist; convergence documented at 73.6% var-vs-rgba in dashboard_home
+  YAML dashboard removal: >-
+    Cannot remove without migrating the global resource registry
+    (ui/ui_lovelace_resources.yaml) — load-bearing dependency
+  Claude Bridge enum refresh: >-
+    New todo lists require MCP connection refresh (new conversation) before
+    claude.ai can read them
+  Transcript sensor size: >-
+    Large transcripts in sensor attributes excluded from recorder to prevent
+    database bloat — may hit HA attribute size limits on very long meetings.
+    Full transcripts also stored in todo.meeting_transcripts (separate from
+    summaries in todo.meeting_summaries)
+  Confidence tier unconsumed: >-
+    Presence anchor defines confidence_tier attribute (6 levels) but zero
+    automations read it — all consumers use binary state only
+  Room transitions fire into void: >-
+    floor02_travel_tracking.yaml fires room_occupancy_change events and
+    produces sensor.floor02_zone_active — zero automations listen
+
+shared_ui_docs:
+  Docs root: www/base/docs/
+  Catalogue: custom:ui-catalogue-card
+  Specification: spec.md
+  Component authoring: authoring.md
+  AI constraints: CLAUDE.md
+  Tooltip exceptions: componentry/tooltips.md
+  Screen border: componentry/screen-border.md
+  Clearable input: componentry/clearable-input.md
+  GitHub repo: github.com/unmasked213/HA-UI-System

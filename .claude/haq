@@ -1,0 +1,65 @@
+#!/bin/bash
+# Home Assistant Query — CLI helper for Claude Code (HA add-on only)
+# Named "haq" to avoid conflicting with the Supervisor CLI "ha"
+# Requires: $SUPERVISOR_TOKEN, access to http://supervisor/core/api
+# Usage:
+#   haq state <entity_id>           - Deep-dive single entity
+#   haq list <pattern>              - List entities matching pattern (e.g., "light.*")
+#   haq filter <state>              - Show all entities in given state (e.g., "on", "unavailable")
+#   haq call <domain> <service> <entity>  - Call a service
+
+API="http://supervisor/core/api"
+AUTH="Authorization: Bearer ${SUPERVISOR_TOKEN}"
+CT="Content-Type: application/json"
+
+case "$1" in
+  state)
+    # Single entity deep-dive
+    curl -s -H "$AUTH" -H "$CT" "$API/states/$2" | jq -r '
+      "Entity: \(.entity_id)",
+      "State:  \(.state)",
+      "Changed: \(.last_changed)",
+      "",
+      "Attributes:",
+      (.attributes | to_entries[] | "  \(.key): \(.value)")
+    ' 2>/dev/null || echo "Entity not found: $2"
+    ;;
+
+  list)
+    # List entities matching pattern
+    pattern="${2:-.*}"
+    curl -s -H "$AUTH" -H "$CT" "$API/states" | jq -r --arg p "$pattern" '
+      .[] | select(.entity_id | test($p)) |
+      "\(.entity_id): \(.state)"
+    ' | sort
+    ;;
+
+  filter)
+    # Filter by state
+    target_state="$2"
+    curl -s -H "$AUTH" -H "$CT" "$API/states" | jq -r --arg s "$target_state" '
+      .[] | select(.state == $s) |
+      "\(.entity_id): \(.state) (changed: \(.last_changed | split("T")[0]))"
+    ' | sort
+    ;;
+
+  call)
+    # Service call (domain, service, [entity])
+    if [ -n "$4" ]; then
+      DATA="{\"entity_id\": \"$4\"}"
+    else
+      DATA="{}"
+    fi
+    curl -s -X POST -H "$AUTH" -H "$CT" \
+      "$API/services/$2/$3" \
+      -d "$DATA" | jq -r '.[] | .entity_id' 2>/dev/null
+    ;;
+
+  *)
+    echo "Usage:"
+    echo "  haq state <entity_id>    - Deep-dive single entity"
+    echo "  haq list <pattern>       - List matching entities (regex)"
+    echo "  haq filter <state>       - Show entities in state (on/off/unavailable/etc)"
+    echo "  haq call <domain> <service> <entity>  - Call a service"
+    ;;
+esac

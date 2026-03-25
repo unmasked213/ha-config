@@ -1,0 +1,225 @@
+# | START: theme_swatch.yaml
+# | PATH: /config/templates/custom_button_card_templates/olympus_cards/theme_swatch_card/theme_swatch.yaml
+
+
+
+# ── THEME SWATCH ────────────────────────────────────────────────────────────────
+#   Interactive theme color preview card with clipboard copy functionality.
+#   Displays resolved theme variables as colored swatches with intelligent text contrast.
+#   Example functionality:
+#
+#     • Tap to copy CSS variable or RGB value to clipboard based on copy mode toggle
+#     • Double-tap to copy alternate format (switches between var and RGB)
+#     • Hover to reveal full variable name overlay
+#     • Auto-hides if color resolves to transparent or invalid
+#     • Supports both standard CSS variables and RGB tuple variables
+#     • Dynamic text color based on background luminance for optimal readability
+
+
+
+# ── USAGE ──────────────────────────────────────────────────────────────────────
+# type: custom:button-card
+# template: theme_swatch
+# variables:
+#   theme_var: primary-color
+#   label: Primary
+#   copy_mode_entity: input_boolean
+
+
+
+theme_swatch:
+  show_icon: false
+  show_state: false
+  show_name: false
+
+
+
+# ── VARIABLES ──────────────────────────────────────────────────────────────────
+  variables:
+    theme_var: primary-color
+    label: null
+    copy_mode_entity: null
+    copy_rgb_format: css
+
+
+
+# ── ACTIONS ────────────────────────────────────────────────────────────────────
+  tap_action:
+    action: javascript
+    haptic: medium
+    javascript: |
+      [[[
+        const varName = variables.theme_var;
+        const cssVar = varName.startsWith('--') ? varName : `--${varName}`;
+        const isRgbTuple = cssVar.includes('rgb-');
+
+        // Resolve to computed color
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+        probe.style.color = isRgbTuple ? `rgb(var(${cssVar}))` : `var(${cssVar})`;
+        document.body.appendChild(probe);
+        const resolvedCss = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+
+        const m = resolvedCss && resolvedCss.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+        if (!m) {
+          if (typeof helpers !== 'undefined' && helpers.toastMessage) helpers.toastMessage("No color to copy");
+          return;
+        }
+
+        const resolvedRgb = `rgb(${m[1]}, ${m[2]}, ${m[3]})`;
+        const plainRgb    = `${m[1]}, ${m[2]}, ${m[3]}`;
+        const rgbOut      = variables.copy_rgb_format === 'plain' ? plainRgb : resolvedRgb;
+        const varText     = isRgbTuple ? `rgb(var(${cssVar}))` : `var(${cssVar})`;
+
+        const preferRgb   = !!(variables.copy_mode_entity && hass?.states?.[variables.copy_mode_entity]?.state === 'on');
+        const toCopy      = preferRgb ? rgbOut : varText;
+        const kind        = preferRgb ? (variables.copy_rgb_format === 'plain' ? 'rgb tuple' : 'rgb') : 'var';
+
+        const write = (t) => (
+          navigator.clipboard?.writeText
+            ? navigator.clipboard.writeText(t)
+            : new Promise((res) => { const ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;top:-9999px;'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); res(); })
+        );
+        write(toCopy).then(()=>{
+          // Optional toast on v6; safely ignored on older versions
+          if (typeof helpers !== 'undefined' && helpers.toastMessage) helpers.toastMessage(`${kind} copied`);
+        });
+      ]]]
+
+
+  double_tap_action:
+    action: javascript
+    haptic: light
+    javascript: |
+      [[[
+        const varName = variables.theme_var;
+        const cssVar = varName.startsWith('--') ? varName : `--${varName}`;
+        const isRgbTuple = cssVar.includes('rgb-');
+
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+        probe.style.color = isRgbTuple ? `rgb(var(${cssVar}))` : `var(${cssVar})`;
+        document.body.appendChild(probe);
+        const resolvedCss = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+
+        const m = resolvedCss && resolvedCss.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+        if (!m) {
+          if (typeof helpers !== 'undefined' && helpers.toastMessage) helpers.toastMessage("No color to copy");
+          return;
+        }
+
+        const resolvedRgb = `rgb(${m[1]}, ${m[2]}, ${m[3]})`;
+        const plainRgb    = `${m[1]}, ${m[2]}, ${m[3]}`;
+        const rgbOut      = variables.copy_rgb_format === 'plain' ? plainRgb : resolvedRgb;
+        const varText     = isRgbTuple ? `rgb(var(${cssVar}))` : `var(${cssVar})`;
+
+        const preferRgb   = !!(variables.copy_mode_entity && hass?.states?.[variables.copy_mode_entity]?.state === 'on');
+        const toCopy      = preferRgb ? varText : rgbOut;
+        const kind        = preferRgb ? 'var' : (variables.copy_rgb_format === 'plain' ? 'rgb tuple' : 'rgb');
+
+        const write = (t) => (
+          navigator.clipboard?.writeText
+            ? navigator.clipboard.writeText(t)
+            : new Promise((res) => { const ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;top:-9999px;'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); res(); })
+        );
+        write(toCopy).then(()=>{
+          if (typeof helpers !== 'undefined' && helpers.toastMessage) helpers.toastMessage(`${kind} copied`);
+        });
+      ]]]
+
+
+  hold_action:
+    action: none
+
+
+
+# ── CUSTOM FIELDS ──────────────────────────────────────────────────────────────
+  custom_fields:
+    text_display: |
+      [[[
+        const varName = variables.theme_var;
+        const cssVar = varName.startsWith('--') ? varName : `--${varName}`;
+        const isRgbTuple = cssVar.includes('rgb-');
+
+        // Resolve; if invisible or invalid, hide field
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+        probe.style.color = isRgbTuple ? `rgb(var(${cssVar}))` : `var(${cssVar})`;
+        document.body.appendChild(probe);
+        const resolvedCss = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+
+        const m = resolvedCss && resolvedCss.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+        if (!m) return '<div style="display:none"></div>';
+        const alpha = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (alpha === 0) return '<div style="display:none"></div>';
+
+        const r = +m[1], g = +m[2], b = +m[3];
+        const yiq = (r*299 + g*587 + b*114) / 1000;
+        const textColor = yiq >= 160 ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.92)';
+
+        const displayLabel = (variables.label || varName).replace(/^--/, '');
+        const hoverLabel = varName.replace(/^--/, '');
+        return `
+          <div class="text-wrapper" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none">
+            <div class="default-text" style="position:absolute;font-weight:700;font-size:12px;color:${textColor};transition:opacity .25s ease;text-align:center;padding:0 8px;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;opacity:1">${displayLabel}</div>
+            <div class="hover-text"   style="position:absolute;font-weight:700;font-size:11px;color:${textColor};transition:opacity .25s ease;text-align:center;padding:0 8px;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;opacity:0">${hoverLabel}</div>
+          </div>
+          <style>
+            ha-card:hover .default-text{opacity:0}
+            ha-card:hover .hover-text{opacity:1}
+          </style>
+        `;
+      ]]]
+
+
+
+# ── STYLES ─────────────────────────────────────────────────────────────────────
+  styles:
+
+    card:
+      - display: |
+          [[[
+            const varName = variables.theme_var;
+            const cssVar = varName.startsWith('--') ? varName : `--${varName}`;
+            const isRgbTuple = cssVar.includes('rgb-');
+
+            const probe = document.createElement('div');
+            probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+            probe.style.color = isRgbTuple ? `rgb(var(${cssVar}))` : `var(${cssVar})`;
+            document.body.appendChild(probe);
+            const resolvedCss = getComputedStyle(probe).color;
+            document.body.removeChild(probe);
+
+            const m = resolvedCss && resolvedCss.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+            if (!m) return 'none';
+            const alpha = m[4] !== undefined ? parseFloat(m[4]) : 1;
+            return alpha === 0 ? 'none' : 'block';
+          ]]]
+      - height: 56px
+      - margin: 0
+      - padding: 0
+      - border-radius: 14px
+      - box-shadow: none
+      - border: none
+      - overflow: hidden
+      - background: |
+          [[[
+            const varName = variables.theme_var;
+            const cssVar = varName.startsWith('--') ? varName : `--${varName}`;
+            return cssVar.includes('rgb-') ? `rgb(var(${cssVar}))` : `var(${cssVar})`;
+          ]]]
+      - position: relative
+      - pointer-events: auto
+
+    custom_fields:
+      text_display:
+        - position: absolute
+        - inset: 0
+        - z-index: 0
+
+
+
+# | END: theme_swatch.yaml

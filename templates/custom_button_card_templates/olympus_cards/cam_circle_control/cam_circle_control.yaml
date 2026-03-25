@@ -1,0 +1,375 @@
+# | START: cam_circle_control.yaml
+# |  PATH: /config/templates/custom_button_card_templates/olympus_cards/cam_circle_control.yaml
+
+# ➔ Camera Circle Control
+#   Custom button card template that displays a circle control for a camera's brightness
+#   and provides a tooltip for the control. Core functionality:
+#
+#     • Displays a circle control for a camera's brightness
+#     • Provides a tooltip for the control
+#     • Updates the control when the camera's brightness changes
+#     • Updates the tooltip when the camera's brightness changes
+
+# ➔ Example Usage
+# type: custom:button-card
+# template: cam_circle_control
+# variables:
+#   custom_entity: number.camera_device_selection_image_brightness
+#   param: brightness
+
+cam_circle_control:
+  entity: |-
+    [[[
+      if (variables?.custom_entity) return variables.custom_entity;
+      const sel = states['input_select.camera_device_selection']?.state || '';
+      const cam = sel.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
+      const param = (variables?.param || 'brightness').toLowerCase();
+      return `number.${cam}_image_${param}`;
+    ]]]
+  tooltip: |
+    [[[
+      const param = (variables?.param || '').toString().trim();
+      const friendly = entity?.attributes?.friendly_name || '';
+      const label = param || friendly.split(/\s+/).pop() || 'Value';
+      return `Set ${label.replace(/_/g, ' ').toLowerCase()}`;
+    ]]]
+  show_name: false
+  show_state: false
+  show_icon: false
+  variables:
+    is_on: >-
+      [[[ return entity?.state != null && !["unavailable", "unknown",
+      "error"].includes(entity.state); ]]]
+    attrs: |
+      [[[
+        return {
+          min: Number.isFinite(parseFloat(entity?.attributes?.min)) ? parseFloat(entity.attributes.min) : 0,
+          max: Number.isFinite(parseFloat(entity?.attributes?.max)) ? parseFloat(entity.attributes.max) : 100,
+          step: Number.isFinite(parseFloat(entity?.attributes?.step)) ? parseFloat(entity.attributes.step) : 1
+        };
+      ]]]
+    pct: |
+      [[[
+        const v = parseFloat(entity?.state);
+        const min = variables.attrs.min;
+        const max = variables.attrs.max;
+        if (!Number.isFinite(v) || max <= min) return 0;
+        return Math.max(0, Math.min(100, Math.round(((v - min) * 100) / (max - min))));
+      ]]]
+  tap_action:
+    action: none
+    haptic: medium
+  hold_action:
+    action: none
+  styles:
+    grid:
+      - grid-template-areas: '"circle" "label"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: auto min-content
+      - row-gap: 8px
+      - align-items: start
+      - justify-items: start
+    card:
+      - width: 100px
+      - height: 120px
+      - padding: 0
+      - box-shadow: none
+      - border: none
+      - transition: none
+      - '-webkit-tap-highlight-color': transparent
+      - background-color: transparent
+      - '--mdc-ripple-color': transparent
+      - '--mdc-ripple-press-opacity': 0
+      - '--mdc-ripple-hover-opacity': 0
+      - '--mdc-ripple-focus-opacity': 0
+      - '--c-stroke-color': >-
+          [[[ return variables.is_on ? "var(--primary-color)" :
+          "var(--disabled-color)"; ]]]
+      - '--c-fill-color': var(--primary-background-color)
+      - '--c-stroke-width': 3
+      - '--c-stroke-width-dragging': 4
+      - '--c-font-color': var(--primary-text-color)
+      - '--c-font-size': 69%
+      - '--c-unit-font-size': 70%
+      - '--c-font-weight': 250
+      - '--c-letter-spacing': 0.03rem
+      - '--c-slider-thumb': var(--primary-color)
+      - '--c-slider-track': var(--disabled-color)
+    custom_fields:
+      circle:
+        - width: 90px
+        - height: 90px
+        - margin: 0
+        - justify-self: start
+      label:
+        - width: 100%
+        - margin: 0
+        - padding: 0 2px
+        - box-sizing: border-box
+        - text-align: center
+        - font-size: 0.7rem
+        - color: var(--primary-text-color)
+        - white-space: nowrap
+        - overflow: hidden
+        - text-overflow: ellipsis
+  custom_fields:
+    circle: |
+      [[[
+        if (!entity?.entity_id?.startsWith('number.')) return '';
+
+        const isOn = variables.is_on;
+        const pct = variables.pct;
+        const radius = 20.5;
+        const circumference = radius * 2 * Math.PI;
+        const offset = circumference - (pct / 100) * circumference;
+        const base = (entity?.entity_id || 'number.unknown').replace(/\W/g, '_');
+        const uid = `${base}_${Date.now()}`;
+
+        const ids = {
+          bg: `cbg_${uid}`,
+          stroke: `cst_${uid}`,
+          rollback: `crb_${uid}`,
+          value: `cvl_${uid}`,
+          slider: `csl_${uid}`
+        };
+
+        const svg = `
+          <svg viewBox="0 0 50 50" role="img" aria-label="Value: ${pct}%">
+            <style>
+              circle {
+                transform: rotate(-90deg);
+                transform-origin: 50% 50%;
+                stroke-linecap: round;
+                fill: ${isOn ? 'var(--c-fill-color)' : 'none'};
+              }
+              #${ids.bg}, #${ids.stroke} {
+                stroke-dasharray: ${circumference};
+              }
+              #${ids.rollback} {
+                stroke-linecap: round;
+              }
+              text {
+                font-size: var(--c-font-size);
+                font-weight: var(--c-font-weight);
+                letter-spacing: var(--c-letter-spacing);
+                fill: var(--c-font-color);
+                text-anchor: middle;
+                dominant-baseline: central;
+              }
+              tspan { font-size: var(--c-unit-font-size); }
+            </style>
+            <circle id="${ids.bg}" cx="25" cy="25" r="${radius}"
+                    opacity="0.7" stroke-width="var(--c-stroke-width)"
+                    stroke="var(--ha-card-background)"/>
+            <circle id="${ids.rollback}" cx="25" cy="25" r="${radius}"
+                    opacity="0" stroke-width="var(--c-stroke-width)"
+                    stroke="var(--warning-color)" stroke-dasharray="0 ${circumference}"
+                    stroke-dashoffset="0"
+                    style="transition: opacity 0.1s ease"/>
+            <circle id="${ids.stroke}" cx="25" cy="25" r="${radius}"
+                    stroke-width="var(--c-stroke-width)"
+                    stroke="var(--c-stroke-color)" stroke-dashoffset="${offset}"/>
+            <text id="${ids.value}" x="50%" y="52%">
+              ${pct}<tspan>%</tspan>
+            </text>
+          </svg>
+        `;
+
+        if (!isOn) return svg;
+
+        const slider = `<input id="${ids.slider}" type="range" min="0" max="100" value="${pct}" aria-label="Adjust value" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" role="slider" tabindex="0">`;
+
+        requestAnimationFrame(() => {
+          const root = this?.shadowRoot;
+          if (!root) return;
+
+          const sliderEl = root.getElementById(ids.slider);
+          const valueText = root.getElementById(ids.value);
+          const strokeCircle = root.getElementById(ids.stroke);
+          const rollbackCircle = root.getElementById(ids.rollback);
+
+          if (!sliderEl || !valueText || !strokeCircle || !rollbackCircle || sliderEl.dataset.init) return;
+          sliderEl.dataset.init = '1';
+          sliderEl.style.top = `${(pct - 82) / 2.2 + 9}%`;
+
+          const attrs = variables.attrs;
+          let debounce = null;
+          let interacting = false;
+          let originalPct = pct;
+
+          const updateUI = (val) => {
+            valueText.innerHTML = `${val}<tspan>%</tspan>`;
+            strokeCircle.style.strokeDashoffset = circumference - (val / 100) * circumference;
+            sliderEl.setAttribute('aria-valuenow', String(val));
+
+            if (val < originalPct) {
+              const seg = ((originalPct - val) / 100) * circumference;
+              rollbackCircle.style.strokeDasharray = `${seg} ${circumference - seg}`;
+              rollbackCircle.style.strokeDashoffset = circumference - (val / 100) * circumference;
+              rollbackCircle.style.opacity = '0.6';
+            } else {
+              rollbackCircle.style.strokeDasharray = `0 ${circumference}`;
+              rollbackCircle.style.opacity = '0';
+            }
+          };
+
+          const commitValue = (val) => {
+            clearTimeout(debounce);
+            debounce = setTimeout(() => {
+              const raw = attrs.min + ((val / 100) * (attrs.max - attrs.min));
+              const stepped = Math.round((raw - attrs.min) / attrs.step) * attrs.step + attrs.min;
+              const clamped = Math.max(attrs.min, Math.min(attrs.max, stepped));
+
+              hass.callService('number', 'set_value', {
+                entity_id: entity.entity_id,
+                value: clamped
+              }).catch(err => console.warn('Service call failed:', err));
+            }, 150);
+          };
+
+          const onStart = () => {
+            originalPct = pct;
+            rollbackCircle.style.strokeDasharray = `0 ${circumference}`;
+            rollbackCircle.style.opacity = '0';
+            sliderEl.style.cursor = 'grabbing';
+            strokeCircle.style.strokeWidth = 'var(--c-stroke-width-dragging)';
+          };
+
+          const onInput = (e) => {
+            interacting = true;
+            e.stopPropagation();
+            const val = Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0));
+            updateUI(val);
+          };
+
+          const onEnd = (e) => {
+            const val = Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0));
+            if (interacting) {
+              e.stopPropagation();
+              commitValue(val);
+            }
+            interacting = false;
+            originalPct = val;
+            rollbackCircle.style.strokeDasharray = `0 ${circumference}`;
+            rollbackCircle.style.opacity = '0';
+            sliderEl.style.cursor = 'grab';
+            strokeCircle.style.strokeWidth = 'var(--c-stroke-width)';
+          };
+
+          const onClick = (e) => interacting && e.stopPropagation();
+
+          sliderEl.addEventListener('mousedown', onStart);
+          sliderEl.addEventListener('touchstart', onStart, {passive: true});
+          sliderEl.addEventListener('input', onInput);
+          sliderEl.addEventListener('mouseup', onEnd);
+          sliderEl.addEventListener('touchend', onEnd);
+          sliderEl.addEventListener('pointercancel', onEnd);
+          sliderEl.addEventListener('touchcancel', onEnd);
+          sliderEl.addEventListener('click', onClick);
+        });
+
+        return svg + slider;
+      ]]]
+    label: |
+      [[[
+        const param = (variables?.param || '').toString().trim();
+        const friendly = entity?.attributes?.friendly_name || '';
+        const lastWord = friendly.split(/\s+/).pop() || '';
+        const raw = param || lastWord || 'Value';
+        const pretty = raw.replace(/_/g, ' ').toLowerCase().replace(/(^|\s)\S/g, s => s.toUpperCase());
+        return `<div class="c-label" aria-hidden="true">${pretty}</div>`;
+      ]]]
+  extra_styles: |
+    [[[
+      const sel = 'input[type="range"][id^="csl_"]';
+      return `
+        #container {
+          text-align: left !important;
+          justify-content: flex-start !important;
+        }
+
+        ${sel} {
+          appearance: none;
+          -webkit-appearance: none;
+          transform: rotate(270deg);
+          width: 90px;
+          position: absolute;
+          left: 0;
+          margin-top: 40%;
+          opacity: 0;
+          cursor: grab;
+          background: transparent;
+          outline: none;
+          border: none;
+          pointer-events: auto;
+          z-index: 10;
+        }
+
+        ${sel}::-webkit-slider-thumb,
+        ${sel}::-moz-range-thumb {
+          appearance: none;
+          -webkit-appearance: none;
+          width: clamp(10rem, 24vw, 18rem);
+          height: clamp(10rem, 24vw, 18rem);
+          border-radius: 50%;
+          background: var(--c-slider-thumb);
+          cursor: grab;
+          border: none;
+          opacity: 0;
+          transition: opacity 0.2s ease, transform 0.1s ease;
+        }
+
+        ${sel}::-webkit-slider-runnable-track,
+        ${sel}::-moz-range-track {
+          background: var(--c-slider-track);
+          height: clamp(1.2rem, 4vw, 3rem);
+          border-radius: 1.5rem;
+          cursor: grab;
+          border: none;
+          outline: none;
+        }
+
+        ${sel}:hover::-webkit-slider-thumb,
+        ${sel}:hover::-moz-range-thumb {
+          opacity: 1;
+        }
+
+        ${sel}:active::-webkit-slider-thumb,
+        ${sel}:active::-moz-range-thumb {
+          cursor: grabbing;
+          opacity: 1;
+          transform: scale(1.05);
+        }
+
+        ${sel}:focus-visible {
+          outline: 2px solid var(--primary-color);
+          outline-offset: 2px;
+        }
+
+        @media screen and (max-width: 800px) {
+          ${sel}::-webkit-slider-thumb,
+          ${sel}::-moz-range-thumb {
+            width: clamp(12rem, 32vw, 22rem);
+            height: clamp(12rem, 32vw, 22rem);
+          }
+        }
+
+        @media (prefers-contrast: high) {
+          ${sel}::-webkit-slider-thumb,
+          ${sel}::-moz-range-thumb {
+            border: 3px solid currentColor;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          ${sel}::-webkit-slider-thumb,
+          ${sel}::-moz-range-thumb {
+            transition: none;
+          }
+          ${sel}:active::-webkit-slider-thumb,
+          ${sel}:active::-moz-range-thumb {
+            transform: none;
+          }
+        }
+      `;
+    ]]]
