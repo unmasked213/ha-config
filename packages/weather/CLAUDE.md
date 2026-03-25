@@ -1,6 +1,6 @@
 # CLAUDE - Weather Domain
 
-> **Scope:** Pirate Weather integration, AI clothing suggestions, forecast data aggregation
+> **Scope:** Forecasts, AI clothing suggestions
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

@@ -323,40 +323,45 @@ def readme_tree() -> str:
         lambda f: f.is_file() and f.suffix == ".js",
     )
 
+    # Comment column: align all # comments to the same position
+    COL = 38  # characters from start of line to the #
+
+    def _line(prefix: str, name: str, desc: str) -> str:
+        left = f"{prefix}{name}"
+        return f"{left:<{COL}}# {desc}" if desc else left
+
     lines = [
         "```",
         "/config/",
-        "├── configuration.yaml        # HA bootstrap (delegates to packages)",
-        "├── automations.yaml          # Root automations",
-        "├── scripts.yaml              # Reusable service-call sequences",
-        "├── scenes.yaml               # Scene snapshots",
+        _line("├── ", "configuration.yaml", "HA bootstrap (delegates to packages)"),
+        _line("├── ", "automations.yaml", "Root automations"),
+        _line("├── ", "scripts.yaml", "Reusable service-call sequences"),
+        _line("├── ", "scenes.yaml", "Scene snapshots"),
         "│",
-        f"├── packages/                 # {pkg_count} domain packages, {yaml_count} YAML files",
+        _line("├── ", "packages/", f"{pkg_count} domain packages, {yaml_count} YAML files"),
     ]
 
     domain_descs = _load_domain_descriptions()
     for i, domain in enumerate(domains):
         is_last = i == len(domains) - 1
         conn = "└" if is_last else "├"
-        desc = domain_descs.get(domain, "")
-        desc_str = f"  # {desc}" if desc else ""
-        lines.append(f"│   {conn}── {domain + '/':<24}{desc_str}")
+        lines.append(_line(f"│   {conn}── ", domain + "/", domain_descs.get(domain, "")))
 
     lines.extend([
         "│",
-        f"├── pyscript/                 # {py_count} Python automations",
-        f"├── custom_components/        # {cc_count} third-party integrations",
-        "├── www/                      # Web assets",
-        f"│   ├── base/                 # UI design system ({js_count} JS files)",
-        "│   ├── cards/                 # Custom card implementations",
-        "│   └── community/            # Third-party card library",
+        _line("├── ", "pyscript/", f"{py_count} Python automations"),
+        _line("├── ", "custom_components/", f"{cc_count} third-party integrations"),
+        _line("├── ", "www/", "Web assets"),
+        _line("│   ├── ", "base/", f"UI design system ({js_count} JS files)"),
+        _line("│   ├── ", "cards/", "Custom card implementations"),
+        _line("│   └── ", "community/", "Third-party card library"),
         "│",
-        "├── themes/                   # Material You, Catppuccin, VisionOS",
-        "├── ui/                       # Dashboard views, templates, resources",
-        "├── templates/                # Custom button card templates",
-        "├── docs/                     # Reports and reference documentation",
-        "├── addons/                   # Local add-ons (ha-config-ai-agent)",
-        "└── .claude/                  # AI session management",
+        _line("├── ", "themes/", "Material You, Catppuccin, VisionOS"),
+        _line("├── ", "ui/", "Dashboard views, templates, resources"),
+        _line("├── ", "templates/", "Custom button card templates"),
+        _line("├── ", "docs/", "Reports and reference documentation"),
+        _line("├── ", "addons/", "Local add-ons (ha-config-ai-agent)"),
+        _line("└── ", ".claude/", "AI session management"),
         "```",
     ])
 

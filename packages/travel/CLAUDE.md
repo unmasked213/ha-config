@@ -1,6 +1,6 @@
 # CLAUDE - Travel Domain
 
-> **Scope:** Location tracking, Google Travel Time ETA, map display, railway information
+> **Scope:** Location tracking, ETA, railway
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

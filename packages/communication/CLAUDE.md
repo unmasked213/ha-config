@@ -1,6 +1,6 @@
 # CLAUDE - Communication
 
-> **Scope:** WhatsApp messaging, AI text generation, notifications
+> **Scope:** WhatsApp, notifications, transcripts
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

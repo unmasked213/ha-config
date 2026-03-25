@@ -1,6 +1,6 @@
 # CLAUDE - Occupancy
 
-> **Scope:** Presence detection, door sensors, bed state, room transitions
+> **Scope:** Presence detection, doors, bed state
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

@@ -1,6 +1,6 @@
 # CLAUDE - Work
 
-> **Scope:** Meeting action extraction pipeline — automated work obligation tracking
+> **Scope:** Meeting action extraction
 > **Last reviewed:** 2026-03
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

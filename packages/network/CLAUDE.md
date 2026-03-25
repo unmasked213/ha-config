@@ -1,6 +1,6 @@
 # CLAUDE - Network
 
-> **Scope:** Network device scanning, MAC address mapping
+> **Scope:** Device scanning, MAC mapping
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

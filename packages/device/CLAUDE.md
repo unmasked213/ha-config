@@ -1,6 +1,6 @@
 # CLAUDE - Device Domain
 
-> **Scope:** Hardware device control, camera feeds, covers/blinds, mobile phones, PC state, pet devices, Sonos, Govee heater, driveway car detection
+> **Scope:** Cameras, covers, PC, pet devices, Sonos
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

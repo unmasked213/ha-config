@@ -1,6 +1,6 @@
 # CLAUDE - Lights
 
-> **Scope:** Light automation, manual override, brightness scheduling, color space conversion
+> **Scope:** Per-floor lighting automation
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

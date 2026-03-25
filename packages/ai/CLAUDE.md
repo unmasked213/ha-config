@@ -1,6 +1,6 @@
 # CLAUDE - AI
 
-> **Scope:** AI text/image generation, system prompts, Alexa TTS, prompt management
+> **Scope:** AI generation, prompts, Alexa TTS
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

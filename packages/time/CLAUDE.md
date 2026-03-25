@@ -1,6 +1,6 @@
 # CLAUDE - Time Domain
 
-> **Scope:** Time/date sensors, alarm management, hourly automations, calendar event creation, dashboard timers
+> **Scope:** Alarms, calendar, hourly triggers
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

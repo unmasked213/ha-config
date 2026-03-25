@@ -16,40 +16,40 @@ The system operates at a non-trivial scale, with purposeful complexity and . Met
 
 ```
 /config/
-├── configuration.yaml        # HA bootstrap (delegates to packages)
-├── automations.yaml          # Root automations
-├── scripts.yaml              # Reusable service-call sequences
-├── scenes.yaml               # Scene snapshots
+├── configuration.yaml                # HA bootstrap (delegates to packages)
+├── automations.yaml                  # Root automations
+├── scripts.yaml                      # Reusable service-call sequences
+├── scenes.yaml                       # Scene snapshots
 │
-├── packages/                 # 14 domain packages, 63 YAML files
-│   ├── ai/                       # AI text/image generation, system prompts, Alexa TTS, prompt management
-│   ├── communication/            # WhatsApp messaging, AI text generation, notifications
-│   ├── dashboard/                # Report viewer backend sensors for the report-viewer-card
-│   ├── device/                   # Hardware device control, camera feeds, covers/blinds, mobile phones, PC state, pet devices, Sonos, Govee heater, driveway car detection
-│   ├── health/                   # Body composition metrics from Withings smart scale for two people
-│   ├── lights/                   # Light automation, manual override, brightness scheduling, color space conversion
-│   ├── network/                  # Network device scanning, MAC address mapping
-│   ├── occupancy/                # Presence detection, door sensors, bed state, room transitions
-│   ├── server/                   # Git sync, frontend helpers, server statistics, dashboard infrastructure, theme management, TTS setup
-│   ├── shopping/                 # Shopping list management, text sanitisation, supermarket busyness tracking
-│   ├── time/                     # Time/date sensors, alarm management, hourly automations, calendar event creation, dashboard timers
-│   ├── travel/                   # Location tracking, Google Travel Time ETA, map display, railway information
-│   ├── weather/                  # Pirate Weather integration, AI clothing suggestions, forecast data aggregation
-│   └── work/                     # Meeting action extraction pipeline — automated work obligation tracking
+├── packages/                         # 14 domain packages, 63 YAML files
+│   ├── ai/                           # AI generation, prompts, Alexa TTS
+│   ├── communication/                # WhatsApp, notifications, transcripts
+│   ├── dashboard/                    # Report viewer backend
+│   ├── device/                       # Cameras, covers, PC, pet devices, Sonos
+│   ├── health/                       # Body composition (Withings)
+│   ├── lights/                       # Per-floor lighting automation
+│   ├── network/                      # Device scanning, MAC mapping
+│   ├── occupancy/                    # Presence detection, doors, bed state
+│   ├── server/                       # Git sync, frontend, server stats
+│   ├── shopping/                     # Shopping lists, store busyness
+│   ├── time/                         # Alarms, calendar, hourly triggers
+│   ├── travel/                       # Location tracking, ETA, railway
+│   ├── weather/                      # Forecasts, AI clothing suggestions
+│   └── work/                         # Meeting action extraction
 │
-├── pyscript/                 # 12 Python automations
-├── custom_components/        # 36 third-party integrations
-├── www/                      # Web assets
-│   ├── base/                 # UI design system (16 JS files)
-│   ├── cards/                 # Custom card implementations
-│   └── community/            # Third-party card library
+├── pyscript/                         # 12 Python automations
+├── custom_components/                # 36 third-party integrations
+├── www/                              # Web assets
+│   ├── base/                         # UI design system (16 JS files)
+│   ├── cards/                        # Custom card implementations
+│   └── community/                    # Third-party card library
 │
-├── themes/                   # Material You, Catppuccin, VisionOS
-├── ui/                       # Dashboard views, templates, resources
-├── templates/                # Custom button card templates
-├── docs/                     # Reports and reference documentation
-├── addons/                   # Local add-ons (ha-config-ai-agent)
-└── .claude/                  # AI session management
+├── themes/                           # Material You, Catppuccin, VisionOS
+├── ui/                               # Dashboard views, templates, resources
+├── templates/                        # Custom button card templates
+├── docs/                             # Reports and reference documentation
+├── addons/                           # Local add-ons (ha-config-ai-agent)
+└── .claude/                          # AI session management
 ```
 <!-- TREE:END -->
 

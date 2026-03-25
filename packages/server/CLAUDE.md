@@ -1,6 +1,6 @@
 # CLAUDE - Server Domain
 
-> **Scope:** Git sync, frontend helpers, server statistics, dashboard infrastructure, theme management, TTS setup
+> **Scope:** Git sync, frontend, server stats
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

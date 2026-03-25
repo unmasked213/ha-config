@@ -1,6 +1,6 @@
 # CLAUDE - Dashboard Domain
 
-> **Scope:** Report viewer backend sensors for the report-viewer-card
+> **Scope:** Report viewer backend
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

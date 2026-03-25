@@ -1,6 +1,6 @@
 # CLAUDE - Health Domain
 
-> **Scope:** Body composition metrics from Withings smart scale for two people
+> **Scope:** Body composition (Withings)
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 

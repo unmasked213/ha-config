@@ -1,6 +1,6 @@
 # CLAUDE - Shopping
 
-> **Scope:** Shopping list management, text sanitisation, supermarket busyness tracking
+> **Scope:** Shopping lists, store busyness
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 
