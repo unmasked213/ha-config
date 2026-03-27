@@ -25,9 +25,14 @@ homeassistant:
   packages:                                 !include_dir_named packages
 
   allowlist_external_dirs:
-    -                                       /config
-    -                                       /config/www
+    -                                       /config/www/transcripts
     -                                       /config/www/whatsapp_histories
+    -                                       /config/www/cards
+    -                                       /config/docs
+    -                                       /config/packages
+    -                                       /config/pyscript
+    -                                       /config/themes
+    -                                       /media
 
   media_dirs:
     ai_generated:                           /media/ai_generated
@@ -76,6 +81,7 @@ recorder:
       -                                     sensor.*_link_quality
       -                                     sensor.*_battery_plus
       -                                     binary_sensor.*_vibration*
+
     entities:
       -                                     binary_sensor.door_office
       -                                     binary_sensor.door_bedroom
@@ -87,6 +93,7 @@ recorder:
       -                                     input_text.next_message
       -                                     event.repair
       -                                     sensor.ha_server_snapshot
+
     event_types:
       -                                     call_service
 
@@ -118,8 +125,6 @@ http:
 
 
 
-
-
 # ── INTEGRATIONS ────────────────────────────────────────────────────────────
 system_health:
 lovelace_gen:
@@ -128,7 +133,6 @@ powercalc:
 whatsapp:
 browser_mod:
 prompt_manager:
-
 
 panel_custom:
   - name:                                   material-you-panel

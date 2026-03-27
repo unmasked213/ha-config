@@ -2,8 +2,8 @@
 ╭────────────────────────────────────────╮
 │  /config                               │
 ├────────────────────────────────────────┤
-│  Scanned: 2026-03-25 17:59  |  0.0s    │
-│  742 dirs · 7,665 files · 3.9 GB       │
+│  Scanned: 2026-03-27 03:00  |  0.0s    │
+│  746 dirs · 7,679 files · 4.1 GB       │
 ╰────────────────────────────────────────╯
 
 📁 config/
@@ -12,7 +12,7 @@
 │
 ├── 📁 .cursor/  — 1 dirs, 1 files, 9 KB
 │
-├── 📁 .storage/  — 24 dirs, 156 files, 34 MB
+├── 📁 .storage/  — 24 dirs, 156 files, 35 MB
 │
 ├── 📁 .vscode/  — 1 files, 525 B
 │
@@ -196,7 +196,22 @@
 │   │   ├── gemini-prompt-manager-ui-ideas.md
 │   │   ╰── log-cleanup-plan.md
 │   │
-│   ├── 📁 reference/  (10 folders, 4 files, 57 KB)
+│   ├── 📁 reference/  (11 folders, 5 files, 81 KB)
+│   │   │
+│   │   ├── 📁 car_incident_evidence_19-01-2026/  (2 folders, 1 file, 57 MB)
+│   │   │   │
+│   │   │   ├── 📁 image/  (3 files, 687 KB)
+│   │   │   │   ├── Contemporaneous_notes.png
+│   │   │   │   ├── first_whatsapp_messages_recieved_from_different_number.png
+│   │   │   │   ╰── her_car.jpeg
+│   │   │   │
+│   │   │   ├── 📁 video/  (1 folder, 1 file, 230 MB)
+│   │   │   │   │
+│   │   │   │   ├── 📁 contact_video/
+│   │   │   │   │
+│   │   │   │   ╰── MOVA9737.avi
+│   │   │   │
+│   │   │   ╰── MOVA9737_compressed - Copy.mp4
 │   │   │
 │   │   ├── 📁 Claude/  (1 folder, 1 file, 12 KB)
 │   │   │   │
@@ -339,9 +354,10 @@
 │   │   ├── design_philosophy_reference.md
 │   │   ├── lights-package-audit.md
 │   │   ├── server-info-card.md
+│   │   ├── ui-catalogue-card-audit.md
 │   │   ╰── unused-integrations-audit.md
 │   │
-│   ├── 📁 reports/  (7 folders)
+│   ├── 📁 reports/  (7 folders, 1 file, 17 KB)
 │   │   │
 │   │   ├── 📁 claude-insights/  (2 folders)
 │   │   │   │
@@ -354,7 +370,7 @@
 │   │   ├── 📁 components-review/  (1 file, 11 KB)
 │   │   │   ╰── 2026-02-08-20-00-components-review.json
 │   │   │
-│   │   ├── 📁 config-intel/  (9 files, 305 KB)
+│   │   ├── 📁 config-intel/  (10 files, 339 KB)
 │   │   │   ├── 2026-02-06-11-39-config-intel.md
 │   │   │   ├── 2026-02-10-16-05-config-intel.md
 │   │   │   ├── 2026-02-12-14-03-config-intel.md
@@ -363,7 +379,8 @@
 │   │   │   ├── 2026-02-18-17-18-config-intel.md
 │   │   │   ├── 2026-02-27-03-05-config-intel.md
 │   │   │   ├── 2026-03-05-04-23-config-intel.md
-│   │   │   ╰── 2026-03-15-10-50-config-intel.md
+│   │   │   ├── 2026-03-15-10-50-config-intel.md
+│   │   │   ╰── 2026-03-25-22-31-config-intel.md
 │   │   │
 │   │   ├── 📁 failure-mode/  (2 files, 54 KB)
 │   │   │   ├── FAILURE_MODE_REPORT_2026-02-01.md
@@ -376,11 +393,14 @@
 │   │   ├── 📁 project-audit/  (1 file, 15 KB)
 │   │   │   ╰── 2026-02-14-01-38-project-audit.md
 │   │   │
-│   │   ╰── 📁 shared-ui-audit/  (4 files, 139 KB)
-│   │       ├── 2026-02-08-04-30-shared-ui-audit.md
-│   │       ├── 2026-02-10-16-02-shared-ui-audit.md
-│   │       ├── 2026-02-24-21-00-shared-ui-audit.md
-│   │       ╰── 2026-03-06-19-18-shared-ui-audit.md
+│   │   ├── 📁 shared-ui-audit/  (5 files, 178 KB)
+│   │   │   ├── 2026-02-08-04-30-shared-ui-audit.md
+│   │   │   ├── 2026-02-10-16-02-shared-ui-audit.md
+│   │   │   ├── 2026-02-24-21-00-shared-ui-audit.md
+│   │   │   ├── 2026-03-06-19-18-shared-ui-audit.md
+│   │   │   ╰── 2026-03-25-06-52-shared-ui-audit.md
+│   │   │
+│   │   ╰── 2026-4-0-trigger-impact.md
 │   │
 │   ╰── 📁 research/  (7 folders, 1 file, 912 KB)
 │       │
@@ -500,9 +520,9 @@
 │   │   ├── presence_desks.yaml
 │   │   ╰── presence_detection.yaml
 │   │
-│   ├── 📁 server/  (1 folder, 4 files, 23 KB)
+│   ├── 📁 server/  (1 folder, 4 files, 22 KB)
 │   │   │
-│   │   ├── 📁 frontend/  (10 files, 66 KB)
+│   │   ├── 📁 frontend/  (10 files, 67 KB)
 │   │   │   ├── advanced_camera_card_backend.yaml
 │   │   │   ├── bubble_modules.yaml
 │   │   │   ├── daily_affirmation.yaml
@@ -717,7 +737,7 @@
 │   ├── tablet.yaml
 │   ╰── test_theme.yaml
 │
-├── 📁 tmp/  — 3 files, 116 KB
+├── 📁 tmp/  — 5 files, 1 MB
 │
 ├── 📁 tts/  — 84 files, 6 MB
 │
@@ -745,7 +765,7 @@
 │   │
 │   ├── 📁 alexa_tts/  — empty
 │   │
-│   ├── 📁 base/  (1 folder, 17 files, 387 KB)
+│   ├── 📁 base/  (1 folder, 17 files, 391 KB)
 │   │   │
 │   │   ├── 📁 docs/  (1 folder, 3 files, 87 KB)
 │   │   │   │
@@ -809,12 +829,12 @@
 │   │   │   ├── CLAUDE.md
 │   │   │   ╰── prompt-manager.js
 │   │   │
-│   │   ├── 📁 report-viewer-card/  (3 files, 87 KB)
+│   │   ├── 📁 report-viewer-card/  (3 files, 89 KB)
 │   │   │   ├── markdown-renderer.js
 │   │   │   ├── report-viewer-card.js
 │   │   │   ╰── SPEC.md
 │   │   │
-│   │   ├── 📁 ui-catalogue-card/  (8 files, 178 KB)
+│   │   ├── 📁 ui-catalogue-card/  (9 files, 217 KB)
 │   │   │   ├── CLAUDE.md
 │   │   │   ├── constants.js
 │   │   │   ├── demos.js
@@ -822,7 +842,8 @@
 │   │   │   ├── registry.js
 │   │   │   ├── render.js
 │   │   │   ├── styles.js
-│   │   │   ╰── ui-catalogue-card.js
+│   │   │   ├── ui-catalogue-card.js
+│   │   │   ╰── usage.js
 │   │   │
 │   │   ├── 📁 work-actions-card/  (2 files, 99 KB)
 │   │   │   ├── CLAUDE.md
@@ -834,7 +855,7 @@
 │   │
 │   ├── 📁 community/  — 58 dirs, 1390 files, 61 MB
 │   │
-│   ├── 📁 docs/  — 2 dirs, 1 files, 39 KB
+│   ├── 📁 docs/  — 2 dirs
 │   │
 │   ├── 📁 fonts/  — 28 files, 1 MB
 │   │
@@ -856,7 +877,7 @@
 │   │
 │   ├── 📁 media/  — 33 dirs, 61 files, 46 MB
 │   │
-│   ├── 📁 reports/  — 6 dirs, 20 files, 610 KB
+│   ├── 📁 reports/  — 6 dirs, 22 files, 683 KB
 │   │
 │   ├── 📁 rotas/  — 1 files, 144 KB
 │   │

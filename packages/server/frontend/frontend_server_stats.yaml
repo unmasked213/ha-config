@@ -921,6 +921,32 @@ command_line:
 
 
 
+  # ── STORAGE FILE COUNT ──────────────────────────────────────────────────
+  #  • Monitors .storage/ without needing allowlist_external_dirs.
+
+  - sensor:
+      name: Storage File Count
+      unique_id: storage_file_count
+      scan_interval: 3600
+      icon: mdi:folder-lock
+      command_timeout: 15
+      unit_of_measurement: "files"
+
+      command: >
+        sh -c '
+          count=$(find /config/.storage -type f 2>/dev/null | wc -l);
+          size_mb=$(du -sm /config/.storage 2>/dev/null | cut -f1 || echo 0);
+          echo "{\"file_count\":$count,\"size_mb\":$size_mb}";
+        '
+
+      value_template: "{{ value_json.file_count | int }}"
+
+      json_attributes:
+        - size_mb
+
+
+
+
   # ── PYTHON VERSION ────────────────────────────────────────────────────────
   #  • Returns the Python version used by Home Assistant Core.
 
@@ -1069,4 +1095,40 @@ mqtt:
 
 
 
+
+
+# ╭────────────────────╮
+# │   FOLDER SENSORS
+# ╰────────────────────╯
+
+sensor:
+  - platform: folder
+    folder: /config/www/transcripts
+
+  - platform: folder
+    folder: /config/www/whatsapp_histories
+
+  - platform: folder
+    folder: /config/docs/
+
+  - platform: folder
+    folder: /config/packages/
+
+  - platform: folder
+    folder: /config/pyscript/
+
+  - platform: folder
+    folder: /config/themes/
+
+  - platform: folder
+    folder: /config/www/cards/
+
+  - platform: folder
+    folder: /media/
+
+  # .storage/ monitored via command_line sensor below (no allowlist needed)
+  # See: sensor.storage_file_count
+
+
 # |   END: frontend_server_stats.yaml
+
