@@ -4,7 +4,7 @@ This is the working config for a mature, architecture-driven Home Assistant syst
 
 System logic is organised into package-scoped domains, each with its own localised AI context. `configuration.yaml` acts only as a bootstrap layer, all substantive beaviour resides within the domain structure. 
 
-The system operates at a non-trivial scale, with purposeful complexity and . Metrics are derived from live sensor data.
+The system operates at a non-trivial scale, with purposeful complexity and nuance. Metrics are derived from live sensor data.
 
 
 
