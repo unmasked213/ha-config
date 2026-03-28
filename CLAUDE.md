@@ -76,8 +76,9 @@ Token-driven design system with 16 JS files. `foundation.js` is **READ-ONLY** (s
 | `prompt-manager/` | 9 | AI prompt CRUD, scoring, versioning, HA backend sync |
 | `report-viewer-card/` | 2 | Dynamic markdown report display |
 | `presence-activity-card/` | 3 | Presence visualisation |
-| `ui-catalogue-card/` | 7 | Dev-time component showcase |
+| `ui-catalogue-card/` | 8 | Dev-time component showcase |
 | `checklist-card/` | 1 | Todo list with animated checkboxes |
+| `priority-matrix-card/` | 5 | Task prioritisation matrix with circle sliders, scoring, FLIP animations, weights drawer |
 | `pico-hid-card/` | 1 | USB HID typing device controller |
 | `work-actions-card/` | 1 | Work todo list with completion animations, dropdown menu settings, meeting summary drawer, edit modal, new item indicators, touch interactions |
 | `phone-card/` | 1 | Phone display card |
