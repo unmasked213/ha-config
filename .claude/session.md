@@ -2,46 +2,41 @@
 > I update this automatically as we work. Say "continue" to resume.
 
 ## Active Task
-Number input component — complete
+Priority matrix card — build complete
 
 ## Status
-Complete — Component built, stable, integrated into 3 cards, docs updated
+Complete — Rebuilt v2 using shared UI components, ready for HA restart and testing
 
 ## Context
-- `<ui-number-input>` custom element at `www/base/number-input.js` — stable
-- Integrated into: ui-catalogue-card, work-actions-card (settings modal), prompt-manager (set score modal), presence-activity-card (settings drawer)
-- Key features: expanding pill, momentum hold with acceleration, scroll (works at rest with 4s inactivity auto-collapse), inline edit, decimal step support, snap-to-step, single-active-instance enforcement
-- iOS/iPadOS: sync focus for keyboard, editing-mode zone taps stay in edit, touch-action manipulation
-- Pink flash (`--ui-pink`) on chevrons with scale(1.25) and 600ms linger
-- No dividers (removed by design)
-- Theme inheritance via MutationObserver; manual class for light DOM (modals)
+- `custom:priority-matrix-card` — interactive scoring matrix for HA build task prioritisation
+- Entity: `todo.ha_priorities` (local_todo) — scores stored as JSON in description field
+- 6 criteria (time, function, blocking, impact, motivation, size), each 1-10
+- Composite score 0-100 with configurable weights (0-3 in 0.5 steps)
+- Circle sliders (48px, pointer drag), sortable columns, collapsible weights panel
+- Persistence via debounced `todo.update_item` / `todo.add_item` / `todo.remove_item`
+- Mobile responsive (stacked layout below 600px)
 
 ## Files This Session
-- `www/base/number-input.js` — New component (stable)
-- `www/base/components.js` — Removed experimental caret-color
-- `www/base/docs/componentry/number-input.md` — Spec v1.1
-- `www/base/docs/CLAUDE.md` — Added number-input references
-- `www/cards/ui-catalogue-card/registry.js` — Added entry (stable)
-- `www/cards/ui-catalogue-card/demos.js` — Added demo + updated SVGs
-- `www/cards/ui-catalogue-card/ui-catalogue-card.js` — Import + adopt
-- `www/cards/ui-catalogue-card/CLAUDE.md` — Updated adopted modules
-- `www/cards/work-actions-card/work-actions-card.js` — Replaced 3 native inputs in settings modal, removed Close button
-- `www/cards/prompt-manager/prompt-manager.js` — Import
-- `www/cards/prompt-manager/modules/render.js` — Replaced score input
-- `www/cards/prompt-manager/modules/events.js` — Updated score confirm handler
-- `www/cards/presence-activity-card/presence-activity-card.js` — Import, adopt, replaced 4 inputs, updated event handler + sync
-- `ui/ui_lovelace_resources.yaml` — Added resource
+- `packages/work/ha_priorities.yaml` — Local todo entity definition
+- `www/cards/priority-matrix-card/constants.js` — Criteria, scoring logic, parse/serialize
+- `www/cards/priority-matrix-card/styles.js` — Shadow DOM stylesheet (token-only)
+- `www/cards/priority-matrix-card/render.js` — DOM construction, circle sliders, sort indicators
+- `www/cards/priority-matrix-card/events.js` — Handlers, HA service calls, debounced persistence
+- `www/cards/priority-matrix-card/priority-matrix-card.js` — Entry point, card class registration
 
 ## Next Steps
-None — component is complete and deployed
+1. Register resource in `ui/ui_lovelace_resources.yaml`
+2. Add card to a dashboard view
+3. Restart HA to pick up the new local_todo entity
+4. Test: add tasks, drag sliders, sort columns, weight adjustments, mobile layout
 
 ## Blockers
 None
 
 ## Recent
+- Priority matrix card (2026-03-27) — Built 5-file card + entity YAML
 - Number-input component (2026-03-24) — Built, iterated, stabilised, integrated into 3 production cards
 - Work-actions-card collapsible sections (2026-03-18) — Added collapsible drawer sections
-- Config Intel fixes (2026-03-16) — 4 files updated, metrics refreshed
 
 ---
-*Updated: 2026-03-24 ~22:00*
+*Updated: 2026-03-27 ~10:00*

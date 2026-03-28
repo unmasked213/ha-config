@@ -71,6 +71,8 @@
     type: module
   - url: /local/cards/pico-hid-card/pico-hid-card.js?v=6
     type: module
+  - url: /local/cards/priority-matrix-card/priority-matrix-card.js
+    type: module
 
 
 
