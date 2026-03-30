@@ -61,82 +61,22 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 
 > Auto-generated from live sensor data at each git sync. Source: [`readme_snapshot.j2`](readme_snapshot.j2)
 
-### Platform
+| | |
+|--|--|
+| **Platform** | HA Core 2026.3.4 · OS 17.1 · Supervisor 2026.03.2 |
+| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 140.8 / 938.2 GB disk |
+| **Storage** | SQLite · 7 day retention · 3.4 GB |
+| **Config** | 357,288 lines (52,170 YAML · 250,174 dashboard JSON) |
+| **Integrations** | 36 custom · 82 HACS · 16 add-ons · 64 lovelace resources |
+| **Dashboard** | 122 views · 10,036 cards (5,501 custom / 4,535 standard) |
+| | |
+| **Entities** | **2,997 total** (247 unavailable) |
+| Sensors | 1,366 sensor · 168 binary |
+| Automation | 83 automations · 68 scripts · 147 scenes |
+| Hardware | 45 lights · 206 switches · 11 covers · 6 media players |
+| Other | 31 cameras · 341 helpers · 128 updates · 37 zones |
 
-| Component | Version |
-|-----------|---------|
-| HA Core | 2026.3.4 |
-| HA OS | 17.1 |
-| Supervisor | 2026.03.2 |
-| Installed | 2023-03-30 |
-
-### Hardware
-
-| Spec | Value |
-|------|-------|
-| CPU | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz |
-| Threads | 8 |
-| RAM | 32.0 GB |
-| Disk | 139.7 GB used / 938.2 GB total |
-
-### Entities
-
-3098 total, 281 unavailable
-
-| Domain | Count |
-|--------|------:|
-| Sensors | 1453 |
-| Binary sensors | 171 |
-| Automations | 82 |
-| Scripts | 68 |
-| Scenes | 147 |
-| Lights | 45 |
-| Switches | 210 |
-| Covers | 11 |
-| Climate | 0 |
-| Media players | 6 |
-| Cameras | 31 |
-| Helpers | 341 |
-| Updates | 128 |
-| Zones | 37 |
-
-### Infrastructure
-
-| Resource | Count |
-|----------|------:|
-| Custom integrations | 36 |
-| HACS integrations | 82 |
-| Add-ons | 16 |
-| Lovelace resources | 64 |
-
-### Dashboard
-
-| Metric | Value |
-|--------|------:|
-| Views | 122 |
-| Total cards | 10036 |
-| Custom | 5502 |
-| Standard | 4534 |
-
-### Config Scale
-
-| Metric | Lines |
-|--------|------:|
-| Total | 320,872 |
-| YAML | 52,067 |
-| Dashboard JSON | 250,264 |
-
-### Storage
-
-| Metric | Value |
-|--------|-------|
-| DB engine | SQLite |
-| Retention | 7 days |
-| DB size | 3.4 GB |
-
----
-
-*Snapshot taken: 2026-03-25 03:56 UTC*
+*Snapshot taken: 2026-03-30 15:42 BST*
 <!-- SNAPSHOT:END -->
 
 ---
