@@ -19,7 +19,9 @@ The work domain automates extraction of personal action items from meeting summa
 | `work.yaml` | Trigger automation — fires pipeline on `todo.meeting_summaries` state change |
 | `work_actions_card.yaml` | HA helper entities for work-actions-card settings (6 helpers: height, show completed, sort order, hover tooltips, new indicator expiry, completed shelf life) |
 
-**Companion pyscript file:** `pyscript/action_extraction_pipeline.py` — all pipeline logic (Phases 2-5)
+**Companion pyscript files:**
+- `pyscript/action_extraction_pipeline.py` — all pipeline logic (Phases 2-5)
+- `pyscript/speaker_rename.py` — speaker rename/merge service (called from work-actions-card)
 
 **Transcript/summary files:** `www/transcripts/` — persistent storage with no cleanup cutoff. Naming convention: `MM-DD_Slugified_Title_summary.txt` and `MM-DD_Slugified_Title_transcript.txt`. Slugification: strip `[Plaud-AutoFlow]` tag, replace non-alphanumeric with `_`, collapse consecutive underscores.
 
@@ -120,6 +122,7 @@ The prompt template is `PROMPT_TEMPLATE` in `pyscript/action_extraction_pipeline
 - **AI package** — uses `ai_task.openai_ai_task` for classification
 - **Communication package** — meeting summaries originate from the IMAP transcript pipeline
 - **Dashboard** — `work-actions-card` in `www/cards/` displays `todo.work_actions`; card settings persist to `input_number.wac_max_height`, `input_boolean.wac_show_completed`, `input_select.wac_sort_order`, `input_boolean.wac_hover_tooltips`, `input_number.wac_new_indicator_hours`, `input_number.wac_completed_shelf_days`
+- **Speaker rename** — `pyscript/speaker_rename.py` modifies summary/transcript files in `www/transcripts/` and updates `todo.meeting_summaries` + `todo.work_actions` entities; called by the card's speaker chip UI
 
 ### Cross-references
 
@@ -142,6 +145,7 @@ The prompt template is `PROMPT_TEMPLATE` in `pyscript/action_extraction_pipeline
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-04-02 | — | Speaker rename/merge pyscript service (`pyscript/speaker_rename.py`) — updates files and todo entities per-meeting |
 | 2026-03-11 | — | Initial deployment: pipeline, trigger automation, ledger entity |
 
-*Last Updated: 2026-03-11*
+*Last Updated: 2026-04-02*
