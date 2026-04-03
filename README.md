@@ -40,7 +40,7 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 ├── pyscript/                         # 13 Python automations
 ├── custom_components/                # 36 third-party integrations
 ├── www/                              # Web assets
-│   ├── base/                         # UI design system (16 JS files)
+│   ├── base/                         # UI design system (17 JS files)
 │   ├── cards/                        # Custom card implementations
 │   └── community/                    # Third-party card library
 │

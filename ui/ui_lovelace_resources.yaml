@@ -13,6 +13,8 @@
 # ── SHARED UI: LIBRARIES ─────────────────────────────────────────────────────
 #   These are the core UI libraries in my custom cards
 
+  - url: /local/base/fonts.js
+    type: module
   - url: /local/base/foundation.js
     type: module
   - url: /local/base/components.js
