@@ -23,7 +23,7 @@ The AI domain provides text and image generation services via OpenAI and Anthrop
 | `alexa.yaml` | TTS announcements via Alexa devices (SSML) |
 | `prompt_manager.yaml` | Event-driven AI generation for UI components |
 | `rota_upload.yaml` | Folder sensor for uploaded rota files |
-| `claude_bridge.yaml` | Bidirectional text channel between Claude (MCP) and HA |
+| `claude_bridge.yaml` | Bidirectional Claude↔HA channel + Code Dispatch automation |
 
 ---
 
@@ -35,6 +35,16 @@ Bidirectional text channel between Claude (MCP) and HA:
 - **Write path:** Claude adds items to `todo.claude_bridge` → relay automation timestamps and copies to `input_text.claude_bridge_payload` (~244 usable chars); todo item cleared after relay.
 - **Read path:** HA writes to `todo.claude_bridge_response` (no size limit via description field).
 - `transcript_pipeline.yaml` auto-feeds Plaud transcripts to the read channel.
+
+### Claude Code Dispatch (`claude_bridge.yaml` + `scripts/claude_dispatch.sh`)
+
+Automated bridge allowing Claude.ai to dispatch tasks to the addon's `claude -p`:
+- **Request path:** Claude.ai → `todo.claude_code_tasks` → automation signal → addon watcher → `claude -p`
+- **Response path:** `claude -p` output → `todo.claude_bridge_response` (with `[Dispatch]` prefix) → Claude.ai reads
+- Status entities: `input_boolean.claude_dispatch_running`, `input_text.claude_dispatch_status`, `input_datetime.claude_dispatch_heartbeat`
+- Model configurable via `input_select.claude_dispatch_model` (default: sonnet)
+- Watcher script runs in addon container with restart loop; not persistent across addon restarts
+- Protocol reference: `docs/projects/claude/bridge/claude-dispatch-protocol.md`
 
 ### System Prompts
 
@@ -143,16 +153,20 @@ Add to `ai_system_prompts.yaml`:
 - WhatsApp auto-reply (`c_whatsapp_auto_reply.yaml`) — Uses `ha_text_ai.generate_text`
 - System prompts define reply personalities
 
+**Dispatch responses share `todo.claude_bridge_response`** with transcript pipeline. Items are distinguished by `[Dispatch]` prefix.
+
 **Cross-references:**
 - Root: /CLAUDE.md
 - Architecture: /ARCHITECTURE.md
 - Communication (consumer): packages/communication/
+- Dispatch protocol: docs/projects/claude/bridge/claude-dispatch-protocol.md
 
 ---
 
 ## TODOs & Gaps
 
 - **Claude Bridge has no recovery mechanism** — If `todo.claude_bridge` service is unavailable, Claude-to-HA communication is completely blocked with no timeout or watchdog. (Failure Mode Report 2026-03-06)
+- **Dispatch watcher not persistent** — Requires manual start after addon reboot; no auto-restart mechanism yet
 
 ---
 
@@ -160,7 +174,8 @@ Add to `ai_system_prompts.yaml`:
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-04-02 | — | Added Claude Code Dispatch bridge (automation, watcher script, protocol doc, dispatch entities) |
 | 2026-03-25 | — | Added Claude Bridge recovery gap to TODOs (from Failure Mode Report 2026-03-06) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format |
 
-*Last Updated: 2026-03-25*
+*Last Updated: 2026-04-02*

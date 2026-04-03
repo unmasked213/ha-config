@@ -32,6 +32,8 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `ARCHITECTURE.md` | System architecture documentation (v10.4) |
 | `README.md` | Quick reference with auto-generated metrics (snapshot injected by `git_sync.sh` at commit time) |
 | `readme_snapshot.j2` | Jinja2 template for README metrics — rendered via HA template API during git sync |
+| `scripts/claude_dispatch.sh` | Addon-side dispatch watcher for Claude Code bridge |
+| `docs/projects/claude/bridge/claude-dispatch-protocol.md` | Dispatch protocol reference and claude.ai setup instructions |
 | `git_sync.sh` | Git synchronisation script |
 | `extract_js.py` | JavaScript extraction utility |
 | `ip_bans.yaml` | IP ban list |
@@ -50,7 +52,7 @@ Each domain has its own `CLAUDE.md` at `packages/<domain>/CLAUDE.md`, auto-loade
 
 | Domain | Files | Purpose | Key Entry Points |
 |--------|-------|---------|-----------------|
-| **ai** | 8 | AI text/image generation, prompts, Claude bridge, Alexa TTS | `ai_main.yaml`, `claude_bridge.yaml`, `prompt_manager.yaml` |
+| **ai** | 8 | AI text/image generation, prompts, Claude bridge + Code Dispatch, Alexa TTS | `ai_main.yaml`, `claude_bridge.yaml`, `prompt_manager.yaml` |
 | **communication** | 6 | WhatsApp messaging, notifications, transcript pipeline | `whatsapp_config.yaml`, `alerts.yaml`, `transcript_pipeline.yaml` |
 | **dashboard** | 1 | Report viewer backend sensors | `report_viewer.yaml` |
 | **device** | 10 | Cameras, covers/blinds, PC state, pet devices, Govee, Sonos | `cameras.yaml`, `curtains.yaml`, `pc.yaml` |

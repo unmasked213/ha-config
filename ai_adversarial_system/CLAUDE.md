@@ -29,7 +29,8 @@ This system documents and governs same-model (Claude-to-Claude) collaboration pa
 ### What This System Is For
 
 - **Build-test cycles** — One instance writes code, another tests live
-- **Capability asymmetry** — HA addon (live system access) + Desktop (longer sessions, browser automation)
+- **Capability asymmetry** — HA addon (live system access) + Desktop (longer sessions) + Claude.ai (memory/search)
+- **Automated dispatch** — Claude.ai sends tasks to addon via todo lists + `claude -p` (see `docs/projects/claude/bridge/claude-dispatch-protocol.md`)
 - **Session continuity** — Pick up where previous instance left off
 - **Writing discipline** — Having an audience improves reasoning quality
 
@@ -49,15 +50,22 @@ If you want someone to challenge your approach, use a different model. Same-mode
 - Can query entity states, call services, render templates
 - Can run bash commands (limited tooling — no sqlite3, hass-cli by default)
 - Working directory: `/config`
+- Runs `claude -p` for dispatch tasks (invoked by watcher script)
 
-**Desktop (Claude Code / claude.ai):**
+**Desktop (Claude Code):**
 - File system access (via Samba at `A:\`)
 - Longer session capacity
-- Browser automation (if using claude.ai with artifacts)
 - No live HA API access
 - Working directory: `A:\` (maps to `/config`)
 
-**Addon CAN access live HA data** via API. Desktop cannot (no token access). Do not accept claims of "no API access" from Addon without verification.
+**Claude.ai (tablet/phone):**
+- Best memory and chat search across all instances
+- MCP access to HA todo lists (read/write via Nabu Casa)
+- Indirect config access via Claude Code Dispatch bridge (`docs/projects/claude/bridge/claude-dispatch-protocol.md`)
+- No direct file system access, no live HA API access beyond MCP intents
+- Adds context from memory/conversation when framing dispatch tasks
+
+**Addon CAN access live HA data** via API. Desktop and Claude.ai cannot (no token access). Do not accept claims of "no API access" from Addon without verification.
 
 ### Value Model (Tested)
 
@@ -71,6 +79,8 @@ We tested these hypotheses during the dad's car detection, design iteration, and
 | **Premise validation** | **0%** | Both accepted "Addon can't access API" without verifying. User caught it. |
 
 The "fresh eyes" effect is mostly a myth for same-model. We converge on the same conclusions because we have the same training. The real value is complementary capabilities and the forcing function of writing for an audience.
+
+**Update (2026-04-02):** The Claude Code Dispatch bridge extends capability division to Claude.ai. Claude.ai's memory/search + addon's config access produces ~100% capability division value, consistent with the original finding. The dispatch protocol is documented at `docs/projects/claude/bridge/claude-dispatch-protocol.md`.
 
 ### Why Premise Validation Fails (Attribution Analysis)
 
@@ -236,9 +246,10 @@ Why 20: Long enough for context (~1-2 weeks of active work), short enough to sta
 
 | Date | Commit | Description |
 |------|--------|-------------|
+| 2026-04-02 | — | Added Claude.ai as instance, dispatch bridge pattern, updated value model |
 | 2026-02-24 | b350903 | Restructured to 8-section format |
 | 2026-02-03 | — | Initial documentation based on three test cycles including premise validation failure and attribution analysis |
 
 ---
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-04-02*

@@ -31,11 +31,36 @@
 #  state change even when the same command is sent consecutively.
 
 
-# ── HELPERS ─────────────────────────────────────────────────────────────────
+#  ╔═════════════════════════════════════════════════════════════════════════╗
+#  ║     CLAUDE CODE DISPATCH                                                ║
+#  ╚═════════════════════════════════════════════════════════════════════════╝
+
+#  Automated bridge allowing Claude.ai to dispatch tasks to the addon's
+#  claude -p, with full config access, MCP tools, and documentation.
+#
+#  Flow:
+#    Claude.ai writes task → todo.claude_code_tasks (via MCP)
+#    Automation detects new item → touches signal file in /config/tmp/
+#    Addon watcher detects signal → fetches task via REST API
+#    Watcher runs: CLAUDECODE= claude -p "task" (from /config/)
+#    Response written → todo.claude_bridge_response (shared read channel)
+#    Task removed from queue
+#
+#  Todo list (created via UI, not defined here):
+#    todo.claude_code_tasks  — dispatch request queue
+#
+#  Watcher script: /config/scripts/claude_dispatch.sh (runs in addon)
+#  Protocol reference: /config/docs/projects/claude/bridge/claude-dispatch-protocol.md
+
+
+# ── HELPERS (Bridge) ───────────────────────────────────────────────────────
 
 input_text:
   claude_bridge_payload:
     name: Claude Bridge Payload
+    max: 255
+  claude_dispatch_status:
+    name: Claude Dispatch Status
     max: 255
 
 input_datetime:
@@ -43,6 +68,40 @@ input_datetime:
     name: Claude Bridge Last Received
     has_date: true
     has_time: true
+
+
+# ── HELPERS (Dispatch) ────────────────────────────────────────────────────
+
+  claude_dispatch_last_run:
+    name: Claude Dispatch Last Run
+    has_date: true
+    has_time: true
+
+  claude_dispatch_heartbeat:
+    name: Claude Dispatch Heartbeat
+    has_date: true
+    has_time: true
+
+input_boolean:
+  claude_dispatch_running:
+    name: Claude Dispatch Running
+    icon: mdi:robot
+
+input_select:
+  claude_dispatch_model:
+    name: Claude Dispatch Model
+    options:
+      - sonnet
+      - opus
+      - haiku
+    initial: sonnet
+    icon: mdi:brain
+
+
+# ── SHELL COMMANDS ────────────────────────────────────────────────────────
+
+shell_command:
+  claude_dispatch_signal: "touch /config/tmp/dispatch_signal"
 
 
 # ── AUTOMATION ──────────────────────────────────────────────────────────────
@@ -116,7 +175,26 @@ automation:
           item: "{{ trigger.json.message }}"
 
 
+  # ── Dispatch Signal ───────────────────────────────────────────────────
+  # Detects new items in the dispatch queue and touches a signal file
+  # on the shared filesystem. The addon watcher picks up the signal.
 
+  - id: claude_dispatch_signal
+    alias: "Claude Bridge - Dispatch Signal"
+    trigger:
+      - platform: state
+        entity_id: todo.claude_code_tasks
+    condition:
+      - condition: template
+        value_template: >-
+          {{ state_attr('todo.claude_code_tasks', 'todo_items_count')
+             | default(states('todo.claude_code_tasks'), true)
+             | int(0) > 0 }}
+      - condition: state
+        entity_id: input_boolean.claude_dispatch_running
+        state: "off"
+    action:
+      - service: shell_command.claude_dispatch_signal
 
 
 # | END: claude_bridge.yaml

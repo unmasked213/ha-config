@@ -2,17 +2,17 @@
 ╭────────────────────────────────────────╮
 │  /config                               │
 ├────────────────────────────────────────┤
-│  Scanned: 2026-04-02 03:00  |  0.1s    │
-│  1,461 dirs · 10,605 files · 4.2 GB    │
+│  Scanned: 2026-04-03 03:00  |  0.1s    │
+│  1,465 dirs · 10,654 files · 4.2 GB    │
 ╰────────────────────────────────────────╯
 
 📁 config/
 │
-├── 📁 .claude/  — 4 dirs, 28 files, 48 KB
+├── 📁 .claude/  — 4 dirs, 28 files, 47 KB
 │
 ├── 📁 .cursor/  — 1 dirs, 1 files, 9 KB
 │
-├── 📁 .storage/  — 24 dirs, 157 files, 32 MB
+├── 📁 .storage/  — 24 dirs, 158 files, 35 MB
 │
 ├── 📁 .vscode/  — 1 files, 525 B
 │
@@ -77,7 +77,7 @@
 │   │
 │   ╰── 📁 whatsapp_addon/  — 16 dirs, 119 files, 9 MB
 │
-├── 📁 ai_adversarial_system/  (3 folders, 3 files, 45 KB)
+├── 📁 ai_adversarial_system/  (3 folders, 3 files, 46 KB)
 │   │
 │   ├── 📁 AI-Adversarial-System-main/  (4 files, 50 KB)
 │   │   ├── compliance-document.md
@@ -198,7 +198,12 @@
 │   │
 │   ├── 📁 projects/  (6 folders, 1 file, 12 KB)
 │   │   │
-│   │   ├── 📁 claude/  (1 folder, 1 file, 12 KB)
+│   │   ├── 📁 claude/  (2 folders, 1 file, 12 KB)
+│   │   │   │
+│   │   │   ├── 📁 bridge/  (3 files, 34 KB)
+│   │   │   │   ├── claude-dispatch-plan.md
+│   │   │   │   ├── claude-dispatch-protocol.md
+│   │   │   │   ╰── CLAUDE.md
 │   │   │   │
 │   │   │   ├── 📁 skills/  (8 folders, 8 files, 104 KB)
 │   │   │   │   │
@@ -3847,7 +3852,11 @@
 │   │   ├── ui-catalogue-card-audit.md
 │   │   ╰── unused-integrations-audit.md
 │   │
-│   ├── 📁 reports/  (7 folders, 1 file, 17 KB)
+│   ├── 📁 reports/  (8 folders, 1 file, 17 KB)
+│   │   │
+│   │   ├── 📁 card-audit/  (2 files, 32 KB)
+│   │   │   ├── 2026-04-02-20-07-prompt-manager-audit.md
+│   │   │   ╰── 2026-04-02-22-07-prompt-manager-audit.md
 │   │   │
 │   │   ├── 📁 claude-insights/  (2 folders)
 │   │   │   │
@@ -3943,7 +3952,7 @@
 │
 ├── 📁 packages/  (14 folders)
 │   │
-│   ├── 📁 ai/  (9 files, 37 KB)
+│   ├── 📁 ai/  (9 files, 42 KB)
 │   │   ├── ai_main.yaml
 │   │   ├── ai_system_prompts.yaml
 │   │   ├── alexa.yaml
@@ -4050,12 +4059,16 @@
 │   │   ├── CLAUDE.md
 │   │   ╰── frontend_weather.yaml
 │   │
-│   ╰── 📁 work/  (3 files, 12 KB)
+│   ╰── 📁 work/  (3 files, 13 KB)
 │       ├── CLAUDE.md
 │       ├── work.yaml
 │       ╰── work_actions_card.yaml
 │
-├── 📁 pyscript/  (12 files, 109 KB)
+├── 📁 pyscript/  (1 folder, 13 files, 116 KB)
+│   │
+│   ├── 📁 modules/  (1 file, 3 KB)
+│   │   ╰── speaker_rename_io.py
+│   │
 │   ├── action_extraction_pipeline.py
 │   ├── cleanup_duplicate_work_events.py
 │   ├── dad_car_detection.py
@@ -4066,13 +4079,15 @@
 │   ├── recorder_stats.py
 │   ├── save_rota_image.py
 │   ├── save_uploaded_file.py
+│   ├── speaker_rename.py
 │   ├── system_context.py
 │   ╰── theme_sync.py
 │
 ├── 📁 python_scripts/
 │
-├── 📁 scripts/  (3 files, 8 KB)
+├── 📁 scripts/  (4 files, 19 KB)
 │   ├── .imap_env
+│   ├── claude_dispatch.sh
 │   ├── fetch_imap_attachments.py
 │   ╰── fetch_transcript.sh
 │
@@ -4227,7 +4242,7 @@
 │   ├── tablet.yaml
 │   ╰── test_theme.yaml
 │
-├── 📁 tmp/  — 1 dirs, 5 files, 1 MB
+├── 📁 tmp/  — 1 dirs, 7 files, 1 MB
 │
 ├── 📁 tts/  — 87 files, 6 MB
 │
@@ -4255,7 +4270,7 @@
 │   │
 │   ├── 📁 alexa_tts/  — empty
 │   │
-│   ├── 📁 base/  (1 folder, 17 files, 393 KB)
+│   ├── 📁 base/  (1 folder, 17 files, 394 KB)
 │   │   │
 │   │   ├── 📁 docs/  (1 folder, 3 files, 90 KB)
 │   │   │   │
@@ -4312,9 +4327,9 @@
 │   │   │   ├── render.js
 │   │   │   ╰── styles.js
 │   │   │
-│   │   ├── 📁 prompt-manager/  (1 folder, 2 files, 19 KB)
+│   │   ├── 📁 prompt-manager/  (1 folder, 2 files, 22 KB)
 │   │   │   │
-│   │   │   ├── 📁 modules/  (8 files, 218 KB)
+│   │   │   ├── 📁 modules/  (8 files, 219 KB)
 │   │   │   │   ├── constants.js
 │   │   │   │   ├── data.js
 │   │   │   │   ├── events.js
@@ -4343,7 +4358,7 @@
 │   │   │   ├── ui-catalogue-card.js
 │   │   │   ╰── usage.js
 │   │   │
-│   │   ├── 📁 work-actions-card/  (2 files, 99 KB)
+│   │   ├── 📁 work-actions-card/  (2 files, 115 KB)
 │   │   │   ├── CLAUDE.md
 │   │   │   ╰── work-actions-card.js
 │   │   │
@@ -4373,13 +4388,13 @@
 │   │
 │   ├── 📁 media/  — 33 dirs, 61 files, 46 MB
 │   │
-│   ├── 📁 reports/  — 6 dirs, 22 files, 683 KB
+│   ├── 📁 reports/  — 7 dirs, 25 files, 735 KB
 │   │
 │   ├── 📁 rotas/  — 1 files, 144 KB
 │   │
 │   ├── 📁 sound/  — 4 files, 877 KB
 │   │
-│   ├── 📁 transcripts/  — 164 files, 2 MB
+│   ├── 📁 transcripts/  — 168 files, 2 MB
 │   │
 │   ├── 📁 vendor/  — 9 files, 143 KB
 │   │
