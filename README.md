@@ -21,7 +21,7 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 ├── scripts.yaml                      # Reusable service-call sequences
 ├── scenes.yaml                       # Scene snapshots
 │
-├── packages/                         # 14 domain packages, 63 YAML files
+├── packages/                         # 14 domain packages, 62 YAML files
 │   ├── ai/                           # AI generation, prompts, Alexa TTS
 │   ├── communication/                # WhatsApp, notifications, transcripts
 │   ├── dashboard/                    # Report viewer backend
@@ -38,7 +38,7 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 │   └── work/                         # Meeting action extraction
 │
 ├── pyscript/                         # 13 Python automations
-├── custom_components/                # 36 third-party integrations
+├── custom_components/                # 29 third-party integrations
 ├── www/                              # Web assets
 │   ├── base/                         # UI design system (17 JS files)
 │   ├── cards/                        # Custom card implementations

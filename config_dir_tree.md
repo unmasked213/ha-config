@@ -2,8 +2,8 @@
 ╭────────────────────────────────────────╮
 │  /config                               │
 ├────────────────────────────────────────┤
-│  Scanned: 2026-04-03 03:00  |  0.1s    │
-│  1,465 dirs · 10,654 files · 4.2 GB    │
+│  Scanned: 2026-04-07 03:00  |  0.1s    │
+│  1,450 dirs · 9,835 files · 4.2 GB     │
 ╰────────────────────────────────────────╯
 
 📁 config/
@@ -12,7 +12,7 @@
 │
 ├── 📁 .cursor/  — 1 dirs, 1 files, 9 KB
 │
-├── 📁 .storage/  — 24 dirs, 158 files, 35 MB
+├── 📁 .storage/  — 23 dirs, 154 files, 30 MB
 │
 ├── 📁 .vscode/  — 1 files, 525 B
 │
@@ -149,15 +149,13 @@
 │       ╰── 📁 homeassistant/  (1 file, 971 B)
 │           ╰── inverted_binary_sensor.yaml
 │
-├── 📁 custom_components/  (35 integrations)
+├── 📁 custom_components/  (28 integrations)
 │   ├── alexa_media/
 │   ├── auto_backup/
 │   ├── battery_notes/
-│   ├── ble_monitor/
 │   ├── browser_mod/
 │   ├── chatreader/
 │   ├── custom_icons/
-│   ├── fallback_conversation/
 │   ├── frigate/
 │   ├── ha_text_ai/
 │   ├── hacs/
@@ -165,7 +163,6 @@
 │   ├── lovelace_gen/
 │   ├── lunar_phase/
 │   ├── meross_lan/
-│   ├── nationalrailtimes/
 │   ├── network_scanner/
 │   ├── nodered/
 │   ├── openai_gpt4o_tts/
@@ -176,12 +173,8 @@
 │   ├── powercalc/
 │   ├── prompt_manager/
 │   ├── pyscript/
-│   ├── room_selector/
-│   ├── sleep_as_android/
-│   ├── sleep_as_android_mqtt/
 │   ├── spook/
 │   ├── stateful_scenes/
-│   ├── waste_collection_schedule/
 │   ├── webrtc/
 │   ├── whatsapp/
 │   ╰── whatsapp_chat/
@@ -196,7 +189,7 @@
 │   │   ├── gemini-prompt-manager-ui-ideas.md
 │   │   ╰── log-cleanup-plan.md
 │   │
-│   ├── 📁 projects/  (6 folders, 1 file, 12 KB)
+│   ├── 📁 projects/  (7 folders, 1 file, 12 KB)
 │   │   │
 │   │   ├── 📁 claude/  (2 folders, 1 file, 12 KB)
 │   │   │   │
@@ -205,7 +198,7 @@
 │   │   │   │   ├── claude-dispatch-protocol.md
 │   │   │   │   ╰── CLAUDE.md
 │   │   │   │
-│   │   │   ├── 📁 skills/  (8 folders, 8 files, 104 KB)
+│   │   │   ├── 📁 skills/  (9 folders, 4 files, 60 KB)
 │   │   │   │   │
 │   │   │   │   ├── 📁 claude-bridge/  (1 file, 5 KB)
 │   │   │   │   │   ╰── SKILL.md
@@ -227,29 +220,47 @@
 │   │   │   │   │   ╰── 📁 ha-development/  (1 file, 8 KB)
 │   │   │   │   │       ╰── SKILL.md
 │   │   │   │   │
-│   │   │   │   ├── 📁 mpv-development/  (1 folder)
+│   │   │   │   ├── 📁 mpv-development/  (1 folder, 1 file, 9 KB)
 │   │   │   │   │   │
-│   │   │   │   │   ╰── 📁 mpv-development/  (1 folder, 1 file, 10 KB)
+│   │   │   │   │   ├── 📁 mpv-development/  (1 folder, 1 file, 10 KB)
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── 📁 references/  (2 files, 10 KB)
+│   │   │   │   │   │   │   ├── hardware.md
+│   │   │   │   │   │   │   ╰── scripts.md
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── mpv-development.skill
+│   │   │   │   │
+│   │   │   │   ├── 📁 music/  (1 folder)
+│   │   │   │   │   │
+│   │   │   │   │   ╰── 📁 music/  (1 folder, 1 file, 6 KB)
 │   │   │   │   │       │
-│   │   │   │   │       ├── 📁 references/  (2 files, 10 KB)
-│   │   │   │   │       │   ├── hardware.md
-│   │   │   │   │       │   ╰── scripts.md
+│   │   │   │   │       ├── 📁 references/  (4 files, 20 KB)
+│   │   │   │   │       │   ├── catalogue.md
+│   │   │   │   │       │   ├── process.md
+│   │   │   │   │       │   ├── suno-spec.md
+│   │   │   │   │       │   ╰── taste.md
 │   │   │   │   │       │
 │   │   │   │   │       ╰── SKILL.md
 │   │   │   │   │
-│   │   │   │   ├── 📁 pc-environment/  (1 folder)
+│   │   │   │   ├── 📁 pc-environment/  (1 folder, 1 file, 1 KB)
 │   │   │   │   │   │
-│   │   │   │   │   ╰── 📁 pc-environment/  (1 file, 3 KB)
-│   │   │   │   │       ╰── SKILL.md
+│   │   │   │   │   ├── 📁 pc-environment/  (1 file, 3 KB)
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── pc-environment.skill
 │   │   │   │   │
-│   │   │   │   ├── 📁 prompt-engineering/  (1 folder)
+│   │   │   │   ├── 📁 prompt-engineering/  (1 folder, 1 file, 10 KB)
 │   │   │   │   │   │
-│   │   │   │   │   ╰── 📁 prompt-engineering/  (1 folder, 1 file, 3 KB)
-│   │   │   │   │       │
-│   │   │   │   │       ├── 📁 references/  (1 file, 14 KB)
-│   │   │   │   │       │   ╰── library.md
-│   │   │   │   │       │
-│   │   │   │   │       ╰── SKILL.md
+│   │   │   │   │   ├── 📁 prompt-engineering/  (1 folder, 1 file, 4 KB)
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── 📁 references/  (1 file, 18 KB)
+│   │   │   │   │   │   │   ╰── library.md
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── prompt-engineering.skill
 │   │   │   │   │
 │   │   │   │   ├── 📁 shared-ui/  (1 folder)
 │   │   │   │   │   │
@@ -260,30 +271,42 @@
 │   │   │   │   │       │
 │   │   │   │   │       ╰── SKILL.md
 │   │   │   │   │
-│   │   │   │   ├── 📁 who-i-am/  (1 folder)
+│   │   │   │   ├── 📁 who-i-am/  (1 folder, 1 file, 23 KB)
 │   │   │   │   │   │
-│   │   │   │   │   ╰── 📁 who-i-am/  (1 folder, 1 file, 14 KB)
-│   │   │   │   │       │
-│   │   │   │   │       ├── 📁 references/  (3 files, 33 KB)
-│   │   │   │   │       │   ├── ai-methodology.md
-│   │   │   │   │       │   ├── history.md
-│   │   │   │   │       │   ╰── philosophy.md
-│   │   │   │   │       │
-│   │   │   │   │       ╰── SKILL.md
+│   │   │   │   │   ├── 📁 who-i-am/  (1 folder, 1 file, 15 KB)
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── 📁 references/  (3 files, 36 KB)
+│   │   │   │   │   │   │   ├── ai-methodology.md
+│   │   │   │   │   │   │   ├── history.md
+│   │   │   │   │   │   │   ╰── philosophy.md
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── who-i-am.skill
 │   │   │   │   │
 │   │   │   │   ├── claude-bridge.skill
 │   │   │   │   ├── dwp-work-context.skill
 │   │   │   │   ├── ha-development.skill
-│   │   │   │   ├── mpv-development.skill
-│   │   │   │   ├── pc-environment.skill
-│   │   │   │   ├── prompt-engineering.skill
-│   │   │   │   ├── shared-ui.skill
-│   │   │   │   ╰── who-i-am.skill
+│   │   │   │   ╰── shared-ui.skill
 │   │   │   │
 │   │   │   ╰── ha_preview_setup_guide.md
 │   │   │
 │   │   ├── 📁 dad_car_detection/  (1 file, 13 KB)
 │   │   │   ╰── DAD_CAR_DETECTION.md
+│   │   │
+│   │   ├── 📁 floorplan/  (1 folder, 2 files, 27 KB)
+│   │   │   │
+│   │   │   ├── 📁 svg/  (7 files, 67 KB)
+│   │   │   │   ├── floor_01 - Copy.svg
+│   │   │   │   ├── floor_01 - static.svg
+│   │   │   │   ├── floor_01.svg
+│   │   │   │   ├── floor_02 - static.svg
+│   │   │   │   ├── floor_02.svg
+│   │   │   │   ├── floorplan.svg
+│   │   │   │   ╰── roof_base.svg
+│   │   │   │
+│   │   │   ├── Bedroom.txt
+│   │   │   ╰── housemap_static.png
 │   │   │
 │   │   ├── 📁 music/  (1 file, 2 KB)
 │   │   │   ╰── dancing-feet-composition.md
@@ -3869,7 +3892,7 @@
 │   │   ├── 📁 components-review/  (1 file, 11 KB)
 │   │   │   ╰── 2026-02-08-20-00-components-review.json
 │   │   │
-│   │   ├── 📁 config-intel/  (10 files, 339 KB)
+│   │   ├── 📁 config-intel/  (11 files, 375 KB)
 │   │   │   ├── 2026-02-06-11-39-config-intel.md
 │   │   │   ├── 2026-02-10-16-05-config-intel.md
 │   │   │   ├── 2026-02-12-14-03-config-intel.md
@@ -3879,7 +3902,8 @@
 │   │   │   ├── 2026-02-27-03-05-config-intel.md
 │   │   │   ├── 2026-03-05-04-23-config-intel.md
 │   │   │   ├── 2026-03-15-10-50-config-intel.md
-│   │   │   ╰── 2026-03-25-22-31-config-intel.md
+│   │   │   ├── 2026-03-25-22-31-config-intel.md
+│   │   │   ╰── 2026-04-03-21-00-config-intel.md
 │   │   │
 │   │   ├── 📁 failure-mode/  (2 files, 54 KB)
 │   │   │   ├── FAILURE_MODE_REPORT_2026-02-01.md
@@ -3901,7 +3925,7 @@
 │   │   │
 │   │   ╰── 2026-4-0-trigger-impact.md
 │   │
-│   ╰── 📁 research/  (7 folders, 1 file, 912 KB)
+│   ╰── 📁 research/  (8 folders, 1 file, 912 KB)
 │       │
 │       ├── 📁 ai/  (9 files, 3 MB)
 │       │   ├── # Deep Research Commissioning Claude's Defeatist.pdf
@@ -3927,6 +3951,9 @@
 │       │
 │       ├── 📁 personal_device/  (1 file, 14 KB)
 │       │   ╰── Windows 11 PC Rebuild Guide.md
+│       │
+│       ├── 📁 prompt-engineering/  (1 file, 97 KB)
+│       │   ╰── Universal rewrite prompt across domains.pdf
 │       │
 │       ├── 📁 smart_home/  (1 file, 1 MB)
 │       │   ╰── Research multi-sensor occupancy detection systems,.pdf
@@ -3980,7 +4007,7 @@
 │   │   ├── CLAUDE.md
 │   │   ╰── report_viewer.yaml
 │   │
-│   ├── 📁 device/  (11 files, 57 KB)
+│   ├── 📁 device/  (10 files, 55 KB)
 │   │   ├── cameras.yaml
 │   │   ├── CLAUDE.md
 │   │   ├── curtains.yaml
@@ -3990,8 +4017,7 @@
 │   │   ├── pc.yaml
 │   │   ├── pet_devices.yaml
 │   │   ├── phone_control.yaml
-│   │   ├── sonos.yaml
-│   │   ╰── structure.yaml
+│   │   ╰── sonos.yaml
 │   │
 │   ├── 📁 health/  (3 files, 18 KB)
 │   │   ├── CLAUDE.md
@@ -4212,14 +4238,10 @@
 │   │
 │   ╰── decluttering-card.yaml
 │
-├── 📁 themes/  (6 folders, 7 files, 114 KB)
+├── 📁 themes/  (4 folders, 7 files, 114 KB)
 │   │
 │   ├── 📁 bubble/  (1 file, 8 KB)
 │   │   ╰── bubble.yaml
-│   │
-│   ├── 📁 catppuccin/  (2 files, 386 KB)
-│   │   ├── catppuccin-accents.zip
-│   │   ╰── catppuccin.yaml
 │   │
 │   ├── 📁 material_you/  (1 file, 42 KB)
 │   │   ╰── material_you.yaml
@@ -4229,10 +4251,6 @@
 │   │
 │   ├── 📁 Rounded/  (1 file, 17 KB)
 │   │   ╰── rounded.yaml
-│   │
-│   ├── 📁 visionos/  (2 files, 18 KB)
-│   │   ├── Liquid Glass.yaml
-│   │   ╰── visionos.yaml
 │   │
 │   ├── hacasa.yaml
 │   ├── hacasa_gold.yaml
@@ -4244,9 +4262,9 @@
 │
 ├── 📁 tmp/  — 1 dirs, 7 files, 1 MB
 │
-├── 📁 tts/  — 87 files, 6 MB
+├── 📁 tts/  — 90 files, 7 MB
 │
-├── 📁 ui/  (1 folder, 4 files, 19 KB)
+├── 📁 ui/  (1 folder, 4 files, 18 KB)
 │   │
 │   ├── 📁 views/  (9 files, 317 KB)
 │   │   ├── home.yaml
@@ -4270,7 +4288,7 @@
 │   │
 │   ├── 📁 alexa_tts/  — empty
 │   │
-│   ├── 📁 base/  (1 folder, 17 files, 394 KB)
+│   ├── 📁 base/  (1 folder, 18 files, 392 KB)
 │   │   │
 │   │   ├── 📁 docs/  (1 folder, 3 files, 90 KB)
 │   │   │   │
@@ -4287,6 +4305,7 @@
 │   │   ├── checkboxes.js
 │   │   ├── components.js
 │   │   ├── drawer.js
+│   │   ├── fonts.js
 │   │   ├── foundation.js
 │   │   ├── helpers.js
 │   │   ├── modals.js
@@ -4329,7 +4348,7 @@
 │   │   │
 │   │   ├── 📁 prompt-manager/  (1 folder, 2 files, 22 KB)
 │   │   │   │
-│   │   │   ├── 📁 modules/  (8 files, 219 KB)
+│   │   │   ├── 📁 modules/  (8 files, 232 KB)
 │   │   │   │   ├── constants.js
 │   │   │   │   ├── data.js
 │   │   │   │   ├── events.js
@@ -4347,7 +4366,7 @@
 │   │   │   ├── report-viewer-card.js
 │   │   │   ╰── SPEC.md
 │   │   │
-│   │   ├── 📁 ui-catalogue-card/  (9 files, 222 KB)
+│   │   ├── 📁 ui-catalogue-card/  (9 files, 221 KB)
 │   │   │   ├── CLAUDE.md
 │   │   │   ├── constants.js
 │   │   │   ├── demos.js
@@ -4366,7 +4385,7 @@
 │   │   ├── specs-card.js
 │   │   ╰── ui-circle-slider.js
 │   │
-│   ├── 📁 community/  — 58 dirs, 1390 files, 61 MB
+│   ├── 📁 community/  — 47 dirs, 1369 files, 61 MB
 │   │
 │   ├── 📁 fonts/  — 28 files, 1 MB
 │   │
@@ -4388,19 +4407,19 @@
 │   │
 │   ├── 📁 media/  — 33 dirs, 61 files, 46 MB
 │   │
-│   ├── 📁 reports/  — 7 dirs, 25 files, 735 KB
+│   ├── 📁 reports/  — 7 dirs, 26 files, 771 KB
 │   │
-│   ├── 📁 rotas/  — 1 files, 144 KB
+│   ├── 📁 rotas/  — 1 files, 36 KB
 │   │
 │   ├── 📁 sound/  — 4 files, 877 KB
 │   │
-│   ├── 📁 transcripts/  — 168 files, 2 MB
+│   ├── 📁 transcripts/  — 204 files, 2 MB
 │   │
 │   ├── 📁 vendor/  — 9 files, 143 KB
 │   │
 │   ├── 📁 weathericons/  — 4 dirs, 590 files, 1 MB
 │   │
-│   ├── 📁 whatsapp_histories/  — 5 files, 181 KB
+│   ├── 📁 whatsapp_histories/  — 5 files, 189 KB
 │   │
 │   ├── add_item.js
 │   ├── Beko_FFG1545W.png

@@ -18,7 +18,7 @@
   - url: /local/base/foundation.js
     type: module
   - url: /local/base/components.js
-    type: module    
+    type: module
   - url: /local/base/utilities.js
     type: module
   - url: /local/base/helpers.js
@@ -81,7 +81,6 @@
 
 # -- MID-MIGRATION CARDS  ------------------------------------------------------
 #   These cards are in the process of migration to shared UI system
-
 
 
 
@@ -156,7 +155,7 @@
   - url: https://cdn.jsdelivr.net/npm/apexcharts@3.28.3/dist/apexcharts.min.js
     type: module
 
-# ➔ Apexcharts card
+# ➔ Apexcharts card (local copy)
   - url: /local/apexcharts-card.js
     type: module
 
@@ -171,8 +170,6 @@
 # ➔ Auto entities
   - url: /hacsfiles/lovelace-auto-entities/auto-entities.js
     type: module
-  - url: /hacsfiles/lovelace-auto-entities/rollup.config.js
-    type: module
 
 # ➔ Bar card
   - url: /hacsfiles/bar-card/bar-card.js
@@ -184,10 +181,6 @@
 
 # ➔ Button card
   - url: /hacsfiles/button-card/button-card.js
-    type: module
-
-# ➔ Canary
-  - url: /hacsfiles/lovelace-canary/canary.js
     type: module
 
 # ➔ Card mod
@@ -206,14 +199,6 @@
   - url: /hacsfiles/decluttering-card/decluttering-card.js
     type: module
 
-# ➔ Entities btn group
-  - url: /hacsfiles/lovelace-entities-btn-group/entities-btn-group.js
-    type: module
-
-# ➔ Expander card
-  - url: /hacsfiles/lovelace-expander-card/expander-card.js
-    type: module
-
 # ➔ Flex table card
   - url: /hacsfiles/flex-table-card/flex-table-card.js
     type: module
@@ -221,15 +206,9 @@
 # ➔ Fold entity row
   - url: /hacsfiles/lovelace-fold-entity-row/fold-entity-row.js
     type: module
-  - url: /hacsfiles/lovelace-fold-entity-row/rollup.config.js
-    type: module
 
 # ➔ Hass hue icons
   - url: /hacsfiles/hass-hue-icons/hass-hue-icons.js
-    type: module
-
-# ➔ History explorer card
-  - url: /hacsfiles/history-explorer-card/history-explorer-card.js
     type: module
 
 # ➔ Hourly weather
@@ -240,10 +219,8 @@
   - url: /hacsfiles/kiosk-mode/kiosk-mode.js
     type: module
 
-# ➔ ???
+# ➔ Hui element
   - url: /hacsfiles/lovelace-hui-element/hui-element.js
-    type: module
-  - url: /hacsfiles/lovelace-hui-element/rollup.config.js
     type: module
 
 # ➔ HTML card
@@ -252,8 +229,6 @@
 
 # ➔ Layout card
   - url: /hacsfiles/lovelace-layout-card/layout-card.js
-    type: module
-  - url: /hacsfiles/lovelace-layout-card/rollup.config.js
     type: module
 
 # ➔ Last changed element
@@ -275,8 +250,6 @@
 # ➔ More info card
   - url: /hacsfiles/lovelace-more-info-card/more-info-card.js
     type: module
-  - url: /hacsfiles/lovelace-more-info-card/rollup.config.js
-    type: module
 
 # ➔ Multiple entity row
   - url: /hacsfiles/lovelace-multiple-entity-row/multiple-entity-row.js
@@ -286,7 +259,7 @@
   - url: /hacsfiles/lovelace-mushroom/mushroom.js
     type: module
 
-# ➔ Not actually my cards, but they're called "My..."
+# ➔ My cards
   - url: /hacsfiles/my-cards/my-slider-v2.js
     type: module
   - url: /hacsfiles/my-cards/my-slider.js
@@ -315,12 +288,6 @@
 # ➔ Stack in card
   - url: /hacsfiles/stack-in-card/stack-in-card.js
     type: module
-  - url: /hacsfiles/lovelace-state-switch/rollup.config.js
-    type: module
-
-# ➔ State switch
-  - url: /hacsfiles/lovelace-state-switch/state-switch.js
-    type: module
 
 # ➔ Swipe card
   - url: /hacsfiles/swipe-card/swipe-card.js
@@ -333,26 +300,14 @@
 # ➔ Template entity row
   - url: /hacsfiles/lovelace-template-entity-row/template-entity-row.js
     type: module
-  - url: /hacsfiles/lovelace-template-entity-row/rollup.config.js
-    type: module
-
-# ➔ Text input row
-  - url: /hacsfiles/lovelace-text-input-row/lovelace-text-input-row.js
-    type: module
 
 # ➔ Timer bar card
   - url: /hacsfiles/timer-bar-card/timer-bar-card.js
     type: module
 
-
-
 # ➔ Timeline card
   - url: /hacsfiles/timeline_card/timeline_card.js
     type: module
-
-    
-    
-    
 
 
 

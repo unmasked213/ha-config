@@ -1501,11 +1501,6 @@ device_heater_power_toggle:
       entity_id: switch.heater_timer
     alias: Add safety timer in case device left unattended
   mode: single
-alarm_c_phone_cancel_all_alarms:
-  sequence:
-  - service: notify.mobile_app_cancel_sleep_as_android_a
-    data:
-      message: command_broadcast_intencom.urbandroid.sleep.aom.urbandroid.sleep.alarmclock.CANCEL_ALARM
 sound_sonos_presence_alert:
   alias: Sound - Sonos - Presence alert
   sequence:

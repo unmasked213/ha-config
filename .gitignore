@@ -8,8 +8,9 @@ cloud/
 .storage/
 !.storage/lovelace.*
 !.storage/lovelace_*
-addons/
+addons/*/
 !addons/ha-addons/
+!addons/ha-config-ai-agent/
 !addons/whatsapp_addon/
 custom_icons/
 deps/
@@ -33,9 +34,11 @@ docs/research/personal_device/
 docs/research/enhy/
 
 # --------------------------------------------
-# WWW rules — track root, but ignore subfolders (recursive)
+# WWW rules — ignore subfolders except authored code
 # --------------------------------------------
-www/**/
+www/*/
+!www/base/
+!www/cards/
 
 # --------------------------------------------
 # Ignore Python cache
@@ -100,7 +103,5 @@ ui_setup_v2.md
 zigbee.db
 zigbee.db-shm
 zigbee.db-wal
-frigate.yml
-git_sync.sh
 git_sync_result.txt
 *.log

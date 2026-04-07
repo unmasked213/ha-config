@@ -1,13 +1,16 @@
+
 # | START: configuration.yaml
 # |  PATH: /config/configuration.yaml
 
 
-#  ╔═════════════════════════════════════════════════════════════════════════╗
-#  ║     HOME ASSISTANT CONFIGURATION                                        ║
-#  ╚═════════════════════════════════════════════════════════════════════════╝
+# ╭────────────────────────────────────╮
+# │    Home Assistant Configuration    │
+# ├────────────────────────────────────┴─────────────────────────────────────╮
+# │  • Minimal loader. Logic lives in /config/packages/                      │
+# │  • Defines globals, includes, frontend mode, recorder policy, and        │
+# │    integrations                                                          │
+# ╰──────────────────────────────────────────────────────────────────────────╯
 
-#  • Minimal loader. All domain logic lives in packages/.
-#  • Defines globals, includes, frontend mode, recorder policy, and integrations.
 
 
 # ── CORE ────────────────────────────────────────────────────────────────────
