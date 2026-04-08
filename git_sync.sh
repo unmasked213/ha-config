@@ -72,8 +72,68 @@ update_readme_snapshot() {
   mv "$TMPFILE" "$README_FILE"
 }
 
+# inject_section RENDERED TARGET_FILE SECTION_ID START_MARKER END_MARKER
+#   Extracts <!-- section:SECTION_ID --> block from RENDERED and injects it
+#   between START_MARKER and END_MARKER in TARGET_FILE.
+inject_section() {
+  _rendered="$1"
+  _target="$2"
+  _section_id="$3"
+  _start_marker="$4"
+  _end_marker="$5"
+
+  [ -f "$_target" ] || return 0
+  grep -q "$_start_marker" "$_target" || return 0
+  grep -q "$_end_marker" "$_target" || return 0
+
+  # Extract content between section sentinels (excluding the sentinel lines)
+  _content=$(printf '%s' "$_rendered" | sed -n "/<!-- section:${_section_id} -->/,/<!-- \/section:${_section_id} -->/p" | sed '1d;$d')
+  [ -n "$_content" ] || return 0
+
+  _tmpfile=$(mktemp) || return 0
+  sed -n "1,/${_start_marker}/p" "$_target" > "$_tmpfile"
+  printf '%s\n' "$_content" >> "$_tmpfile"
+  sed -n "/${_end_marker}/,\$p" "$_target" >> "$_tmpfile"
+  mv "$_tmpfile" "$_target"
+}
+
+update_architecture_snapshot() {
+  TEMPLATE_FILE="$REPO_DIR/architecture_snapshot.j2"
+  [ -f "$TEMPLATE_FILE" ] || return 0
+
+  TOKEN=$(cat /run/supervisor.token 2>/dev/null || echo "${SUPERVISOR_TOKEN:-}")
+  [ -n "$TOKEN" ] || return 0
+
+  JSON_BODY=$(jq -n --arg t "$(cat "$TEMPLATE_FILE")" '{"template": $t}') || return 0
+
+  RENDERED=$(curl -sSL --max-time 30 \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$JSON_BODY" \
+    http://hassio/core/api/template 2>/dev/null) || return 0
+
+  [ -n "$RENDERED" ] || return 0
+  # Validate render produced at least one section sentinel
+  printf '%s' "$RENDERED" | grep -q '<!-- section:arch_header -->' || return 0
+
+  ARCH_FILE="$REPO_DIR/ARCHITECTURE.md"
+  CLAUDE_FILE="$REPO_DIR/CLAUDE.md"
+
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_header" "<!-- ARCH:HEADER:START -->" "<!-- ARCH:HEADER:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_packages" "<!-- ARCH:PACKAGES:START -->" "<!-- ARCH:PACKAGES:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_components" "<!-- ARCH:COMPONENTS:START -->" "<!-- ARCH:COMPONENTS:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_www_base" "<!-- ARCH:WWW_BASE:START -->" "<!-- ARCH:WWW_BASE:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_www_cards" "<!-- ARCH:WWW_CARDS:START -->" "<!-- ARCH:WWW_CARDS:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_pyscript" "<!-- ARCH:PYSCRIPT:START -->" "<!-- ARCH:PYSCRIPT:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_themes" "<!-- ARCH:THEMES:START -->" "<!-- ARCH:THEMES:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_entity_counts" "<!-- ARCH:ENTITY_COUNTS:START -->" "<!-- ARCH:ENTITY_COUNTS:END -->"
+  inject_section "$RENDERED" "$ARCH_FILE" "arch_ui_location" "<!-- ARCH:UI_LOCATION:START -->" "<!-- ARCH:UI_LOCATION:END -->"
+  inject_section "$RENDERED" "$CLAUDE_FILE" "claude_summary" "<!-- CLAUDE:SUMMARY:START -->" "<!-- CLAUDE:SUMMARY:END -->"
+}
+
 update_readme_tree || true
 update_readme_snapshot || true
+update_architecture_snapshot || true
 
 git add -A >/dev/null 2>&1 || true
 

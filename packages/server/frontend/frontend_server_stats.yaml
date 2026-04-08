@@ -1036,6 +1036,139 @@ command_line:
 
 
 
+    # ── PACKAGE DOMAIN BREAKDOWN ───────────────────────────────────────────
+    #  • Per-domain file and line counts for packages/.
+    #    State = total package lines. Attributes = per-domain JSON.
+    #    Used by architecture_snapshot.j2 at git sync time.
+
+  - sensor:
+      name: Package Domain Breakdown
+      unique_id: package_domain_breakdown
+      scan_interval: 6000
+      command_timeout: 30
+      unit_of_measurement: "lines"
+      icon: mdi:package-variant
+
+
+      # -- Command -----------------------------------------------------------
+      # Iterates each subdirectory in packages/, counts .yaml files and lines.
+      # Outputs JSON with total + per-domain attributes.
+
+      command: >
+        sh -c '
+          cd /config/packages || exit 1;
+          total_files=0; total_lines=0; json="{";
+          first=1;
+          for d in */; do
+            d="${d%/}";
+            files=$(find "$d" -name "*.yaml" 2>/dev/null | wc -l);
+            lines=$(find "$d" -name "*.yaml" -print0 2>/dev/null | xargs -0 cat 2>/dev/null | wc -l);
+            total_files=$((total_files + files));
+            total_lines=$((total_lines + lines));
+            [ "$first" = 1 ] && first=0 || json="$json,";
+            json="$json \"${d}_files\":$files, \"${d}_lines\":$lines";
+          done;
+          json="$json, \"total_files\":$total_files, \"total_lines\":$total_lines }";
+          echo "$json";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.total_lines | int }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - total_files
+        - total_lines
+        - ai_files
+        - ai_lines
+        - communication_files
+        - communication_lines
+        - dashboard_files
+        - dashboard_lines
+        - device_files
+        - device_lines
+        - health_files
+        - health_lines
+        - lights_files
+        - lights_lines
+        - network_files
+        - network_lines
+        - occupancy_files
+        - occupancy_lines
+        - server_files
+        - server_lines
+        - shopping_files
+        - shopping_lines
+        - time_files
+        - time_lines
+        - travel_files
+        - travel_lines
+        - weather_files
+        - weather_lines
+        - work_files
+        - work_lines
+
+
+
+
+    # ── FRONTEND CODE BREAKDOWN ────────────────────────────────────────────
+    #  • File and line counts for www/base/, www/cards/, pyscript/, themes/.
+    #    State = total lines across all. Attributes = per-area breakdown.
+    #    Used by architecture_snapshot.j2 at git sync time.
+
+  - sensor:
+      name: Frontend Code Breakdown
+      unique_id: frontend_code_breakdown
+      scan_interval: 6000
+      command_timeout: 30
+      unit_of_measurement: "lines"
+      icon: mdi:language-javascript
+
+
+      # -- Command -----------------------------------------------------------
+      # Counts .js files in www/base and www/cards, .py in pyscript, .yaml in themes.
+
+      command: >
+        sh -c '
+          cd /config || exit 1;
+          base_files=$(find www/base -name "*.js" 2>/dev/null | wc -l);
+          base_lines=$(find www/base -name "*.js" -print0 2>/dev/null | xargs -0 cat 2>/dev/null | wc -l);
+          cards_files=$(find www/cards -name "*.js" 2>/dev/null | wc -l);
+          cards_lines=$(find www/cards -name "*.js" -print0 2>/dev/null | xargs -0 cat 2>/dev/null | wc -l);
+          pyscript_files=$(find pyscript -name "*.py" 2>/dev/null | wc -l);
+          pyscript_lines=$(find pyscript -name "*.py" -print0 2>/dev/null | xargs -0 cat 2>/dev/null | wc -l);
+          themes_files=$(find themes -name "*.yaml" 2>/dev/null | wc -l);
+          themes_lines=$(find themes -name "*.yaml" -print0 2>/dev/null | xargs -0 cat 2>/dev/null | wc -l);
+          total=$((base_lines + cards_lines + pyscript_lines + themes_lines));
+          echo "{\"total_lines\":$total,\"base_files\":$base_files,\"base_lines\":$base_lines,\"cards_files\":$cards_files,\"cards_lines\":$cards_lines,\"pyscript_files\":$pyscript_files,\"pyscript_lines\":$pyscript_lines,\"themes_files\":$themes_files,\"themes_lines\":$themes_lines}";
+        '
+
+
+      # -- Value Template ----------------------------------------------------
+
+      value_template: "{{ value_json.total_lines | int }}"
+
+
+      # -- JSON Attributes ---------------------------------------------------
+
+      json_attributes:
+        - total_lines
+        - base_files
+        - base_lines
+        - cards_files
+        - cards_lines
+        - pyscript_files
+        - pyscript_lines
+        - themes_files
+        - themes_lines
+
+
+
+
 #────────────────────────────────╮
 mqtt:
 #────────────────────────────────╯

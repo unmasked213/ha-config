@@ -1,0 +1,70 @@
+{#- ARCHITECTURE.md + CLAUDE.md metrics — rendered by HA template API at git sync time.
+    Test by pasting into Developer Tools > Template.
+    Each section is delimited by sentinel comments so git_sync.sh can extract
+    the right block for the right marker pair in the target file. -#}
+{%- set edb = 'sensor.entity_domain_breakdown' -%}
+{%- set dc  = 'sensor.dashboard_complexity' -%}
+{%- set clb = 'sensor.config_line_breakdown' -%}
+{%- set pdb = 'sensor.package_domain_breakdown' -%}
+{%- set fcb = 'sensor.frontend_code_breakdown' -%}
+{%- set core_ver = state_attr('update.home_assistant_core_update', 'installed_version') | default('?') -%}
+{%- set os_ver = state_attr('update.home_assistant_operating_system_update', 'installed_version') | default('?') -%}
+{%- set sup_ver = state_attr('update.home_assistant_supervisor_update', 'installed_version') | default('?') -%}
+{%- set runtime = states(edb) | int(0) -%}
+{%- set unavailable = state_attr(edb, 'unavailable') | int(0) -%}
+{%- set unavailable_pct = ((unavailable / runtime * 100) | round(1)) if runtime > 0 else 0 -%}
+{%- set custom_cc = states('sensor.custom_components_count') | int(0) -%}
+{%- set config_lines = states(clb) | int(0) -%}
+{%- set pkg_files = state_attr(pdb, 'total_files') | int(0) -%}
+{%- set pkg_lines = states(pdb) | int(0) -%}
+{%- set base_files = state_attr(fcb, 'base_files') | int(0) -%}
+{%- set base_lines = state_attr(fcb, 'base_lines') | int(0) -%}
+{%- set cards_files = state_attr(fcb, 'cards_files') | int(0) -%}
+{%- set cards_lines = state_attr(fcb, 'cards_lines') | int(0) -%}
+{%- set py_files = state_attr(fcb, 'pyscript_files') | int(0) -%}
+{%- set py_lines = state_attr(fcb, 'pyscript_lines') | int(0) -%}
+{%- set theme_lines = state_attr(fcb, 'themes_lines') | int(0) -%}
+{%- set views = state_attr(dc, 'views') | int(0) -%}
+{%- set total_cards = state_attr(dc, 'total_cards') | int(0) -%}
+{%- set custom_cards = state_attr(dc, 'custom_cards') | int(0) -%}
+{%- set standard_cards = state_attr(dc, 'standard_cards') | int(0) -%}
+{%- set helpers = (state_attr(edb, 'input_booleans') | int(0)) + (state_attr(edb, 'input_numbers') | int(0)) + (state_attr(edb, 'input_selects') | int(0)) + (state_attr(edb, 'input_texts') | int(0)) + (state_attr(edb, 'input_datetimes') | int(0)) + (state_attr(edb, 'timers') | int(0)) + (state_attr(edb, 'counters') | int(0)) -%}
+<!-- section:arch_header -->
+**Document Version:** 10.5
+**Last Updated:** {{ now().strftime('%Y-%m-%d') }}
+**Home Assistant Version:** {{ core_ver }} | OS {{ os_ver }} | Supervisor {{ sup_ver }}
+
+This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~{{ '{:,}'.format(runtime) }} runtime entities ({{ unavailable }} unavailable, {{ unavailable_pct }}%), ~{{ '{:,}'.format(config_lines) }} lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
+<!-- /section:arch_header -->
+<!-- section:arch_packages -->
+├── packages/                          # PRIMARY EDIT LOCATION ({{ pkg_files }} files, {{ '{:,}'.format(pkg_lines) }} lines)
+<!-- /section:arch_packages -->
+<!-- section:arch_components -->
+├── custom_components/                 # {{ custom_cc }} custom integrations
+<!-- /section:arch_components -->
+<!-- section:arch_www_base -->
+│   ├── base/                          # Shared UI foundation ({{ base_files }} files, {{ '{:,}'.format(base_lines) }} lines)
+<!-- /section:arch_www_base -->
+<!-- section:arch_www_cards -->
+│   ├── cards/                         # Custom card implementations ({{ cards_files }} JS files, {{ '{:,}'.format(cards_lines) }} lines)
+<!-- /section:arch_www_cards -->
+<!-- section:arch_pyscript -->
+├── pyscript/                          # Python automation ({{ py_files }} files, {{ '{:,}'.format(py_lines) }} lines)
+<!-- /section:arch_pyscript -->
+<!-- section:arch_themes -->
+├── themes/                            # Theme files ({{ '{:,}'.format(theme_lines) }} lines)
+<!-- /section:arch_themes -->
+<!-- section:arch_entity_counts -->
+**Entity counts:**
+- Runtime: {{ '{:,}'.format(runtime) }} | Unavailable: {{ unavailable }} ({{ unavailable_pct }}%)
+- Dashboard-referenced: ~{{ state_attr(edb, 'dashboard_referenced_pct') | default('48') }}% ({{ 100 - (state_attr(edb, 'dashboard_referenced_pct') | default('48') | int) }}% unreferenced — many are legitimate helpers, stats sensors, or internal)
+- Domain breakdown: {{ state_attr(edb, 'sensors') | default('?') }} sensors, {{ state_attr(edb, 'binary_sensors') | default('?') }} binary, {{ state_attr(edb, 'automations') | default('?') }} automations, {{ state_attr(edb, 'scripts') | default('?') }} scripts, {{ state_attr(edb, 'scenes') | default('?') }} scenes, {{ state_attr(edb, 'lights') | default('?') }} lights, {{ state_attr(edb, 'switches') | default('?') }} switches, {{ state_attr(edb, 'cameras') | default('?') }} cameras, {{ helpers }} helpers
+
+*Auto-generated from live sensor data. Last sync: {{ now().strftime('%Y-%m-%d %H:%M %Z') }}*
+<!-- /section:arch_entity_counts -->
+<!-- section:arch_ui_location -->
+**Location:** `/config/www/base/` ({{ base_files }} files, {{ '{:,}'.format(base_lines) }} lines) with documentation in `/config/www/base/docs/`
+<!-- /section:arch_ui_location -->
+<!-- section:claude_summary -->
+Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~{{ '{:,}'.format(runtime) }} runtime entities across 14 domain packages, {{ custom_cc }} custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
+<!-- /section:claude_summary -->

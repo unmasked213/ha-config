@@ -2,7 +2,9 @@
 
 ## Summary
 
-Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~3,098 runtime entities (3,927 in registry) across 14 domain packages, 36 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
+<!-- CLAUDE:SUMMARY:START -->
+Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~2,985 runtime entities across 14 domain packages, 28 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
+<!-- CLAUDE:SUMMARY:END -->
 
 ---
 
@@ -17,7 +19,7 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `frigate.yml` | Frigate NVR config (C11 camera, MQTT, go2rtc) |
 | `secrets.yaml` | Credentials store (gitignored, `!secret` references only) |
 | `packages/` | **14 domain packages** — primary config (62 YAML files, ~10.9K lines) |
-| `custom_components/` | **36 installed integrations** (never modify directly) |
+| `custom_components/` | **28 installed integrations** (never modify directly) |
 | `www/` | Web assets — UI design system (`base/`), custom cards (`cards/`), community cards, media |
 | `system_context.yaml` | Single source of truth for static system context (read by pyscript → `sensor.ha_system_context`) |
 | `pyscript/` | Python automations (12 files) — CV detection, calendar ops, logging, system context, action extraction |

@@ -2,11 +2,13 @@
 # |  PATH: /config/ARCHITECTURE.md
 
 
-**Document Version:** 10.4
-**Last Updated:** 2026-03-25
-**Home Assistant Version:** 2026.3.4 | OS 17.1 | Supervisor 2026.03.2
+<!-- ARCH:HEADER:START -->
+**Document Version:** 10.5
+**Last Updated:** 2026-04-08
+**Home Assistant Version:** 2026.4.1 | OS 17.2 | Supervisor 2026.03.3
 
-This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~3,098 runtime entities (3,927 in registry, 908 disabled), ~320K lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
+This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~2,985 runtime entities (154 unavailable, 5.2%), ~341,457 lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
+<!-- ARCH:HEADER:END -->
 
 ---
 
@@ -37,7 +39,9 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 ├── scenes.yaml                        # Scene definitions (148 lines)
 ├── secrets.yaml                       # Sensitive credentials (gitignored)
 │
-├── packages/                          # PRIMARY EDIT LOCATION (62 files, 10,990 lines)
+<!-- ARCH:PACKAGES:START -->
+├── packages/                          # PRIMARY EDIT LOCATION (62 files, 11,092 lines)
+<!-- ARCH:PACKAGES:END -->
 │   ├── ai/                            # AI integrations (8 files)
 │   │   ├── CLAUDE.md                  # Domain context
 │   │   ├── ai_main.yaml, ai_system_prompts.yaml, alexa.yaml
@@ -56,10 +60,10 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │   │   ├── CLAUDE.md                  # Domain context
 │   │   └── report_viewer.yaml         # Index + content sensors for docs/reports/
 │   │
-│   ├── device/                        # Device configs (10 files)
+│   ├── device/                        # Device configs (9 files)
 │   │   ├── CLAUDE.md                  # Domain context
 │   │   └── cameras, curtains, driveway_detection, govee, mobile_device,
-│   │       pc, pet_devices, phone_control, sonos, structure
+│   │       pc, pet_devices, phone_control, sonos
 │   │
 │   ├── health/                        # Body composition metrics
 │   │   ├── CLAUDE.md                  # Domain context
@@ -83,11 +87,11 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │   │   └── presence_desks.yaml, floor02_travel_tracking.yaml,
 │   │       presence_activity_card.yaml
 │   │
-│   ├── server/                        # Server & frontend (12 files)
+│   ├── server/                        # Server & frontend (13 files)
 │   │   ├── CLAUDE.md                  # Domain context
-│   │   ├── github_sync.yaml
+│   │   ├── dir_tree.yaml, github_sync.yaml
 │   │   ├── ha_snapshot_sensor.yaml    # Pre-formatted HA snapshot for prompt manager inject
-│   │   └── frontend/                  # 10 files: camera views, stats, themes, TTS, etc.
+│   │   └── frontend/                  # 11 files: camera views, stats, themes, TTS, etc.
 │   │
 │   ├── shopping/                      # Shopping list, store busyness
 │   │   ├── CLAUDE.md                  # Domain context
@@ -110,7 +114,9 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │       ├── CLAUDE.md                  # Domain context
 │       └── work.yaml, work_actions_card.yaml
 │
-├── custom_components/                 # 36 custom integrations
+<!-- ARCH:COMPONENTS:START -->
+├── custom_components/                 # 28 custom integrations
+<!-- ARCH:COMPONENTS:END -->
 │   ├── ha_text_ai/                    # AI text generation
 │   ├── whatsapp/, whatsapp_chat/      # WhatsApp integration
 │   ├── frigate/                       # Camera NVR
@@ -118,7 +124,9 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │   └── [29 more...]
 │
 ├── www/                               # Web-accessible static files
-│   ├── base/                          # Shared UI foundation (16 files, 12,429 lines)
+<!-- ARCH:WWW_BASE:START -->
+│   ├── base/                          # Shared UI foundation (17 files, 12,261 lines)
+<!-- ARCH:WWW_BASE:END -->
 │   │   ├── docs/                      # UI documentation
 │   │   │   └── CLAUDE.md              # Token governance - READ-ONLY rules
 │   │   ├── foundation.js              # Design tokens — READ-ONLY
@@ -126,7 +134,9 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │   │   └── [checkboxes, helpers, modals, radios, screen-border,
 │   │        skeletons, templates, templates.test, toasts, toggles,
 │   │        tooltips, utilities]
-│   ├── cards/                         # Custom card implementations (28 JS files, 19,994 lines)
+<!-- ARCH:WWW_CARDS:START -->
+│   ├── cards/                         # Custom card implementations (34 JS files, 23,885 lines)
+<!-- ARCH:WWW_CARDS:END -->
 │   │   ├── prompt-manager/            # Prompt Manager card (modular, 9 files)
 │   │   ├── presence-activity-card/    # Presence card (modular, 3 files)
 │   │   ├── report-viewer-card/        # Report viewer card (2 files)
@@ -137,14 +147,18 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │   │   └── [specs-card, specs-card-tabbed, phone-card, ui-circle-slider]
 │   └── whatsapp_histories/            # Chat history storage
 │
-├── pyscript/                          # Python automation (12 files, 2,977 lines)
+<!-- ARCH:PYSCRIPT:START -->
+├── pyscript/                          # Python automation (14 files, 3,297 lines)
+<!-- ARCH:PYSCRIPT:END -->
 │   └── action_extraction_pipeline.py, dad_car_detection.py,
 │       save_uploaded_file.py, log_errors.py, recorder_stats.py,
 │       system_context.py, theme_sync.py, save_rota_image.py,
 │       dump_log_breakdown.py,
 │       calendar ops (3 files: cleanup, delete batch, delete single)
 │
-├── themes/                            # Theme files (9,516 lines)
+<!-- ARCH:THEMES:START -->
+├── themes/                            # Theme files (4,563 lines)
+<!-- ARCH:THEMES:END -->
 │   └── material_you/ (active default), catppuccin/, visionos/, olympus (legacy)
 │
 ├── docs/                              # Reports and reference documentation
@@ -626,16 +640,22 @@ Previously resolved items (startup recovery, division-by-zero guards, namespace 
 - Packages: ~35 automations across package files
 - Registry total: 82 (some from Node-RED, UI-created, or integration-generated)
 
+<!-- ARCH:ENTITY_COUNTS:START -->
 **Entity counts:**
-- Registry: 3,927 (908 disabled) | Runtime snapshot: 3,098 | Unavailable: 281 (9.1%)
+- Runtime: 2,985 | Unavailable: 154 (5.2%)
 - Dashboard-referenced: ~48% (52% unreferenced — many are legitimate helpers, stats sensors, or internal)
-- Registry history: 4,245→3,838→**3,927** (+89 since v10.3). Disabled: 1,389→960→**908** (-52). Enabled: 2,856→2,878→**3,019** (+141).
+- Domain breakdown: 1,385 sensors, 170 binary, 84 automations, 68 scripts, 147 scenes, 45 lights, 205 switches, 27 cameras, 316 helpers
+
+*Auto-generated from live sensor data. Last sync: 2026-04-08 03:57 UTC*
+<!-- ARCH:ENTITY_COUNTS:END -->
 
 ---
 
 ## 10. UI Design System Summary
 
-**Location:** `/config/www/base/` (16 files, 12,429 lines) with documentation in `/config/www/base/docs/`
+<!-- ARCH:UI_LOCATION:START -->
+**Location:** `/config/www/base/` (17 files, 12,261 lines) with documentation in `/config/www/base/docs/`
+<!-- ARCH:UI_LOCATION:END -->
 
 **Key files:**
 - `foundation.js` — Token definitions (READ-ONLY)

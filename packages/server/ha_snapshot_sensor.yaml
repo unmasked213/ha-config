@@ -32,6 +32,8 @@ template:
             Installed: 2023-03-30
             Scale: {{ states('sensor.config_line_breakdown') | default('0') }} config lines ({{ state_attr('sensor.config_line_breakdown', 'yaml') | default('0') }} YAML, {{ state_attr('sensor.config_line_breakdown', 'dashboards') | default('0') }} dashboard)
             Resources: {{ states('sensor.lovelace_resources_count') | default('0') }} lovelace, {{ states('sensor.custom_components_count') | default('0') }} custom components, {{ states('sensor.integrations_frontend_count') | default('0') }} HACS, {{ states('sensor.addons_frontend_count') | default('0') }} addons
+            Packages: {{ state_attr('sensor.package_domain_breakdown', 'total_files') | default('0') }} files, {{ states('sensor.package_domain_breakdown') | default('0') }} lines across 14 domains
+            Frontend JS: {{ state_attr('sensor.frontend_code_breakdown', 'base_files') | default('0') }} base ({{ state_attr('sensor.frontend_code_breakdown', 'base_lines') | default('0') }}L), {{ state_attr('sensor.frontend_code_breakdown', 'cards_files') | default('0') }} cards ({{ state_attr('sensor.frontend_code_breakdown', 'cards_lines') | default('0') }}L), {{ state_attr('sensor.frontend_code_breakdown', 'pyscript_files') | default('0') }} pyscript ({{ state_attr('sensor.frontend_code_breakdown', 'pyscript_lines') | default('0') }}L), {{ state_attr('sensor.frontend_code_breakdown', 'themes_files') | default('0') }} themes ({{ state_attr('sensor.frontend_code_breakdown', 'themes_lines') | default('0') }}L)
             </home_assistant>
 
             <system>

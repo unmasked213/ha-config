@@ -2,8 +2,8 @@
 ╭────────────────────────────────────────╮
 │  /config                               │
 ├────────────────────────────────────────┤
-│  Scanned: 2026-04-07 03:00  |  0.1s    │
-│  1,450 dirs · 9,835 files · 4.2 GB     │
+│  Scanned: 2026-04-08 03:00  |  0.1s    │
+│  1,451 dirs · 9,844 files · 4.2 GB     │
 ╰────────────────────────────────────────╯
 
 📁 config/
@@ -12,7 +12,7 @@
 │
 ├── 📁 .cursor/  — 1 dirs, 1 files, 9 KB
 │
-├── 📁 .storage/  — 23 dirs, 154 files, 30 MB
+├── 📁 .storage/  — 23 dirs, 154 files, 34 MB
 │
 ├── 📁 .vscode/  — 1 files, 525 B
 │
@@ -3883,11 +3883,13 @@
 │   │   │
 │   │   ├── 📁 claude-insights/  (2 folders)
 │   │   │   │
-│   │   │   ├── 📁 addon/  (1 file, 69 KB)
-│   │   │   │   ╰── 2026-03-10_claude_code_addon_insights.html
+│   │   │   ├── 📁 addon/  (2 files, 141 KB)
+│   │   │   │   ├── 2026-03-10_claude_code_addon_insights.html
+│   │   │   │   ╰── 2026-04-07_claude_code_insights.html
 │   │   │   │
-│   │   │   ╰── 📁 desktop/  (1 file, 62 KB)
-│   │   │       ╰── 2026-03-10_claude_code_desktop_insights.html
+│   │   │   ╰── 📁 desktop/  (2 files, 122 KB)
+│   │   │       ├── 2026-03-10_claude_code_desktop_insights.html
+│   │   │       ╰── 2026-04-07_claude_code_desktop_insights.html
 │   │   │
 │   │   ├── 📁 components-review/  (1 file, 11 KB)
 │   │   │   ╰── 2026-02-08-20-00-components-review.json
@@ -4260,7 +4262,7 @@
 │   ├── tablet.yaml
 │   ╰── test_theme.yaml
 │
-├── 📁 tmp/  — 1 dirs, 7 files, 1 MB
+├── 📁 tmp/  — 1 dirs, 10 files, 2 MB
 │
 ├── 📁 tts/  — 90 files, 7 MB
 │
@@ -4385,7 +4387,7 @@
 │   │   ├── specs-card.js
 │   │   ╰── ui-circle-slider.js
 │   │
-│   ├── 📁 community/  — 47 dirs, 1369 files, 61 MB
+│   ├── 📁 community/  — 47 dirs, 1371 files, 61 MB
 │   │
 │   ├── 📁 fonts/  — 28 files, 1 MB
 │   │
