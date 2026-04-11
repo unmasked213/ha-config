@@ -111,5 +111,3 @@ The `.claude/` directory provides session persistence for cross-device continuit
 - Credentials — in gitignored `secrets.yaml`
 
 ---
-
-*Last Updated: 2026-03-25*

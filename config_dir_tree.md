@@ -2,17 +2,17 @@
 ╭────────────────────────────────────────╮
 │  /config                               │
 ├────────────────────────────────────────┤
-│  Scanned: 2026-04-08 03:00  |  0.1s    │
-│  1,451 dirs · 9,844 files · 4.2 GB     │
+│  Scanned: 2026-04-11 03:00  |  0.1s    │
+│  1,456 dirs · 9,880 files · 4.2 GB     │
 ╰────────────────────────────────────────╯
 
 📁 config/
 │
-├── 📁 .claude/  — 4 dirs, 28 files, 47 KB
+├── 📁 .claude/  — 4 dirs, 29 files, 47 KB
 │
 ├── 📁 .cursor/  — 1 dirs, 1 files, 9 KB
 │
-├── 📁 .storage/  — 23 dirs, 154 files, 34 MB
+├── 📁 .storage/  — 23 dirs, 155 files, 33 MB
 │
 ├── 📁 .vscode/  — 1 files, 525 B
 │
@@ -198,26 +198,37 @@
 │   │   │   │   ├── claude-dispatch-protocol.md
 │   │   │   │   ╰── CLAUDE.md
 │   │   │   │
-│   │   │   ├── 📁 skills/  (9 folders, 4 files, 60 KB)
+│   │   │   ├── 📁 skills/  (11 folders, 1 file, 3 KB)
 │   │   │   │   │
-│   │   │   │   ├── 📁 claude-bridge/  (1 file, 5 KB)
+│   │   │   │   ├── 📁 ai-bridge/  (2 files, 8 KB)
+│   │   │   │   │   ├── claude-bridge.skill
 │   │   │   │   │   ╰── SKILL.md
 │   │   │   │   │
-│   │   │   │   ├── 📁 dwp-work-context/  (1 folder)
+│   │   │   │   ├── 📁 dwp-work-context/  (1 folder, 1 file, 2 KB)
 │   │   │   │   │   │
-│   │   │   │   │   ╰── 📁 dwp-work-context/  (1 folder, 1 file, 5 KB)
-│   │   │   │   │       │
-│   │   │   │   │       ├── 📁 references/  (4 files, 98 KB)
-│   │   │   │   │       │   ├── colleague_profiles.md
-│   │   │   │   │       │   ├── minutes.md
-│   │   │   │   │       │   ├── ops.md
-│   │   │   │   │       │   ╰── people.md
-│   │   │   │   │       │
-│   │   │   │   │       ╰── SKILL.md
+│   │   │   │   │   ├── 📁 dwp-work-context/  (1 folder, 1 file, 5 KB)
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── 📁 reference/  (4 files, 101 KB)
+│   │   │   │   │   │   │   ├── colleague_profiles.md
+│   │   │   │   │   │   │   ├── minutes.md
+│   │   │   │   │   │   │   ├── ops.md
+│   │   │   │   │   │   │   ╰── people.md
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── dwp-work-context.skill
 │   │   │   │   │
-│   │   │   │   ├── 📁 ha-development/  (1 folder)
+│   │   │   │   ├── 📁 ha-development/  (1 folder, 1 file, 4 KB)
 │   │   │   │   │   │
-│   │   │   │   │   ╰── 📁 ha-development/  (1 file, 8 KB)
+│   │   │   │   │   ├── 📁 ha-development/  (1 file, 8 KB)
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── ha-development.skill
+│   │   │   │   │
+│   │   │   │   ├── 📁 inner-wiring/  (1 folder)
+│   │   │   │   │   │
+│   │   │   │   │   ╰── 📁 inner-wiring/  (2 files, 14 KB)
+│   │   │   │   │       ├── inner-wiring-skill.md
 │   │   │   │   │       ╰── SKILL.md
 │   │   │   │   │
 │   │   │   │   ├── 📁 mpv-development/  (1 folder, 1 file, 9 KB)
@@ -262,14 +273,28 @@
 │   │   │   │   │   │
 │   │   │   │   │   ╰── prompt-engineering.skill
 │   │   │   │   │
-│   │   │   │   ├── 📁 shared-ui/  (1 folder)
+│   │   │   │   ├── 📁 shared-ui/  (1 folder, 1 file, 11 KB)
 │   │   │   │   │   │
-│   │   │   │   │   ╰── 📁 shared-ui/  (1 folder, 1 file, 14 KB)
-│   │   │   │   │       │
-│   │   │   │   │       ├── 📁 references/  (1 file, 19 KB)
-│   │   │   │   │       │   ╰── system.md
-│   │   │   │   │       │
-│   │   │   │   │       ╰── SKILL.md
+│   │   │   │   │   ├── 📁 shared-ui/  (1 folder, 1 file, 14 KB)
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── 📁 references/  (1 file, 19 KB)
+│   │   │   │   │   │   │   ╰── system.md
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── shared-ui.skill
+│   │   │   │   │
+│   │   │   │   ├── 📁 skill-optimiser/  (1 folder, 1 file, 11 KB)
+│   │   │   │   │   │
+│   │   │   │   │   ├── 📁 skill-optimiser/  (1 folder, 1 file, 11 KB)
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ├── 📁 references/  (2 files, 13 KB)
+│   │   │   │   │   │   │   ├── standards.md
+│   │   │   │   │   │   │   ╰── update-procedure.md
+│   │   │   │   │   │   │
+│   │   │   │   │   │   ╰── SKILL.md
+│   │   │   │   │   │
+│   │   │   │   │   ╰── skill-optimiser.skill
 │   │   │   │   │
 │   │   │   │   ├── 📁 who-i-am/  (1 folder, 1 file, 23 KB)
 │   │   │   │   │   │
@@ -284,10 +309,7 @@
 │   │   │   │   │   │
 │   │   │   │   │   ╰── who-i-am.skill
 │   │   │   │   │
-│   │   │   │   ├── claude-bridge.skill
-│   │   │   │   ├── dwp-work-context.skill
-│   │   │   │   ├── ha-development.skill
-│   │   │   │   ╰── shared-ui.skill
+│   │   │   │   ╰── CLAUDE.md
 │   │   │   │
 │   │   │   ╰── ha_preview_setup_guide.md
 │   │   │
@@ -3894,7 +3916,7 @@
 │   │   ├── 📁 components-review/  (1 file, 11 KB)
 │   │   │   ╰── 2026-02-08-20-00-components-review.json
 │   │   │
-│   │   ├── 📁 config-intel/  (11 files, 375 KB)
+│   │   ├── 📁 config-intel/  (12 files, 409 KB)
 │   │   │   ├── 2026-02-06-11-39-config-intel.md
 │   │   │   ├── 2026-02-10-16-05-config-intel.md
 │   │   │   ├── 2026-02-12-14-03-config-intel.md
@@ -3905,7 +3927,8 @@
 │   │   │   ├── 2026-03-05-04-23-config-intel.md
 │   │   │   ├── 2026-03-15-10-50-config-intel.md
 │   │   │   ├── 2026-03-25-22-31-config-intel.md
-│   │   │   ╰── 2026-04-03-21-00-config-intel.md
+│   │   │   ├── 2026-04-03-21-00-config-intel.md
+│   │   │   ╰── 2026-04-08-03-57-config-intel.md
 │   │   │
 │   │   ├── 📁 failure-mode/  (2 files, 54 KB)
 │   │   │   ├── FAILURE_MODE_REPORT_2026-02-01.md
@@ -4047,9 +4070,9 @@
 │   │   ├── presence_desks.yaml
 │   │   ╰── presence_detection.yaml
 │   │
-│   ├── 📁 server/  (1 folder, 4 files, 22 KB)
+│   ├── 📁 server/  (1 folder, 4 files, 23 KB)
 │   │   │
-│   │   ├── 📁 frontend/  (10 files, 67 KB)
+│   │   ├── 📁 frontend/  (10 files, 72 KB)
 │   │   │   ├── advanced_camera_card_backend.yaml
 │   │   │   ├── bubble_modules.yaml
 │   │   │   ├── daily_affirmation.yaml
@@ -4071,7 +4094,7 @@
 │   │   ├── shopping_list.yaml
 │   │   ╰── tesco_sensors.yaml
 │   │
-│   ├── 📁 time/  (5 files, 22 KB)
+│   ├── 📁 time/  (5 files, 23 KB)
 │   │   ├── alarm_time.yaml
 │   │   ├── calendar_frontend_add_event.yaml
 │   │   ├── CLAUDE.md
@@ -4092,7 +4115,7 @@
 │       ├── work.yaml
 │       ╰── work_actions_card.yaml
 │
-├── 📁 pyscript/  (1 folder, 13 files, 116 KB)
+├── 📁 pyscript/  (1 folder, 13 files, 117 KB)
 │   │
 │   ├── 📁 modules/  (1 file, 3 KB)
 │   │   ╰── speaker_rename_io.py
@@ -4113,11 +4136,16 @@
 │
 ├── 📁 python_scripts/
 │
-├── 📁 scripts/  (4 files, 19 KB)
+├── 📁 scripts/  (9 files, 85 KB)
 │   ├── .imap_env
 │   ├── claude_dispatch.sh
+│   ├── dir_tree.py
+│   ├── doc_snapshot.j2
+│   ├── extract_js.py
 │   ├── fetch_imap_attachments.py
-│   ╰── fetch_transcript.sh
+│   ├── fetch_transcript.sh
+│   ├── git_sync.sh
+│   ╰── ha_dir_tree.py
 │
 ├── 📁 templates/  (1 folder, 1 file, 35 KB)
 │   │
@@ -4264,7 +4292,7 @@
 │
 ├── 📁 tmp/  — 1 dirs, 10 files, 2 MB
 │
-├── 📁 tts/  — 90 files, 7 MB
+├── 📁 tts/  — 92 files, 7 MB
 │
 ├── 📁 ui/  (1 folder, 4 files, 18 KB)
 │   │
@@ -4292,7 +4320,7 @@
 │   │
 │   ├── 📁 base/  (1 folder, 18 files, 392 KB)
 │   │   │
-│   │   ├── 📁 docs/  (1 folder, 3 files, 90 KB)
+│   │   ├── 📁 docs/  (1 folder, 3 files, 91 KB)
 │   │   │   │
 │   │   │   ├── 📁 componentry/  (4 files, 29 KB)
 │   │   │   │   ├── clearable-input.md
@@ -4379,7 +4407,7 @@
 │   │   │   ├── ui-catalogue-card.js
 │   │   │   ╰── usage.js
 │   │   │
-│   │   ├── 📁 work-actions-card/  (2 files, 115 KB)
+│   │   ├── 📁 work-actions-card/  (2 files, 117 KB)
 │   │   │   ├── CLAUDE.md
 │   │   │   ╰── work-actions-card.js
 │   │   │
@@ -4409,13 +4437,13 @@
 │   │
 │   ├── 📁 media/  — 33 dirs, 61 files, 46 MB
 │   │
-│   ├── 📁 reports/  — 7 dirs, 26 files, 771 KB
+│   ├── 📁 reports/  — 7 dirs, 27 files, 805 KB
 │   │
 │   ├── 📁 rotas/  — 1 files, 36 KB
 │   │
 │   ├── 📁 sound/  — 4 files, 877 KB
 │   │
-│   ├── 📁 transcripts/  — 204 files, 2 MB
+│   ├── 📁 transcripts/  — 220 files, 2 MB
 │   │
 │   ├── 📁 vendor/  — 9 files, 143 KB
 │   │
@@ -4459,6 +4487,7 @@
 ├── .shopping_list.json
 ├── _log_sample.txt
 ├── ARCHITECTURE.md
+├── architecture_snapshot.j2
 ├── automations.yaml
 ├── CLAUDE.md
 ├── configuration.yaml

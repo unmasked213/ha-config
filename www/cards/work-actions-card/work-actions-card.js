@@ -62,12 +62,25 @@ styles.replaceSync(`
     gap: var(--ui-space-6);
   }
 
-  /* Menu container */
-  .wac-menu-container {
+  /* Header actions (copy + menu) */
+  .wac-header-actions {
     position: absolute;
     right: var(--ui-space-4);
     top: var(--ui-space-6);
     z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-1);
+  }
+
+  .wac-header-actions .ui-copy-btn {
+    width: var(--ui-space-8);
+    height: var(--ui-space-8);
+  }
+
+  /* Menu container */
+  .wac-menu-container {
+    position: relative;
   }
 
   .wac-menu-container .ui-menu--down {
@@ -914,6 +927,17 @@ class WorkActionsCard extends HTMLElement {
     this._container = document.createElement("div");
     this._container.className = "items";
 
+    // Header actions wrapper (copy button + dropdown menu)
+    const headerActions = document.createElement("div");
+    headerActions.className = "wac-header-actions";
+
+    // Copy all outstanding actions button
+    const copyAllBtn = document.createElement("button");
+    copyAllBtn.className = "ui-copy-btn wac-copy-all";
+    copyAllBtn.setAttribute("aria-label", "Copy outstanding actions");
+    copyAllBtn.title = "Copy outstanding actions";
+    copyAllBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a 2 2 0 0 1-2-2V4a 2 2 0 0 1 2-2h9a 2 2 0 0 1 2 2v1"></path></svg>';
+
     // Dropdown menu (PM-style)
     const menuContainer = document.createElement("div");
     menuContainer.className = "dropdown-container wac-menu-container";
@@ -937,6 +961,7 @@ class WorkActionsCard extends HTMLElement {
       <button class="ui-menu__item" id="wac-menu-settings">\u2026 More</button>`;
 
     menuContainer.append(menuBtn, menu);
+    headerActions.append(copyAllBtn, menuContainer);
 
     // Meeting summary drawer (content set dynamically)
     const backdrop = document.createElement("div");
@@ -970,7 +995,7 @@ class WorkActionsCard extends HTMLElement {
       </div>
       <div class="ui-drawer__content"></div>`;
 
-    card.append(menuContainer, backdrop, panel, header, this._container);
+    card.append(headerActions, backdrop, panel, header, this._container);
     this.shadowRoot.appendChild(card);
     this._rendered = true;
     this._attachSettingsHandlers();
@@ -1716,6 +1741,42 @@ class WorkActionsCard extends HTMLElement {
     const menu = this.shadowRoot.getElementById("wac-menu");
     const close = this.shadowRoot.querySelector(".ui-drawer__close");
     const backdrop = this.shadowRoot.querySelector(".ui-drawer-backdrop");
+
+    // Copy all outstanding actions
+    const copyAllBtn = this.shadowRoot.querySelector(".wac-copy-all");
+    if (copyAllBtn) copyAllBtn.addEventListener("click", async () => {
+      const outstanding = [...this._items.values()].filter(i => !i.checked);
+      if (!outstanding.length) return;
+
+      const lines = outstanding.map(i => {
+        const dateMatch = i.description?.match(/Meeting date:\s*(\S+)/);
+        const dateStr = dateMatch ? dateMatch[1] : i.due || "No date";
+        return `- ${i.summary} (${dateStr})`;
+      });
+      const text = lines.join("\n");
+
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const el = document.createElement("textarea");
+          Object.assign(el, { value: text });
+          Object.assign(el.style, { position: "fixed", opacity: "0" });
+          document.body.appendChild(el);
+          el.select();
+          document.execCommand("copy");
+          document.body.removeChild(el);
+        }
+        copyAllBtn.classList.add("ui-copy-btn--copied");
+        copyAllBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"></polyline></svg>';
+        setTimeout(() => {
+          copyAllBtn.classList.remove("ui-copy-btn--copied");
+          copyAllBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a 2 2 0 0 1-2-2V4a 2 2 0 0 1 2-2h9a 2 2 0 0 1 2 2v1"></path></svg>';
+        }, 2000);
+      } catch (e) {
+        console.error("[work-actions-card] Copy failed:", e);
+      }
+    });
 
     // Menu button toggles dropdown
     if (menuBtn) menuBtn.addEventListener("click", (e) => {

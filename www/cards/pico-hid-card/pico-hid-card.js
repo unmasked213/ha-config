@@ -600,8 +600,8 @@ class PicoHidCard extends HTMLElement {
       {
         id: 'natural',
         label: 'Natural',
-        desc: '150 WPM',
-        config: { wpm: 150, jitter_pct: 30, typo_rate: 1.5, think_chance: 0.5, think_min_ms: 500, think_max_ms: 3000, punct_pause_ms: 200, fatigue_pct: 15 }
+        desc: '150 WPM · fast',
+        config: { wpm: 150, jitter_pct: 15, typo_rate: 0.3, think_chance: 0.1, think_min_ms: 100, think_max_ms: 500, punct_pause_ms: 80, fatigue_pct: 5 }
       },
       {
         id: 'careful',
@@ -612,8 +612,8 @@ class PicoHidCard extends HTMLElement {
       {
         id: 'urgent',
         label: 'Urgent',
-        desc: '150 WPM · fast',
-        config: { wpm: 150, jitter_pct: 15, typo_rate: 0.3, think_chance: 0.1, think_min_ms: 100, think_max_ms: 500, punct_pause_ms: 80, fatigue_pct: 5 }
+        desc: '150 WPM · minimal pauses',
+        config: { wpm: 150, jitter_pct: 15, typo_rate: 0.1, think_chance: 0.05, think_min_ms: 100, think_max_ms: 300, punct_pause_ms: 50, fatigue_pct: 3 }
       },
     ];
   }

@@ -1,4 +1,5 @@
 #!/bin/sh
+# DEPRECATED: Replaced by scripts/git_sync.sh. Will be deleted after first successful sync from new path.
 set -eu
 
 OUTPUT_FILE="/config/git_sync_result.txt"

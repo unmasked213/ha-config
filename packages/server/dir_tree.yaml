@@ -10,7 +10,7 @@ shell_command:
 # ➔ GENERATE CONFIG TREE
 #   Runs the HA-tailored directory tree script. Produces config_dir_tree.md
 #   with full detail on authored content and collapsed summaries for runtime dirs.
-  generate_config_tree: "python3 /config/ha_dir_tree.py"
+  generate_config_tree: "python3 /config/scripts/ha_dir_tree.py"
 
 
 

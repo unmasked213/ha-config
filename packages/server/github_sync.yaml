@@ -10,7 +10,7 @@ shell_command:
 # ➔ GIT SYNC TO GITHUB
 #   Automates git synchronization to GitHub repository. Executes shell script
 #   that handles git add, commit, and push operations for configuration backup
-  git_sync_config: /bin/sh /config/git_sync.sh
+  git_sync_config: /bin/sh /config/scripts/git_sync.sh
 
 
 

@@ -60,6 +60,17 @@ This is the design system governing all custom Lovelace cards and UI components 
 | `docs/componentry/number-input.md` | Reference | Number input spec and timing exceptions |
 | `components.js` | Precedent | Check for existing patterns |
 
+### Document Authority Chain
+
+When sources conflict, higher rank overrides lower unconditionally.
+
+1. `www/base/foundation.js` - CANONICAL (token values)
+2. `www/base/docs/CLAUDE.md` - BINDING (AI rules, decision trees)
+3. `www/base/docs/spec.md` - DEFINITIVE (system specification)
+4. `www/base/docs/authoring.md` - PRESCRIPTIVE (authoring patterns)
+5. `www/base/docs/componentry/*.md` - EXCEPTION (component-specific overrides)
+6. `www/base/components.js` - PRECEDENT (existing implementation patterns)
+
 ### Critical Geometry
 
 These dimensions are immutable:
@@ -84,6 +95,12 @@ All interactive components use identical states:
 | Active | `--ui-state-active` overlay |
 | Focus | `--ui-state-focus-ring` (2px ring) |
 | Disabled | `--ui-state-disabled-opacity` (40%) |
+
+### Gotchas
+
+**Accent pink.** `--ui-pink` (rgb(255, 46, 146)) is shared across spinners, slider rollback, toast borders, and toast icons. Not a semantic role - it's the system's accent-pink utility colour.
+
+**Compositional vs dedicated tokens.** Most components derive geometry from base spacing/radius tokens. Only inputs, switches, sliders, menus, modals, tooltips, toasts, badges, progress bars, chips, controls (checkbox/radio), skeletons, split buttons, and FABs have dedicated component tokens. If a component isn't on that list, compose from base tokens.
 
 ---
 
@@ -373,10 +390,11 @@ None currently identified.
 
 | Date | Commit | Change |
 |------|--------|--------|
+| 2026-04-10 | — | Added Document Authority Chain (6-tier hierarchy), Gotchas section (accent pink, compositional vs dedicated tokens) |
 | 2026-03-25 | — | Full sweep: added number-input.md to "For Detail" section, added `callService`/`sleep` to helpers.js description |
 | 2026-03-23 | — | Added `number-input.js` to Structure and Key Components tables, added `componentry/number-input.md` to docs table |
 | 2026-02-24 | b350903 | Restructured to 8-section format |
 
 ---
 
-*Last Updated: 2026-03-25*
+*Last Updated: 2026-04-10*

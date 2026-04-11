@@ -10,7 +10,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.request import urlopen, Request
 
 HA_URL = "http://192.168.4.101:8123"
-PORT = 8124
+PORT = int(os.environ.get("PORT", 8123))
 
 # Load token from file next to this script
 TOKEN_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ha_token')
@@ -80,7 +80,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
     // (the HTTP proxy can't handle websocket upgrades)
     const _WS = window.WebSocket;
     window.WebSocket = function(url, protocols) {{
-        url = url.replace(/localhost:8124|127\\.0\\.0\\.1:8124/, '192.168.4.101:8123');
+        url = url.replace(/localhost:{PORT}|127\\.0\\.0\\.1:{PORT}/, '192.168.4.101:8123');
         return protocols !== undefined ? new _WS(url, protocols) : new _WS(url);
     }};
     window.WebSocket.prototype = _WS.prototype;

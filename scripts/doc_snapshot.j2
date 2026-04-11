@@ -1,13 +1,27 @@
-{#- DEPRECATED: Replaced by scripts/doc_snapshot.j2. Will be deleted after first successful sync from new path. -#}
-{#- ARCHITECTURE.md + CLAUDE.md metrics — rendered by HA template API at git sync time.
+{#- Unified documentation snapshot template
+    Rendered by HA template API at git sync time.
     Test by pasting into Developer Tools > Template.
-    Each section is delimited by sentinel comments so git_sync.sh can extract
-    the right block for the right marker pair in the target file. -#}
+
+    Produces sections for:
+      README.md     — readme_snapshot (Key Metrics table)
+      ARCHITECTURE.md — arch_header, arch_packages, arch_components,
+                        arch_www_base, arch_www_cards, arch_pyscript,
+                        arch_themes, arch_entity_counts, arch_ui_location
+      CLAUDE.md     — claude_summary
+
+    Each section is delimited by <!-- section:NAME --> sentinels.
+    git_sync.sh extracts and injects each block into its target file.
+-#}
+{#- ── Shared sensor aliases ────────────────────────────────────────────── -#}
 {%- set edb = 'sensor.entity_domain_breakdown' -%}
 {%- set dc  = 'sensor.dashboard_complexity' -%}
 {%- set clb = 'sensor.config_line_breakdown' -%}
+{%- set dbc = 'sensor.database_configuration' -%}
+{%- set sdb = 'sensor.storage_directory_breakdown' -%}
 {%- set pdb = 'sensor.package_domain_breakdown' -%}
 {%- set fcb = 'sensor.frontend_code_breakdown' -%}
+
+{#- ── Computed values (shared across sections) ─────────────────────────── -#}
 {%- set core_ver = state_attr('update.home_assistant_core_update', 'installed_version') | default('?') -%}
 {%- set os_ver = state_attr('update.home_assistant_operating_system_update', 'installed_version') | default('?') -%}
 {%- set sup_ver = state_attr('update.home_assistant_supervisor_update', 'installed_version') | default('?') -%}
@@ -30,8 +44,37 @@
 {%- set custom_cards = state_attr(dc, 'custom_cards') | int(0) -%}
 {%- set standard_cards = state_attr(dc, 'standard_cards') | int(0) -%}
 {%- set helpers = (state_attr(edb, 'input_booleans') | int(0)) + (state_attr(edb, 'input_numbers') | int(0)) + (state_attr(edb, 'input_selects') | int(0)) + (state_attr(edb, 'input_texts') | int(0)) + (state_attr(edb, 'input_datetimes') | int(0)) + (state_attr(edb, 'timers') | int(0)) + (state_attr(edb, 'counters') | int(0)) -%}
+
+{#- ═══════════════════════════════════════════════════════════════════════
+    README.md — Key Metrics snapshot
+    ═══════════════════════════════════════════════════════════════════════ -#}
+<!-- section:readme_snapshot -->
+## Key Metrics
+
+> Auto-generated from live sensor data at each git sync. Source: [`scripts/doc_snapshot.j2`](scripts/doc_snapshot.j2)
+
+| | |
+|--|--|
+| **Platform** | HA Core {{ core_ver }} · OS {{ os_ver }} · Supervisor {{ sup_ver }} |
+| **Hardware** | {{ state_attr('sensor.cpu_speed', 'brand') | default('?') }} · {{ states('sensor.cpu_thread_count') | default('?') }} threads · {{ states('sensor.memory_total_gb') | default('?') }} GB RAM · {{ states('sensor.disk_use') | default('?') }} / {{ states('sensor.home_assistant_host_disk_total') | default('?') }} GB disk |
+| **Storage** | {{ states(dbc) | default('?') }} · {{ state_attr(dbc, 'purge_keep_days') | default('?') }} day retention · {{ (state_attr(sdb, 'config_db_mb') | float(0) / 1024) | round(1) }} GB |
+| **Config** | {{ '{:,}'.format(config_lines) }} lines ({{ '{:,}'.format(state_attr(clb, 'yaml') | int(0)) }} YAML · {{ '{:,}'.format(state_attr(clb, 'dashboards') | int(0)) }} dashboard JSON) |
+| **Integrations** | {{ custom_cc }} custom · {{ states('sensor.integrations_frontend_count') | default('?') }} HACS · {{ states('sensor.addons_frontend_count') | default('?') }} add-ons · {{ states('sensor.lovelace_resources_count') | default('?') }} lovelace resources |
+| **Dashboard** | {{ views }} views · {{ '{:,}'.format(total_cards) }} cards ({{ '{:,}'.format(custom_cards) }} custom / {{ '{:,}'.format(standard_cards) }} standard) |
+| | |
+| **Entities** | **{{ '{:,}'.format(runtime) }} total** ({{ unavailable }} unavailable) |
+| Sensors | {{ '{:,}'.format(state_attr(edb, 'sensors') | int(0)) }} sensor · {{ state_attr(edb, 'binary_sensors') | default('?') }} binary |
+| Automation | {{ state_attr(edb, 'automations') | default('?') }} automations · {{ state_attr(edb, 'scripts') | default('?') }} scripts · {{ state_attr(edb, 'scenes') | default('?') }} scenes |
+| Hardware | {{ state_attr(edb, 'lights') | default('?') }} lights · {{ state_attr(edb, 'switches') | default('?') }} switches · {{ state_attr(edb, 'covers') | default('?') }} covers · {{ state_attr(edb, 'media_players') | default('?') }} media players |
+| Other | {{ state_attr(edb, 'cameras') | default('?') }} cameras · {{ helpers }} helpers · {{ state_attr(edb, 'updates') | default('?') }} updates · {{ state_attr(edb, 'zones') | default('?') }} zones |
+
+*Snapshot taken: {{ now().strftime('%Y-%m-%d %H:%M %Z') }}*
+<!-- /section:readme_snapshot -->
+
+{#- ═══════════════════════════════════════════════════════════════════════
+    ARCHITECTURE.md sections
+    ═══════════════════════════════════════════════════════════════════════ -#}
 <!-- section:arch_header -->
-**Document Version:** 10.5
 **Last Updated:** {{ now().strftime('%Y-%m-%d') }}
 **Home Assistant Version:** {{ core_ver }} | OS {{ os_ver }} | Supervisor {{ sup_ver }}
 
@@ -66,6 +109,10 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 <!-- section:arch_ui_location -->
 **Location:** `/config/www/base/` ({{ base_files }} files, {{ '{:,}'.format(base_lines) }} lines) with documentation in `/config/www/base/docs/`
 <!-- /section:arch_ui_location -->
+
+{#- ═══════════════════════════════════════════════════════════════════════
+    CLAUDE.md — Summary
+    ═══════════════════════════════════════════════════════════════════════ -#}
 <!-- section:claude_summary -->
 Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~{{ '{:,}'.format(runtime) }} runtime entities across 14 domain packages, {{ custom_cc }} custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
 <!-- /section:claude_summary -->

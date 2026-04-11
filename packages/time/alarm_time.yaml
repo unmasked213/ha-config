@@ -125,24 +125,42 @@ automation:
     # ── BED SHAKER:  OFF BUTTON  ────────────────────────────────────────────
     #  • Button to turn off the vibrating bed shaker. 
 
+
+
+
   - id: bed_shaker_off_button
     alias: Bed Shaker Off Button (Hue Button B02)
     mode: single
-    trigger:
-      - platform: event
-        event_type: zha_event
-        event_data:
-          device_ieee: !secret hue_button_b02_ieee
-          endpoint_id: 1
-          cluster_id: 6
-          command: off_with_effect
+    triggers:
+      - device_id: 69bfedb425cc004c936547a02829bef8
+        domain: zha
+        type: remote_button_short_press
+        subtype: turn_on
+        trigger: device
     action:
       - service: switch.turn_off
         target:
-          entity_id: switch.sonoff_usb_plug
-
-
-
+          entity_id:
+            - switch.sonoff_usb_plug
+            - switch.mpm_09
+  - id: one_shot_wake_alarm_2026_04_09
+    alias: "One-shot wake alarm 2026-04-09"
+    description: "Emergency wake - fires industrial vibrator if not in office by 07:30"
+    mode: single
+    triggers:
+      - trigger: time
+        at: "07:30:00"
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.presence_office
+        state: "off"
+    actions:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.mpm_09
+      - action: automation.turn_off
+        target:
+          entity_id: automation.one_shot_wake_alarm_2026_04_09
 
 
 # |   END: alarm_time.yaml

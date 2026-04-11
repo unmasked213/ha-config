@@ -51,56 +51,59 @@ async def cleanup_duplicate_work_events() -> None:
     """
     ics_path = "/config/.storage/local_calendar.enhy.ics"
 
-    # Read the ICS file
-    ics_content = await _read_ics_file(ics_path)
+    try:
+        # Read the ICS file
+        ics_content = await _read_ics_file(ics_path)
 
-    # Extract all events
-    all_events = _extract_events(ics_content)
+        # Extract all events
+        all_events = _extract_events(ics_content)
 
-    # Verify parsing didn't silently drop events
-    expected = len(re.findall(r'^BEGIN:VEVENT\s*$', ics_content, re.MULTILINE))
-    if expected > 0 and len(all_events) != expected:
-        log.error(f"ICS parse mismatch: found {expected} event markers but extracted {len(all_events)} — aborting")
-        return
+        # Verify parsing didn't silently drop events
+        expected = len(re.findall(r'^BEGIN:VEVENT\s*$', ics_content, re.MULTILINE))
+        if expected > 0 and len(all_events) != expected:
+            log.error(f"ICS parse mismatch: found {expected} event markers but extracted {len(all_events)} — aborting")
+            return
 
-    # Separate work events from other events
-    work_events_by_date = {}
-    other_events = []
+        # Separate work events from other events
+        work_events_by_date = {}
+        other_events = []
 
-    for event in all_events:
-        # Check if this is a work shift
-        has_work_description = 'DESCRIPTION:Work shift auto-added from rota upload' in event
+        for event in all_events:
+            # Check if this is a work shift
+            has_work_description = 'DESCRIPTION:Work shift auto-added from rota upload' in event
 
-        if has_work_description:
-            # Extract the date from DTSTART
-            match = re.search(r'DTSTART:(\d{8})', event)
-            if match:
-                date = match.group(1)
-                # Extract creation timestamp to keep newest
-                created_match = re.search(r'CREATED:(\d{8}T\d{6})Z?', event)
-                created = created_match.group(1) if created_match else "00000000T000000"
+            if has_work_description:
+                # Extract the date from DTSTART
+                match = re.search(r'DTSTART:(\d{8})', event)
+                if match:
+                    date = match.group(1)
+                    # Extract creation timestamp to keep newest
+                    created_match = re.search(r'CREATED:(\d{8}T\d{6})Z?', event)
+                    created = created_match.group(1) if created_match else "00000000T000000"
 
-                # Keep only the newest event for each date
-                if date not in work_events_by_date or created > work_events_by_date[date]['created']:
-                    work_events_by_date[date] = {'event': event, 'created': created}
+                    # Keep only the newest event for each date
+                    if date not in work_events_by_date or created > work_events_by_date[date]['created']:
+                        work_events_by_date[date] = {'event': event, 'created': created}
+                else:
+                    # Work event without parseable date - keep it to avoid data loss
+                    other_events.append(event)
             else:
-                # Work event without parseable date - keep it to avoid data loss
+                # Keep all non-work events
                 other_events.append(event)
-        else:
-            # Keep all non-work events
-            other_events.append(event)
 
-    # Combine: all non-work events + one work event per date
-    final_events = other_events + [info['event'] for info in work_events_by_date.values()]
+        # Combine: all non-work events + one work event per date
+        final_events = other_events + [info['event'] for info in work_events_by_date.values()]
 
-    # Rebuild valid ICS file
-    new_ics_content = _rebuild_ics(final_events)
+        # Rebuild valid ICS file
+        new_ics_content = _rebuild_ics(final_events)
 
-    # Write back to file
-    await _write_ics_file(ics_path, new_ics_content)
+        # Write back to file
+        await _write_ics_file(ics_path, new_ics_content)
 
-    total_work_events = sum(1 for e in all_events if 'DESCRIPTION:Work shift auto-added from rota upload' in e)
-    kept_events = len(work_events_by_date)
-    deleted = total_work_events - kept_events
+        total_work_events = sum(1 for e in all_events if 'DESCRIPTION:Work shift auto-added from rota upload' in e)
+        kept_events = len(work_events_by_date)
+        deleted = total_work_events - kept_events
 
-    log.info(f"Cleaned up {deleted} duplicate work events, kept {kept_events} unique dates")
+        log.info(f"Cleaned up {deleted} duplicate work events, kept {kept_events} unique dates")
+    except Exception as e:
+        log.error(f"cleanup_duplicate_work_events failed: {e}")

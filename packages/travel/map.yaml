@@ -60,7 +60,7 @@ template:
         {% if google_travel in ['unknown', 'unavailable'] %}hmm...
         {% else %}
           {% set now = now().timestamp() %}
-          {% set _entity = states[travel_sensor] %}
+          {% set _entity = states[travel_sensor] | default(none) %}
           {% set updated = as_timestamp(_entity.last_updated) if _entity is not none else now %}
           {% set elapsed_min = ((now - updated) / 60)|round %}
           {% set remaining = (google_travel|float(0) - (elapsed_min if elapsed_min < 15 else 15))|round %}
@@ -86,7 +86,7 @@ template:
         {% else %}
           {% set attrs = state_attr(target_sensor, '') %}
           {% set now = now().timestamp() %}
-          {% set _entity = states[target_sensor] %}
+          {% set _entity = states[target_sensor] | default(none) %}
           {% set updated = as_timestamp(_entity.last_updated) if _entity is not none else now %}
           {% set time_diff = now - updated %}
           {% set current_lat = attrs.current_latitude|float(0) %}
@@ -124,7 +124,7 @@ template:
         {% if target in ['unknown', 'unavailable'] %}Unknown
         {% else %}
           {% set now = now().timestamp() %}
-          {% set _entity = states[target_sensor] %}
+          {% set _entity = states[target_sensor] | default(none) %}
           {% set updated = as_timestamp(_entity.last_updated) if _entity is not none else now %}
           {% set diff = (now - updated)|int %}
           {% if diff < 60 %}Just now

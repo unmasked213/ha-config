@@ -27,13 +27,14 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `ui/` | Dashboard config — lovelace resources, views, templates, extra modules |
 | `.storage/` | HA internal storage — dashboards (JSON), auth, registries (~32 MB, never modify) |
 | `.claude/` | AI session management — session.md, rules/, hooks/, mcp.json |
-| `docs/` | Reports (config-intel, failure-mode, meta-insights, shared-ui-audit) and reference docs |
+| `docs/` | Reports (config-intel, failure-mode, meta-insights, shared-ui-audit), reference docs, and claude.ai skill backups |
+| `docs/projects/claude/skills/CLAUDE.md` | Skill file quality gate — auto-triggers via `.claude/rules/skills.md` |
 | `addons/` | Local HA add-ons (ha-config-ai-agent) |
 | `ai_adversarial_system/` | Same-model collaboration pattern documentation and workspace |
 | `media/` | AI-generated images, recordings, transcripts |
 | `ARCHITECTURE.md` | System architecture documentation (v10.4) |
 | `README.md` | Quick reference with auto-generated metrics (snapshot injected by `git_sync.sh` at commit time) |
-| `readme_snapshot.j2` | Jinja2 template for README metrics — rendered via HA template API during git sync |
+| `scripts/doc_snapshot.j2` | Jinja2 template for README + ARCHITECTURE + CLAUDE metrics — rendered via HA template API during git sync |
 | `scripts/claude_dispatch.sh` | Addon-side dispatch watcher for Claude Code bridge |
 | `docs/projects/claude/bridge/claude-dispatch-protocol.md` | Dispatch protocol reference and claude.ai setup instructions |
 | `git_sync.sh` | Git synchronisation script |
@@ -140,6 +141,10 @@ haq call <domain> <service> <entity>  # Call a service
 > **Note:** The Supervisor CLI `ha` is a separate tool (system management). `haq` avoids conflicting with it.
 
 **MCP tools (22):** `HassTurnOn`, `HassTurnOff`, `HassSetPosition`, `HassStopMoving`, `HassCancelAllTimers`, `HassFanSetSpeed`, `HassLightSet`, `HassMediaUnpause`, `HassMediaPause`, `HassMediaNext`, `HassMediaPrevious`, `HassSetVolume`, `HassSetVolumeRelative`, `HassMediaPlayerMute`, `HassMediaPlayerUnmute`, `HassMediaSearchAndPlay`, `HassListAddItem`, `HassListCompleteItem`, `HassBroadcast`, `GetDateTime`, `calendar_get_events`, `todo_get_items`, `GetLiveContext`
+
+### Conversation History (claude-historian)
+
+MCP server that indexes and searches local Claude Code conversation history. Configured globally at `/data/home/.claude/mcp.json`, available in all projects. Runs via `npx claude-historian-mcp` (no install needed). Data source: `/data/home/.claude/history.jsonl`. Uses TF-IDF scoring, fuzzy matching, and time decay. Only covers Claude Code sessions - claude.ai conversations are not searchable from here.
 
 ### Testing & Validation
 

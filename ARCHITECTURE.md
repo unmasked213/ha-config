@@ -189,7 +189,7 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 └── frigate.yml                        # Frigate NVR configuration
 ```
 
-**Metric sources:** File/line counts from `find`/`wc` (2026-03-25). Entity counts from systemSnapshot (2026-03-25). Registry counts from `.storage/core.entity_registry`.
+**Metric sources:** Sections between sentinel markers (`<!-- ARCH:*:START/END -->`) are auto-generated from live sensor data at each git sync. Other counts in this document are point-in-time observations from the date noted.
 
 ---
 
@@ -618,7 +618,7 @@ binary_sensor.presence_sensor_fp2_* [unavailable]
 
 | Item | Type | Impact | Status |
 |------|------|--------|--------|
-| 281 unavailable entities (9.1%) | Entity bloat | Registry bloat, broken refs | Active — trend: 979→949→779→801→800→758→751→152→251→325→173→**281** (regressed from 173 low) |
+| Unavailable entities (see Entity Counts for current) | Entity bloat | Registry bloat, broken refs | Active — trend (manual, as of 2026-03-25): 979→949→779→801→800→758→751→152→251→325→173→281 |
 | Dashboard JS residual rgba() calls | Dual paradigm | Maintenance burden | **Converging** — 73.7% var-vs-rgba adoption. See latest Intel Report |
 | Floor 01 raw sensor coupling | Fragility | Silent failure on rename | Documented warning |
 | Dashboard duplication (default vs home) | Redundancy | Confusion | Acknowledged |
@@ -755,8 +755,5 @@ Previously resolved items (startup recovery, division-by-zero guards, namespace 
 - Project Audit Reports: `/config/docs/reports/project-audit/`
 
 ---
-
-*Updated 2026-03-25 (v10.4). Updated from v10.3: HA 2026.3.1→2026.3.4, Supervisor 2026.02.3→2026.03.2. Entity counts refreshed: registry 3,838→3,927, runtime 2,960→3,098, disabled 960→908, unavailable 173→281 (regression). Refreshed all line counts from fresh measurement. www/base 15→16 JS files (number-input.js). Alexa sensors 20→21. Updated Section 7 with March 6 Failure Mode Report (was Feb 1): added WhatsApp silent message loss (highest risk), Claude Bridge recovery gap, office lighting no-startup-trigger gap, bifurcated resilience characterisation. Added work pipeline decisions to Section 4. Added map.yaml unguarded state access and DST sensitivity to Section 9 debt table. Added number-input component to UI system. Added WhatsApp delivery risk to data flow. Prior: v10.3 (2026-03-13).*
-
 
 # |   END: ARCHITECTURE.md

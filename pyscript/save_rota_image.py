@@ -26,17 +26,20 @@ async def save_rota_image(file_data: str = None, file_name: str = None) -> None:
     if not file_data or not file_name:
         raise ValueError("Both file_data and file_name are required.")
 
-    ext, mime = _guess_ext_and_mime(file_name)
-    target_dir = "/config/www/rotas"
-    os.makedirs(target_dir, exist_ok=True)
-    fixed_path = f"{target_dir}/latest_rota.{ext}"
+    try:
+        ext, mime = _guess_ext_and_mime(file_name)
+        target_dir = "/config/www/rotas"
+        os.makedirs(target_dir, exist_ok=True)
+        fixed_path = f"{target_dir}/latest_rota.{ext}"
 
-    image_bytes = base64.b64decode(file_data)
-    await _write_file(fixed_path, image_bytes)
+        image_bytes = base64.b64decode(file_data)
+        await _write_file(fixed_path, image_bytes)
 
-    # Expose the known filename + mime as a state we can read easily
-    state.set(
-        "pyscript.latest_rota",
-        f"latest_rota.{ext}",
-        attributes={"mime_type": mime}
-    )
+        # Expose the known filename + mime as a state we can read easily
+        state.set(
+            "pyscript.latest_rota",
+            f"latest_rota.{ext}",
+            attributes={"mime_type": mime}
+        )
+    except Exception as e:
+        log.error(f"save_rota_image failed: {e}")

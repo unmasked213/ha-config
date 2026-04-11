@@ -1039,7 +1039,7 @@ command_line:
     # ── PACKAGE DOMAIN BREAKDOWN ───────────────────────────────────────────
     #  • Per-domain file and line counts for packages/.
     #    State = total package lines. Attributes = per-domain JSON.
-    #    Used by architecture_snapshot.j2 at git sync time.
+    #    Used by scripts/doc_snapshot.j2 at git sync time.
 
   - sensor:
       name: Package Domain Breakdown
@@ -1118,7 +1118,7 @@ command_line:
     # ── FRONTEND CODE BREAKDOWN ────────────────────────────────────────────
     #  • File and line counts for www/base/, www/cards/, pyscript/, themes/.
     #    State = total lines across all. Attributes = per-area breakdown.
-    #    Used by architecture_snapshot.j2 at git sync time.
+    #    Used by scripts/doc_snapshot.j2 at git sync time.
 
   - sensor:
       name: Frontend Code Breakdown

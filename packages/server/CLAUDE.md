@@ -118,7 +118,7 @@ Server stats shell commands require the Supervisor API and `mosquitto_sub`. Thes
 - Mosquitto addon (`core-mosquitto`) -- MQTT broker stats
 - browser_mod integration -- auto refresh
 - `jq` binary in container -- dashboard complexity parsing
-- Git sync shell script (`/config/git_sync.sh`, `/config/git_sync_result.txt`)
+- Git sync shell script (`/config/scripts/git_sync.sh`, `/config/git_sync_result.txt`)
 
 **This domain is consumed by:**
 - Dashboard cards (specs-card, phone-card) reference these stat sensors
