@@ -95,6 +95,7 @@ secrets.yaml
 scripts/.imap_env
 .claude/ha_token
 .git-credentials
+.mcp.json
 theme_variables.md
 ui_conversation.md
 ui_research.md
