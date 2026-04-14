@@ -12,6 +12,10 @@ shell_command:
 #   that handles git add, commit, and push operations for configuration backup
   git_sync_config: /bin/sh /config/scripts/git_sync.sh
 
+# ➔ CLAUDE SESSION CLEANUP
+#   Tiered retention: <1MB deleted after 1 day, >1MB deleted after 3 years
+  claude_session_cleanup: /bin/sh /config/scripts/claude_session_cleanup.sh
+
 
 
 

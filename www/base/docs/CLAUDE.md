@@ -17,7 +17,8 @@ This is the design system governing all custom Lovelace cards and UI components 
 |------|-------------|
 | `foundation.js` | READ-ONLY token source of truth (colors, spacing, radius, elevation, motion) |
 | `components.js` | Shared UI components — check for existing patterns before creating new ones |
-| `helpers.js` | Component init (inputs, sliders), `applyThemeClass()`, `callService()`, `sleep()`, HA helper readers (`getHelperNumber`, `getHelperBoolean`, `getHelperSelect`, `persistHelper`) |
+| `fonts.js` | Font-face declarations (Figtree, Inter, SF Mono, etc.) and `--ui-font-family` custom property |
+| `helpers.js` | Component init (inputs, buttons, sliders), `applyThemeClass()`, `callService()`, `sleep()`, HA helper readers (`getHelperNumber`, `getHelperBoolean`, `getHelperSelect`, `persistHelper`) |
 | `modals.js` | Modal/dialog components |
 | `templates.js` | Template rendering system |
 | `templates.test.js` | Tests for the template system |
@@ -29,6 +30,7 @@ This is the design system governing all custom Lovelace cards and UI components 
 | `skeletons.js` | Skeleton loading-state components |
 | `drawer.js` | Drawer panel — right-side slide-out with backdrop, header, tabs, groups/rows. Used for settings and contextual content viewers. |
 | `number-input.js` | Number input — compact numeric stepper pill with expanding chevrons, momentum hold, scroll, inline edit. Custom element `<ui-number-input>`. |
+| `circle-slider.js` | Circular slider - SVG radial slider with vertical drag, rollback indicator, tap detection, wobble animation. Custom element `<ui-circle-slider>`. |
 | `screen-border.js` | Screen border effect component |
 | `utilities.js` | Pure functions: formatting, validation, string/colour manipulation, `escapeHtml` |
 | `README.md` | UI system index and project map |
@@ -140,7 +142,7 @@ Before submitting code:
 ```
 1. Component-specific token exists? -> Use it (--ui-menu-radius, --ui-chip-radius)
 2. Button or badge? -> --ui-radius-pill (999px)
-3. Card? -> --ui-radius-m (12px)
+3. Card or input? -> --ui-radius-xl (32px)
 4. Menu? -> --ui-radius-xl (32px)
 5. Chip/pill? -> --ui-radius-pill (999px)
 6. Otherwise -> --ui-radius-m (12px)
@@ -324,7 +326,7 @@ Never do:
 
 **Spacing:** When ambiguous, default to `--ui-space-4` (16px). Icon-to-text gap is always `--ui-space-2` (8px).
 
-**Radius:** Buttons use `--ui-radius-pill`. Badges use `--ui-radius-pill`. Cards use `--ui-radius-m`. Menus use `--ui-radius-xl`. Use component-specific token when available.
+**Radius:** Buttons use `--ui-radius-pill`. Badges use `--ui-radius-pill`. Cards use `--ui-radius-xl`. Inputs use `--ui-radius-xl`. Menus use `--ui-radius-xl`. Use component-specific token when available.
 
 **Color:** Choose by semantic role, not aesthetics. Primary actions use `--ui-accent`. Destructive uses `--ui-error`. Confirmation uses `--ui-success`. Tier/grade ratings use `--ui-tier-a` through `--ui-tier-d`. Category/classification systems use `--ui-cat-teal` through `--ui-cat-slate` (with `-faint` variants for backgrounds).
 
@@ -390,6 +392,7 @@ None currently identified.
 
 | Date | Commit | Change |
 |------|--------|--------|
+| 2026-04-12 | — | Fixed card radius in decision tree and heuristics from `--ui-radius-m` to `--ui-radius-xl`. Added `fonts.js`, `circle-slider.js`, and `initButtons` to Structure table. Fixed modal elevation example in authoring.md (`--ui-elevated-3` to `--ui-elevated-2`) |
 | 2026-04-10 | — | Added Document Authority Chain (6-tier hierarchy), Gotchas section (accent pink, compositional vs dedicated tokens) |
 | 2026-03-25 | — | Full sweep: added number-input.md to "For Detail" section, added `callService`/`sleep` to helpers.js description |
 | 2026-03-23 | — | Added `number-input.js` to Structure and Key Components tables, added `componentry/number-input.md` to docs table |
@@ -397,4 +400,4 @@ None currently identified.
 
 ---
 
-*Last Updated: 2026-04-10*
+*Last Updated: 2026-04-12*

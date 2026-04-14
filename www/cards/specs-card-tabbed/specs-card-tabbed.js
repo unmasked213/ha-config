@@ -87,6 +87,16 @@ class SpecsCardTabbed extends HTMLElement {
     return 6;
   }
 
+  getGridOptions() {
+    return {
+      rows: 8,
+      min_rows: 3,
+      max_rows: 16,
+      columns: 12,
+      min_columns: 6,
+    };
+  }
+
   // Produces a slug used as a data-label attribute value for targeted DOM lookups
   // in updateValues(). Must stay in sync with the data-label attributes set in renderTabContent().
   sanitizeLabel(label) {
@@ -308,6 +318,12 @@ class SpecsCardTabbed extends HTMLElement {
   render() {
     if (!this._config || !this._hass) return;
 
+    // Inline styles on the host element — :host CSS has lower specificity than
+    // HA's outer-tree grid styles, so we must set these directly.
+    this.style.display = 'block';
+    this.style.overflow = 'hidden';
+    this.style.height = 'calc((var(--row-size, 8) * (var(--row-height, 56px) + var(--row-gap, 8px))) - var(--row-gap, 8px))';
+
     const tabBar = this.renderTabBar();
     const tabPanels = Object.entries(this._config.tabs)
       .map(([tabKey, tab]) => this.renderTabContent(tabKey, tab))
@@ -315,12 +331,12 @@ class SpecsCardTabbed extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
+
         .ui-card {
-          height: calc(var(--ui-space-9) * 13);
-          min-height: calc(var(--ui-space-9) * 13);
-          max-height: calc(var(--ui-space-9) * 13);
+          height: 100%;
           display: flex;
           flex-direction: column;
+          overflow: hidden;
         }
 
         .tab-panel {

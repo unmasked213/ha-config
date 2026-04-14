@@ -192,7 +192,7 @@ export function renderBadgeDemo(comp) {
       { html: `<span class="ui-badge" style="--_badge-color:var(--ui-cat-teal);--_badge-color-faint:var(--ui-cat-teal-faint);">Teal</span>`, label: "Teal" },
       { html: `<span class="ui-badge" style="--_badge-color:var(--ui-cat-amber);--_badge-color-faint:var(--ui-cat-amber-faint);">Amber</span>`, label: "Amber" },
       { html: `<span class="ui-badge" style="--_badge-color:var(--ui-cat-sky);--_badge-color-faint:var(--ui-cat-sky-faint);">Sky</span>`, label: "Sky" },
-      { html: `<span class="ui-badge" style="--_badge-color:var(--ui-cat-rose);--_badge-color-faint:var(--ui-cat-rose-faint);">Rose</span>`, label: "Rose" },
+      { html: `<span class="ui-badge" style="--_badge-color:var(--ui-cat-red);--_badge-color-faint:var(--ui-cat-red-faint);">Red</span>`, label: "Red" },
       { html: `<span class="ui-badge" style="--_badge-color:var(--ui-cat-violet);--_badge-color-faint:var(--ui-cat-violet-faint);">Violet</span>`, label: "Violet" },
     ], { narrow: true })}
     ${this.renderStatesGrid("Modifiers", [
@@ -319,15 +319,15 @@ export function renderCircleSliderDemo(comp) {
 
   const playgroundMap = {
     "number": `
-      <div style="display:flex;gap:var(--ui-space-6);flex-wrap:wrap;align-items:flex-start;">
+      <div class="demo-circle-slider-interactive" style="display:flex;gap:var(--ui-space-6);flex-wrap:wrap;align-items:flex-start;">
         <ui-circle-slider value="65" label="Drag only"></ui-circle-slider>
       </div>`,
     "interactive": `
-      <div style="display:flex;gap:var(--ui-space-6);flex-wrap:wrap;align-items:flex-start;">
+      <div class="demo-circle-slider-interactive" style="display:flex;gap:var(--ui-space-6);flex-wrap:wrap;align-items:flex-start;">
         <ui-circle-slider type="interactive" value="50" label="Tap or drag" data-circle-tap></ui-circle-slider>
       </div>`,
     "disabled": `
-      <div style="display:flex;gap:var(--ui-space-6);flex-wrap:wrap;align-items:flex-start;">
+      <div class="demo-circle-slider-interactive" style="display:flex;gap:var(--ui-space-6);flex-wrap:wrap;align-items:flex-start;">
         <ui-circle-slider disabled value="30" label="Disabled"></ui-circle-slider>
       </div>`,
   };
@@ -788,7 +788,7 @@ export function renderCollapsibleDemo(comp) {
           <button class="ui-btn ui-btn--small ui-btn--outline" id="demoExpandAll">Expand All</button>
           <button class="ui-btn ui-btn--small ui-btn--outline" id="demoCollapseAll">Collapse All</button>
         </div>
-        <div class="ui-collapsible-section" id="catCollapsible1">
+        <div class="ui-collapsible-section" data-section-id="cat-demo-expanded">
           <button class="ui-collapsible-section__header" aria-expanded="true">
             <span class="ui-collapsible-section__title">Expanded Section</span>
             <span class="ui-collapsible-section__arrow"></span>
@@ -797,12 +797,12 @@ export function renderCollapsibleDemo(comp) {
             <p style="color:var(--ui-text-mute);font-size:var(--ui-font-s);">This content is visible by default. Click the header to collapse.</p>
           </div>
         </div>
-        <div class="ui-collapsible-section" id="catCollapsible2" data-initial-state="collapsed">
+        <div class="ui-collapsible-section" data-section-id="cat-demo-collapsed" data-initial-state="collapsed">
           <button class="ui-collapsible-section__header" aria-expanded="false">
             <span class="ui-collapsible-section__title">Collapsed Section</span>
             <span class="ui-collapsible-section__arrow"></span>
           </button>
-          <div class="ui-collapsible-section__content" style="height:0;padding-top:0;padding-bottom:0;margin-top:0;">
+          <div class="ui-collapsible-section__content">
             <p style="color:var(--ui-text-mute);font-size:var(--ui-font-s);">This content was hidden by default.</p>
           </div>
         </div>
@@ -972,6 +972,90 @@ export function renderColoursDemo(comp) {
     </div>
   `;
 
+  // ── Foundation sections (always visible) ──────────────────────────────
+  const foundationSections = [
+    { label: "Semantic Roles", tokens: [
+      ["--ui-accent", "accent"], ["--ui-success", "success"], ["--ui-warning", "warning"],
+      ["--ui-error", "error"], ["--ui-info", "info"],
+    ]},
+    { label: "Soft & Faint Variants", tokens: [
+      ["--ui-accent-soft", "accent-soft"], ["--ui-accent-faint", "accent-faint"],
+      ["--ui-success-soft", "success-soft"], ["--ui-success-faint", "success-faint"],
+      ["--ui-warning-soft", "warning-soft"], ["--ui-warning-faint", "warning-faint"],
+      ["--ui-error-soft", "error-soft"], ["--ui-error-faint", "error-faint"],
+      ["--ui-info-soft", "info-soft"], ["--ui-info-faint", "info-faint"],
+    ]},
+    { label: "Surfaces", tokens: [
+      ["--ui-surface", "surface"], ["--ui-surface-alt", "surface-alt"], ["--ui-surface-alt-2", "surface-alt-2"],
+    ]},
+    { label: "Elevation Tiers", tokens: [
+      ["--ui-elevated-0", "elevated-0"], ["--ui-elevated-1", "elevated-1"], ["--ui-elevated-2", "elevated-2"],
+      ["--ui-elevated-3", "elevated-3"], ["--ui-elevated-4", "elevated-4"],
+    ]},
+    { label: "Shadows", shadow: true, tokens: [
+      ["--ui-shadow-1", "shadow-1"], ["--ui-shadow-2", "shadow-2"],
+      ["--ui-shadow-3", "shadow-3"], ["--ui-shadow-4", "shadow-4"],
+    ]},
+    { label: "Overlays", tokens: [
+      ["--ui-overlay-bg", "overlay-bg"], ["--ui-overlay-scrim", "overlay-scrim"],
+      ["--ui-overlay-scrim-strong", "overlay-scrim-strong"],
+    ]},
+    { label: "Text Colours", tokens: [
+      ["--ui-text", "text"], ["--ui-text-mute", "text-mute"], ["--ui-text-strong", "text-strong"],
+      ["--ui-text-on-accent", "text-on-accent"], ["--ui-text-on-danger", "text-on-danger"],
+    ]},
+    { label: "Borders", tokens: [
+      ["--ui-border-color-light", "border-light"], ["--ui-border-color-med", "border-med"],
+      ["--ui-border-color-strong", "border-strong"],
+    ]},
+    { label: "State Layers", tokens: [
+      ["--ui-state-hover", "state-hover"], ["--ui-state-pressed", "state-pressed"],
+      ["--ui-state-active", "state-active"], ["--ui-state-focus-ring", "state-focus-ring"],
+    ]},
+    { label: "Pink (Accent Variant)", tokens: [
+      ["--ui-pink", "pink"], ["--ui-pink-soft", "pink-soft"],
+    ]},
+    { label: "Tier Colours", tokens: [
+      ["--ui-tier-a", "tier-a (gold)"], ["--ui-tier-a-faint", "tier-a-faint"],
+      ["--ui-tier-b", "tier-b (purple)"], ["--ui-tier-b-faint", "tier-b-faint"],
+      ["--ui-tier-c", "tier-c (blue)"], ["--ui-tier-c-faint", "tier-c-faint"],
+      ["--ui-tier-d", "tier-d (green)"], ["--ui-tier-d-faint", "tier-d-faint"],
+    ]},
+    { label: "Category Colours", tokens: [
+      ["--ui-cat-teal", "cat-teal"], ["--ui-cat-teal-faint", "cat-teal-faint"],
+      ["--ui-cat-amber", "cat-amber"], ["--ui-cat-amber-faint", "cat-amber-faint"],
+      ["--ui-cat-sky", "cat-sky"], ["--ui-cat-sky-faint", "cat-sky-faint"],
+      ["--ui-cat-violet", "cat-violet"], ["--ui-cat-violet-faint", "cat-violet-faint"],
+      ["--ui-cat-green", "cat-green"], ["--ui-cat-green-faint", "cat-green-faint"],
+      ["--ui-cat-red", "cat-red"], ["--ui-cat-red-faint", "cat-red-faint"],
+      ["--ui-cat-lime", "cat-lime"], ["--ui-cat-lime-faint", "cat-lime-faint"],
+      ["--ui-cat-slate", "cat-slate"], ["--ui-cat-slate-faint", "cat-slate-faint"],
+    ]},
+    { label: "Activity Colours (Presence)", tokens: [
+      ["--ui-activity-active-fresh", "active-fresh"], ["--ui-activity-active-fresh-secondary", "active-fresh-secondary"],
+      ["--ui-activity-active-stale", "active-stale"],
+      ["--ui-activity-recent-fresh", "recent-fresh"], ["--ui-activity-recent-fresh-secondary", "recent-fresh-secondary"],
+      ["--ui-activity-recent-faded", "recent-faded"], ["--ui-activity-recent-faded-secondary", "recent-faded-secondary"],
+    ]},
+  ];
+
+  // ── Component sections (collapsed) ────────────────────────────────────
+  const componentGroups = [
+    { label: "Input",     tokens: [["--ui-input-bg", "input-bg"]] },
+    { label: "Switch",    tokens: [["--ui-switch-track-off", "track-off"], ["--ui-switch-thumb-on", "thumb-on"], ["--ui-switch-icon-off", "icon-off"], ["--ui-switch-outline-off", "outline-off"]] },
+    { label: "Badge",     tokens: [["--ui-badge-bg", "badge-bg"], ["--ui-badge-text", "badge-text"]] },
+    { label: "FAB",       tokens: [["--ui-fab-hover-bg", "hover-bg"], ["--ui-fab-active-bg", "active-bg"]] },
+    { label: "Progress",  tokens: [["--ui-progress-track", "track"]] },
+    { label: "Toast",     tokens: [["--ui-toast-bg", "bg"], ["--ui-toast-text", "text"], ["--ui-toast-icon-color", "icon"], ["--ui-toast-close-bg", "close-bg"], ["--ui-toast-close-bg-hover", "close-hover"], ["--ui-toast-close-color", "close-color"]] },
+    { label: "Tooltip",   tokens: [["--ui-tooltip-bg", "bg"], ["--ui-tooltip-text", "text"], ["--ui-rich-tooltip-bg", "rich-bg"], ["--ui-rich-tooltip-text", "rich-text"]] },
+    { label: "Menu",      tokens: [["--ui-menu-item-hover-bg", "hover-bg"]] },
+    { label: "Scrollbar", tokens: [["--ui-scrollbar-track", "track"], ["--ui-scrollbar-thumb", "thumb"], ["--ui-scrollbar-thumb-hover", "thumb-hover"]] },
+    { label: "Skeleton",  tokens: [["--ui-skeleton-base", "base"], ["--ui-skeleton-shine", "shine"]] },
+  ];
+
+  // ── Counts ────────────────────────────────────────────────────────────
+  const componentCount = componentGroups.reduce((n, g) => n + g.tokens.length, 0);
+
   const formatRadio = `
     <div class="cat-colour-format" data-colour-format>
       <div class="ui-radio-group ui-radio-group--horizontal">
@@ -997,103 +1081,61 @@ export function renderColoursDemo(comp) {
     </div>
   `;
 
+  // ── Render shadow swatches differently (show box-shadow not flat fill) ─
+  const renderShadowSwatch = ([token, label]) => `
+    <div class="cat-swatch" data-swatch-token="${token}">
+      <div class="cat-swatch__color" style="background:var(--ui-surface);box-shadow:var(${token});">
+        <span class="cat-swatch__value"></span>
+      </div>
+      <div class="cat-swatch__label">${label}</div>
+    </div>
+  `;
+
+  // ── Build foundation HTML ─────────────────────────────────────────────
+  const foundationHTML = foundationSections.map((section, i) => {
+    const isFirst = i === 0;
+    const swatchesHTML = section.shadow
+      ? section.tokens.map(renderShadowSwatch).join("")
+      : section.tokens.map(([t, l]) => swatch(t, l)).join("");
+
+    return `
+      <div class="cat-demo-section">
+        <div class="cat-section-label${isFirst ? " cat-section-label--with-action" : ""}">
+          ${isFirst ? `<span>${section.label}</span>${formatRadio}` : section.label}
+        </div>
+        <div class="cat-swatch-grid">
+          ${swatchesHTML}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // ── Build component HTML ──────────────────────────────────────────────
+  const componentHTML = componentGroups.map(group => `
+    <div class="cat-component-colours__group">
+      <div class="cat-component-colours__group-label">${group.label}</div>
+      <div class="cat-component-colours__swatches">
+        ${group.tokens.map(([token, label]) => swatch(token, label)).join("")}
+      </div>
+    </div>
+  `).join("");
+
   return `
-    <div class="cat-demo-section">
-      <div class="cat-section-label cat-section-label--with-action">
-        <span>Semantic Roles</span>
-        ${formatRadio}
-      </div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-accent", "accent")}
-        ${swatch("--ui-success", "success")}
-        ${swatch("--ui-warning", "warning")}
-        ${swatch("--ui-error", "error")}
-        ${swatch("--ui-info", "info")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Soft & Faint Variants</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-accent-soft", "accent-soft")}
-        ${swatch("--ui-accent-faint", "accent-faint")}
-        ${swatch("--ui-success-soft", "success-soft")}
-        ${swatch("--ui-success-faint", "success-faint")}
-        ${swatch("--ui-warning-soft", "warning-soft")}
-        ${swatch("--ui-warning-faint", "warning-faint")}
-        ${swatch("--ui-error-soft", "error-soft")}
-        ${swatch("--ui-error-faint", "error-faint")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Text Colours</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-text", "text")}
-        ${swatch("--ui-text-mute", "text-mute")}
-        ${swatch("--ui-text-strong", "text-strong")}
-        ${swatch("--ui-text-on-accent", "text-on-accent")}
-        ${swatch("--ui-text-on-danger", "text-on-danger")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Borders</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-border-color-light", "border-light")}
-        ${swatch("--ui-border-color-med", "border-med")}
-        ${swatch("--ui-border-color-strong", "border-strong")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">State Layers</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-state-hover", "state-hover")}
-        ${swatch("--ui-state-pressed", "state-pressed")}
-        ${swatch("--ui-state-active", "state-active")}
-        ${swatch("--ui-state-focus-ring", "state-focus-ring")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Pink (Accent Variant)</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-pink", "pink")}
-        ${swatch("--ui-pink-soft", "pink-soft")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Tier Colours</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-tier-a", "tier-a (gold)")}
-        ${swatch("--ui-tier-a-faint", "tier-a-faint")}
-        ${swatch("--ui-tier-b", "tier-b (purple)")}
-        ${swatch("--ui-tier-b-faint", "tier-b-faint")}
-        ${swatch("--ui-tier-c", "tier-c (blue)")}
-        ${swatch("--ui-tier-c-faint", "tier-c-faint")}
-        ${swatch("--ui-tier-d", "tier-d (green)")}
-        ${swatch("--ui-tier-d-faint", "tier-d-faint")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Category Colours</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-cat-teal", "cat-teal")}
-        ${swatch("--ui-cat-amber", "cat-amber")}
-        ${swatch("--ui-cat-sky", "cat-sky")}
-        ${swatch("--ui-cat-violet", "cat-violet")}
-        ${swatch("--ui-cat-green", "cat-green")}
-        ${swatch("--ui-cat-red", "cat-red")}
-        ${swatch("--ui-cat-lime", "cat-lime")}
-        ${swatch("--ui-cat-slate", "cat-slate")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Activity Colours (Presence)</div>
-      <div class="cat-swatch-grid">
-        ${swatch("--ui-activity-active-fresh", "active-fresh")}
-        ${swatch("--ui-activity-active-fresh-secondary", "active-fresh-secondary")}
-        ${swatch("--ui-activity-active-stale", "active-stale")}
-        ${swatch("--ui-activity-recent-fresh", "recent-fresh")}
-        ${swatch("--ui-activity-recent-fresh-secondary", "recent-fresh-secondary")}
-        ${swatch("--ui-activity-recent-faded", "recent-faded")}
-        ${swatch("--ui-activity-recent-faded-secondary", "recent-faded-secondary")}
+    ${foundationHTML}
+
+    <div class="cat-component-colours" id="catComponentColours">
+      <div class="ui-collapsible-section" data-section-id="component-colours" data-initial-state="collapsed">
+        <button class="ui-collapsible-section__header" aria-expanded="false">
+          <span class="ui-collapsible-section__title">Component Colours</span>
+          <span class="cat-component-colours__count">${componentCount} tokens</span>
+          <span class="ui-collapsible-section__arrow"></span>
+        </button>
+        <div class="ui-collapsible-section__content">
+          <div class="cat-component-colours__desc">Tokens consumed internally by specific components. Override to restyle without touching the foundational palette.</div>
+          <div class="cat-component-colours__grid">
+            ${componentHTML}
+          </div>
+        </div>
       </div>
     </div>
   `;

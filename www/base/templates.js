@@ -1029,6 +1029,42 @@ function applyFilter(value, filter, hass, entityId) {
       }
     }
 
+    case 'second_to_first': {
+      let text = String(value);
+      const preps = 'to|for|with|from|about|by|of|at|between|through|into|around|without|within|against|near|via|over|under|before|after|behind|beside|beyond|upon';
+      const aux = 'do|does|did|can|could|will|would|shall|should|may|might|must|have|has|had|am|are|was|were';
+      const verbsObj = 'tell|told|ask|asked|help|helped|call|called|see|saw|seen|meet|met|find|found|give|gave|given|send|sent|show|showed|shown|bring|brought|take|took|taken|leave|left|watch|watched|hear|heard|follow|followed|support|supported|contact|contacted|remind|reminded|invite|invited|warn|warned|inform|informed|teach|taught|pay|paid|owe|owed|thank|thanked|cost|offer|offered|allow|allowed|let|make|made|get|got|gotten|keep|kept|save|saved|cause|caused|force|forced|stop|stopped|prevent|prevented|enable|enabled|require|required|permit|permitted|assign|assigned|grant|granted|deny|denied|lend|lent|hand|handed|pass|passed|lead|led|guide|guided|hit|surprise|surprised|impress|impressed|annoy|annoyed|bother|bothered|convince|convinced|persuade|persuaded|encourage|encouraged|challenge|challenged|blame|blamed|credit|credited|trust|trusted|involve|involved|affect|affected|provide|provided|present|presented|introduce|introduced|recommend|recommended|refer|referred|connect|connected|prepare|prepared|train|trained|replace|replaced|hurt|harm|harmed|concern|concerned|join|joined|accompany|accompanied|include|included|exclude|excluded';
+      const rules = [
+        [/\b[Yy]ou\s+yourself\b/g, 'I myself'],
+        [/\bYourself\b/g, 'Myself'],
+        [/\byourself\b/g, 'myself'],
+        [/\bYours\b/g, 'Mine'],
+        [/\byours\b/g, 'mine'],
+        [/\b[Yy]ou(?:'|')re\b/g, "I'm"],
+        [/\b[Yy]ou(?:'|')ve\b/g, "I've"],
+        [/\b[Yy]ou(?:'|')d\b/g, "I'd"],
+        [/\b[Yy]ou(?:'|')ll\b/g, "I'll"],
+        [/\b[Yy]ou are\b/g, 'I am'],
+        [/\b[Yy]ou were\b/g, 'I was'],
+        [/\bYour\b/g, 'My'],
+        [/\byour\b/g, 'my'],
+        [new RegExp(`\\b(${preps})\\s+You\\b`, 'g'), '$1 Me'],
+        [new RegExp(`\\b(${preps})\\s+you\\b`, 'g'), '$1 me'],
+        [new RegExp(`\\b(${verbsObj})\\s+You\\b`, 'g'), '$1 Me'],
+        [new RegExp(`\\b(${verbsObj})\\s+you\\b`, 'g'), '$1 me'],
+        [new RegExp(`\\b(${aux})\\s+You\\b`, 'g'), '$1 I'],
+        [new RegExp(`\\b(${aux})\\s+you\\b`, 'g'), '$1 I'],
+        [/((?:^|\n)\s*)[Yy]ou\b/g, '$1I'],
+        [/([.!?;:]\s+)[Yy]ou\b/g, '$1I'],
+        [/\bYou\b/g, 'I'],
+        [/\byou\b/g, 'I'],
+      ];
+      for (const [pattern, replacement] of rules) {
+        text = text.replace(pattern, replacement);
+      }
+      return text;
+    }
+
     case 'mask': {
       const visibleChars = args[0] !== undefined ? parseInt(args[0]) : 4;
       const maskChar = args[1] !== undefined ? String(args[1]) : '•';

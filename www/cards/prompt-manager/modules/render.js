@@ -504,7 +504,7 @@ export function renderViewModal() {
             `<svg class="inputs-toggle__chevron" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">` +
               `<path d="M7 10l5 5 5-5z"/>` +
             `</svg>` +
-            `<span class="inputs-toggle__label">Inputs (${childCount})</span>` +
+            `<span class="inputs-toggle__label">${childCount} inputs</span>` +
           `</button>` +
           `<div class="inputs-collapsible__body">` +
             `<pre class="pm-highlighted inputs-highlighted${isHighlightCached(inputsBlock) ? '' : ' pm-hl--pending'}">${isHighlightCached(inputsBlock) ? highlightPrompt(inputsBlock) : escapeHtml(inputsBlock)}</pre>` +

@@ -16,7 +16,7 @@ Because of this, the `TOOLTIP_STYLES` constant in `tooltips.js` includes fallbac
 
 ## Dark Mode Synchronisation
 
-The `@media (prefers-color-scheme: dark)` block in `tooltips.js` (approximately lines 605–623) redefines tooltip colors for dark mode. These values **must match** the corresponding dark theme tokens in `foundation.js`.
+The `@media (prefers-color-scheme: dark)` block in `tooltips.js` (approximately lines 777–795) redefines tooltip colors for dark mode. These values **must match** the corresponding dark theme tokens in `foundation.js`.
 
 **When updating `foundation.js` dark theme, also update:**
 - `tooltips.js` → `TOOLTIP_STYLES` → `@media (prefers-color-scheme: dark)` block
@@ -40,7 +40,7 @@ The `@media (prefers-color-scheme: dark)` block in `tooltips.js` (approximately 
 
 Tooltips use intentional timing values that differ from the standard motion token scale. These are documented exceptions, not violations.
 
-**JavaScript constants (lines 46-47):**
+**JavaScript constants (lines 62-63):**
 ```javascript
 const gap = 8;           // Mirrors --ui-space-2 (8px)
 const viewportMargin = 8; // Mirrors --ui-space-2 (8px)
@@ -48,8 +48,8 @@ const viewportMargin = 8; // Mirrors --ui-space-2 (8px)
 These cannot reference CSS custom properties because they're used in pure JavaScript positioning calculations, not CSS.
 
 **Functional timing (not animation):**
-- `100ms` (line 331): Debounce timing for pointer events. This is a functional threshold, not a visual transition.
-- `150ms` (line 107): Remove delay after pointer leaves. Intentionally faster than `--ui-motion-fast` (120ms) for snappier tooltip dismissal.
+- `100ms` (line 359): Debounce timing for pointer events. This is a functional threshold, not a visual transition.
+- `150ms` (line 123): Remove delay after pointer leaves. Intentionally faster than `--ui-motion-fast` (120ms) for snappier tooltip dismissal.
 
 These values are optimised for tooltip UX and should not be changed to match the standard motion scale.
 

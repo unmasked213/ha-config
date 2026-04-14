@@ -1,248 +1,199 @@
 // ══════════════════════════════════════════════════════════════════════════════
 //  EVENTS MODULE
-//  All event handling for catalogue navigation and interactive demos.
+//  Shell listeners (bound once) and demo-specific interactive wiring.
+//
+//  _setupShellListeners()  — bound once on persistent skeleton elements
+//  setupDemoListeners()    — called after each .cat-demo content swap
 // ══════════════════════════════════════════════════════════════════════════════
 
-import { getComponentsByCategory, getComponentById } from "./registry.js";
-import { TOOLTIP_CONTENT, CATEGORY_TOOLTIPS } from "./constants.js";
-import { showRichTooltip } from "/local/base/tooltips.js";
+import { getComponentById } from "./registry.js";
+
+// Static imports — modules already in browser cache from ui-catalogue-card.js
+import { initInputs, initSliders, initButtons } from "/local/base/helpers.js";
+import { initCollapsibleSections, toggleAllSections, handleCopyButton } from "/local/base/components.js";
+import { showToast } from "/local/base/toasts.js";
+import { showModal } from "/local/base/modals.js";
+import { flashScreenBorder } from "/local/base/screen-border.js";
+import { showTooltip, hideTooltip, initTooltips, showRichTooltip, hideRichTooltip } from "/local/base/tooltips.js";
 
 
-// ── Main Setup ───────────────────────────────────────────────────────────────
+// ── Shell Listeners ─────────────────────────────────────────────────────────
+// Bound once on persistent skeleton elements. Event delegation means these
+// survive innerHTML swaps of sidebar, demo area, and tabs content.
 
-export function setupEventListeners() {
+export function _setupShellListeners() {
   const root = this.shadow;
 
-  // Category tabs
-  const tabs = root.getElementById("catTabs");
-  if (tabs && !tabs.dataset.bound) {
-    tabs.dataset.bound = "1";
-    tabs.addEventListener("click", (e) => {
-      const target = (e.composedPath?.() || []).find(n => n.dataset?.category);
-      if (target?.dataset.category) {
-        const cat = target.dataset.category;
-        this.state.activeCategory = cat;
-        this.state.searchTerm = "";
-        // Select first component in the new category
-        const comps = getComponentsByCategory(cat);
-        if (comps.length > 0) {
-          this.state.activeComponent = comps[0].id;
-        }
-        this.state.activeVariant = null;
-        this.render();
-      }
-    });
-  }
+  // ── Category tabs (delegation on persistent #catTabs) ──────────────────
 
-  // Sidebar component clicks + keyboard navigation
-  const sidebar = root.getElementById("catSidebar");
-  if (sidebar && !sidebar.dataset.bound) {
-    sidebar.dataset.bound = "1";
+  this._tabsEl.addEventListener("click", (e) => {
+    const target = (e.composedPath?.() || []).find(n => n.dataset?.category);
+    if (target?.dataset.category) {
+      this._updateCategory(target.dataset.category);
+    }
+  });
 
-    const selectItem = (target) => {
-      if (target?.dataset.component) {
-        this.state.activeComponent = target.dataset.component;
-        this.state.activeVariant = null;
-        this.state.sidebarOpen = false;
-        const backdrop = root.getElementById("catSidebarBackdrop");
-        if (backdrop) backdrop.classList.remove("is-visible");
-        this.render();
-      }
-    };
+  // ── Sidebar component selection (delegation on persistent #catSidebar) ──
 
-    sidebar.addEventListener("click", (e) => {
-      selectItem((e.composedPath?.() || []).find(n => n.dataset?.component));
-    });
-
-    sidebar.addEventListener("keydown", (e) => {
-      const items = [...sidebar.querySelectorAll('.cat-sidebar__item')];
-      const idx = items.indexOf(e.target);
-      if (idx === -1) return;
-
-      if (e.key === "ArrowDown" && idx < items.length - 1) {
-        e.preventDefault();
-        items[idx + 1].focus();
-      } else if (e.key === "ArrowUp" && idx > 0) {
-        e.preventDefault();
-        items[idx - 1].focus();
-      } else if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        selectItem(e.target);
-      }
-    });
-  }
-
-  // Sidebar mobile backdrop
-  const sidebarBackdrop = root.getElementById("catSidebarBackdrop");
-  if (sidebarBackdrop && !sidebarBackdrop.dataset.bound) {
-    sidebarBackdrop.dataset.bound = "1";
-    sidebarBackdrop.addEventListener("click", () => {
+  const selectItem = (target) => {
+    if (target?.dataset.component) {
       this.state.sidebarOpen = false;
-      const sb = root.getElementById("catSidebar");
-      if (sb) sb.classList.remove("is-open");
-      sidebarBackdrop.classList.remove("is-visible");
-    });
-  }
+      const backdrop = root.getElementById("catSidebarBackdrop");
+      if (backdrop) backdrop.classList.remove("is-visible");
+      this._sidebarEl.classList.remove("is-open");
+      this._updateComponent(target.dataset.component);
+    }
+  };
 
-  // Search input
+  this._sidebarEl.addEventListener("click", (e) => {
+    selectItem((e.composedPath?.() || []).find(n => n.dataset?.component));
+  });
+
+  this._sidebarEl.addEventListener("keydown", (e) => {
+    const items = [...this._sidebarEl.querySelectorAll(".cat-sidebar__item")];
+    const idx = items.indexOf(e.target);
+    if (idx === -1) return;
+
+    if (e.key === "ArrowDown" && idx < items.length - 1) {
+      e.preventDefault();
+      items[idx + 1].focus();
+    } else if (e.key === "ArrowUp" && idx > 0) {
+      e.preventDefault();
+      items[idx - 1].focus();
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      selectItem(e.target);
+    }
+  });
+
+  // ── Demo area (delegation for variant chips + usage copy) ──────────────
+
+  this._demoEl.addEventListener("click", (e) => {
+    const path = e.composedPath?.() || [];
+
+    // Variant chip
+    const variantTarget = path.find(n => n.dataset?.variant);
+    if (variantTarget?.dataset.variant) {
+      this._updateVariant(variantTarget.dataset.variant);
+      return;
+    }
+
+    // Usage copy button
+    const copyBtn = path.find(n => n.hasAttribute?.("data-usage-copy"));
+    if (copyBtn) {
+      const block = copyBtn.closest(".cat-usage__block");
+      const code = block?.querySelector(".cat-usage__code");
+      if (!code) return;
+      const text = code.textContent;
+
+      const write = (t) =>
+        navigator.clipboard?.writeText
+          ? navigator.clipboard.writeText(t)
+          : new Promise(res => {
+              const ta = document.createElement("textarea");
+              ta.value = t;
+              ta.style.cssText = "position:fixed;top:-9999px;";
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              document.body.removeChild(ta);
+              res();
+            });
+
+      write(text).then(() => {
+        copyBtn.classList.add("is-copied");
+        setTimeout(() => copyBtn.classList.remove("is-copied"), 1500);
+      }).catch(() => {});
+    }
+  });
+
+  // ── Sidebar mobile backdrop ────────────────────────────────────────────
+
+  const sidebarBackdrop = root.getElementById("catSidebarBackdrop");
+  sidebarBackdrop.addEventListener("click", () => {
+    this.state.sidebarOpen = false;
+    this._sidebarEl.classList.remove("is-open");
+    sidebarBackdrop.classList.remove("is-visible");
+  });
+
+  // ── Search input (persistent - no focus/cursor hack needed) ────────────
+
   const search = root.getElementById("catSearch");
-  if (search && !search.dataset.bound) {
-    search.dataset.bound = "1";
-    let debounce = null;
-    search.addEventListener("input", (e) => {
-      const pill = this.shadow.querySelector(".cat-search-container .ui-input__pill");
-      if (pill) pill.classList.toggle("has-value", !!e.target.value);
-      this._updateCatClearButton();
-      clearTimeout(debounce);
-      debounce = setTimeout(() => {
-        this.state.searchTerm = e.target.value.trim();
-        this.render();
-        // Re-focus and restore cursor
-        const newSearch = this.shadow.getElementById("catSearch");
-        if (newSearch) {
-          newSearch.focus();
-          newSearch.setSelectionRange(newSearch.value.length, newSearch.value.length);
-        }
-      }, 200);
-    });
-  }
+  let debounce = null;
+  search.addEventListener("input", (e) => {
+    const pill = root.querySelector(".cat-search-container .ui-input__pill");
+    if (pill) pill.classList.toggle("has-value", !!e.target.value);
+    this._updateCatClearButton();
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      this._updateSearch(e.target.value.trim());
+    }, 200);
+  });
 
-  // Search clear button
+  // ── Search clear button ────────────────────────────────────────────────
+
   const clearBtn = root.getElementById("catSearchClear");
-  if (clearBtn && !clearBtn.dataset.bound) {
-    clearBtn.dataset.bound = "1";
-    clearBtn.addEventListener("click", () => {
-      this.state.searchTerm = "";
-      const input = this.shadow.getElementById("catSearch");
-      const pill = this.shadow.querySelector(".cat-search-container .ui-input__pill");
-      if (input) { input.value = ""; input.focus(); }
-      if (pill) pill.classList.remove("has-value");
-      this._updateCatClearButton();
-      this.render();
-      const newSearch = this.shadow.getElementById("catSearch");
-      if (newSearch) newSearch.focus();
-    });
-  }
+  clearBtn.addEventListener("click", () => {
+    this.state.searchTerm = "";
+    if (search) { search.value = ""; search.focus(); }
+    const pill = root.querySelector(".cat-search-container .ui-input__pill");
+    if (pill) pill.classList.remove("has-value");
+    this._updateCatClearButton();
+    this._updateSearch("");
+  });
 
-  // Sync clear button visibility on render
   this._updateCatClearButton();
 
-  // Card header info icon — set dynamic content based on active category
-  const headerInfo = root.querySelector('.ui-card-header ui-info-icon[data-tooltip-key="cardHeader"]');
-  if (headerInfo) {
-    const activeCat = this.state.activeCategory;
-    headerInfo.tooltipContent = (activeCat && CATEGORY_TOOLTIPS[activeCat])
-      ? CATEGORY_TOOLTIPS[activeCat]
-      : TOOLTIP_CONTENT.cardHeader;
-  }
+  // ── Sidebar mobile toggle ──────────────────────────────────────────────
 
-  // Sidebar mobile toggle
   const sidebarBtn = root.getElementById("sidebarToggle");
-  if (sidebarBtn && !sidebarBtn.dataset.bound) {
-    sidebarBtn.dataset.bound = "1";
-    sidebarBtn.addEventListener("click", () => {
-      this.state.sidebarOpen = !this.state.sidebarOpen;
-      const sb = this.shadow.getElementById("catSidebar");
-      const bd = this.shadow.getElementById("catSidebarBackdrop");
-      if (sb) sb.classList.toggle("is-open", this.state.sidebarOpen);
-      if (bd) bd.classList.toggle("is-visible", this.state.sidebarOpen);
-    });
-  }
+  sidebarBtn.addEventListener("click", () => {
+    this.state.sidebarOpen = !this.state.sidebarOpen;
+    this._sidebarEl.classList.toggle("is-open", this.state.sidebarOpen);
+    sidebarBackdrop.classList.toggle("is-visible", this.state.sidebarOpen);
+  });
 
-  // Header overflow menu
+  // ── Header overflow menu ───────────────────────────────────────────────
+
   const menuBtn = root.getElementById("catHeaderMenuBtn");
-  if (menuBtn && !menuBtn.dataset.bound) {
-    menuBtn.dataset.bound = "1";
-    menuBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.state.headerMenuOpen = !this.state.headerMenuOpen;
-      const menu = root.getElementById("catHeaderMenu");
-      if (menu) menu.classList.toggle("ui-menu--open", this.state.headerMenuOpen);
-    });
-  }
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    this.state.headerMenuOpen = !this.state.headerMenuOpen;
+    const menu = root.getElementById("catHeaderMenu");
+    if (menu) menu.classList.toggle("ui-menu--open", this.state.headerMenuOpen);
+  });
 
-  // Dark mode checkbox in header menu
+  // ── Dark mode checkbox in header menu ──────────────────────────────────
+
   const darkModeItem = root.getElementById("catHeaderMenuDarkMode");
-  if (darkModeItem && !darkModeItem.dataset.bound) {
-    darkModeItem.dataset.bound = "1";
-    darkModeItem.addEventListener("click", () => {
-      this.state.headerMenuOpen = false;
-      const menu = root.getElementById("catHeaderMenu");
-      if (menu) menu.classList.remove("ui-menu--open");
-      if (this._hass) {
-        const isDark = this._hass.themes.darkMode;
-        const newMode = isDark ? "light" : "dark";
-        const theme = this._hass.selectedTheme?.theme || "default";
-        this._hass.callService("browser_mod", "set_theme", {
-          theme: theme,
-          dark: newMode,
-        });
-      }
-    });
-  }
-
-  // Playground variant chips
-  const controls = root.getElementById("playgroundControls");
-  if (controls && !controls.dataset.bound) {
-    controls.dataset.bound = "1";
-    controls.addEventListener("click", (e) => {
-      const target = (e.composedPath?.() || []).find(n => n.dataset?.variant);
-      if (target?.dataset.variant) {
-        this.state.activeVariant = target.dataset.variant;
-        this.render();
-      }
-    });
-  }
-
-  // Usage section copy buttons
-  root.querySelectorAll('[data-usage-copy]').forEach(btn => {
-    if (!btn.dataset.bound) {
-      btn.dataset.bound = "1";
-      btn.addEventListener("click", () => {
-        const block = btn.closest('.cat-usage__block');
-        const code = block?.querySelector('.cat-usage__code');
-        if (!code) return;
-        const text = code.textContent;
-
-        const write = (t) =>
-          navigator.clipboard?.writeText
-            ? navigator.clipboard.writeText(t)
-            : new Promise(res => {
-                const ta = document.createElement("textarea");
-                ta.value = t;
-                ta.style.cssText = "position:fixed;top:-9999px;";
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand("copy");
-                document.body.removeChild(ta);
-                res();
-              });
-
-        write(text).then(() => {
-          btn.classList.add("is-copied");
-          setTimeout(() => btn.classList.remove("is-copied"), 1500);
-        }).catch(() => {});
+  darkModeItem.addEventListener("click", () => {
+    this.state.headerMenuOpen = false;
+    const menu = root.getElementById("catHeaderMenu");
+    if (menu) menu.classList.remove("ui-menu--open");
+    if (this._hass) {
+      const isDark = this._hass.themes.darkMode;
+      const newMode = isDark ? "light" : "dark";
+      const theme = this._hass.selectedTheme?.theme || "default";
+      this._hass.callService("browser_mod", "set_theme", {
+        theme: theme,
+        dark: newMode,
       });
     }
   });
 }
 
 
-// ── Demo-Specific Listeners ──────────────────────────────────────────────────
-// Called after render to wire up interactive elements within demos.
+// ── Demo-Specific Listeners ─────────────────────────────────────────────────
+// Called after each .cat-demo content swap to wire interactive elements.
+// All imports are static - no async delays.
 
 export function setupDemoListeners() {
   const root = this.shadow;
   const comp = getComponentById(this.state.activeComponent);
   if (!comp) return;
 
-  // Wire up tap bounce on all buttons
-  if (!root._btnBounceInit) {
-    import("/local/base/helpers.js").then(({ initButtons }) => {
-      initButtons(root);
-    });
-    root._btnBounceInit = true;
-  }
+  // Init button bounce on fresh demo content
+  initButtons(this._demoEl);
 
   // Wire up interactive elements based on which demo is showing
   switch (comp.id) {
@@ -321,121 +272,104 @@ export function setupDemoListeners() {
     }
 
     case "text-input": {
-      // Import and init floating labels
-      import("/local/base/helpers.js").then(({ initInputs }) => {
-        const container = root.querySelector('.demo-input-interactive');
-        if (container) initInputs(container);
-      });
+      const container = root.querySelector('.demo-input-interactive');
+      if (container) initInputs(container);
       break;
     }
 
     case "slider": {
-      import("/local/base/helpers.js").then(({ initSliders }) => {
-        const container = root.querySelector('.demo-slider-interactive');
-        if (container) {
-          initSliders(container);
-        }
-      });
+      const container = root.querySelector('.demo-slider-interactive');
+      if (container) initSliders(container);
       break;
     }
 
     case "collapsible": {
-      import("/local/base/components.js").then(({ initCollapsibleSections, toggleAllSections }) => {
-        const container = root.querySelector('.demo-collapsible-interactive');
-        if (container) {
-          initCollapsibleSections(container);
-          const expandBtn = root.getElementById("demoExpandAll");
-          const collapseBtn = root.getElementById("demoCollapseAll");
-          if (expandBtn && !expandBtn.dataset.bound) {
-            expandBtn.dataset.bound = "1";
-            expandBtn.addEventListener("click", () => toggleAllSections(container, true));
-          }
-          if (collapseBtn && !collapseBtn.dataset.bound) {
-            collapseBtn.dataset.bound = "1";
-            collapseBtn.addEventListener("click", () => toggleAllSections(container, false));
-          }
+      const container = root.querySelector('.demo-collapsible-interactive');
+      if (container) {
+        initCollapsibleSections(container);
+        const expandBtn = root.getElementById("demoExpandAll");
+        const collapseBtn = root.getElementById("demoCollapseAll");
+        if (expandBtn && !expandBtn.dataset.bound) {
+          expandBtn.dataset.bound = "1";
+          expandBtn.addEventListener("click", () => toggleAllSections(container, true));
         }
-      });
+        if (collapseBtn && !collapseBtn.dataset.bound) {
+          collapseBtn.dataset.bound = "1";
+          collapseBtn.addEventListener("click", () => toggleAllSections(container, false));
+        }
+      }
       break;
     }
 
     case "toast": {
-      import("/local/base/toasts.js").then(({ showToast }) => {
-        import("/local/base/screen-border.js").then(({ flashScreenBorder }) => {
-          const basicBtn = root.getElementById("demoToastBasic");
-          const iconBtn = root.getElementById("demoToastIcon");
-          const borderBtn = root.getElementById("demoToastBorder");
-          if (basicBtn && !basicBtn.dataset.bound) {
-            basicBtn.dataset.bound = "1";
-            basicBtn.addEventListener("click", () => {
-              showToast({ message: "This is a basic toast notification" });
-            });
-          }
-          if (iconBtn && !iconBtn.dataset.bound) {
-            iconBtn.dataset.bound = "1";
-            iconBtn.addEventListener("click", () => {
-              showToast({ message: "Toast with a custom icon", icon: "mdi:check-circle" });
-            });
-          }
-          if (borderBtn && !borderBtn.dataset.bound) {
-            borderBtn.dataset.bound = "1";
-            borderBtn.addEventListener("click", () => {
-              showToast({ message: "Toast with screen border", icon: "mdi:alert-circle" });
-              flashScreenBorder();
-            });
-          }
+      const basicBtn = root.getElementById("demoToastBasic");
+      const iconBtn = root.getElementById("demoToastIcon");
+      const borderBtn = root.getElementById("demoToastBorder");
+      if (basicBtn && !basicBtn.dataset.bound) {
+        basicBtn.dataset.bound = "1";
+        basicBtn.addEventListener("click", () => {
+          showToast({ message: "This is a basic toast notification" });
         });
-      });
+      }
+      if (iconBtn && !iconBtn.dataset.bound) {
+        iconBtn.dataset.bound = "1";
+        iconBtn.addEventListener("click", () => {
+          showToast({ message: "Toast with a custom icon", icon: "mdi:check-circle" });
+        });
+      }
+      if (borderBtn && !borderBtn.dataset.bound) {
+        borderBtn.dataset.bound = "1";
+        borderBtn.addEventListener("click", () => {
+          showToast({ message: "Toast with screen border", icon: "mdi:alert-circle" });
+          flashScreenBorder();
+        });
+      }
       break;
     }
 
     case "modal": {
-      import("/local/base/modals.js").then(({ showModal }) => {
-        import("/local/base/toasts.js").then(({ showToast }) => {
-          const basicBtn = root.getElementById("demoModalBasic");
-          const btnsBtn = root.getElementById("demoModalButtons");
-          const smallBtn = root.getElementById("demoModalSmall");
-          const medBtn = root.getElementById("demoModalMedium");
-          const lgBtn = root.getElementById("demoModalLarge");
-          if (basicBtn && !basicBtn.dataset.bound) {
-            basicBtn.dataset.bound = "1";
-            basicBtn.addEventListener("click", () => {
-              showModal({ title: "Basic Modal", content: "<p>This is a basic modal dialog. Click the X or press Escape to close.</p>" });
-            });
-          }
-          if (btnsBtn && !btnsBtn.dataset.bound) {
-            btnsBtn.dataset.bound = "1";
-            btnsBtn.addEventListener("click", () => {
-              showModal({
-                title: "Confirm Action",
-                content: "<p>Are you sure you want to proceed?</p>",
-                buttons: [
-                  { label: "Cancel", variant: "secondary", action: (m) => m.close() },
-                  { label: "Confirm", variant: "accent", action: (m) => { showToast({ message: "Confirmed!", icon: "mdi:check" }); m.close(); } },
-                ]
-              });
-            });
-          }
-          if (smallBtn && !smallBtn.dataset.bound) {
-            smallBtn.dataset.bound = "1";
-            smallBtn.addEventListener("click", () => {
-              showModal({ title: "Small Modal", content: "<p>Max width 480px.</p>", size: "s" });
-            });
-          }
-          if (medBtn && !medBtn.dataset.bound) {
-            medBtn.dataset.bound = "1";
-            medBtn.addEventListener("click", () => {
-              showModal({ title: "Medium Modal", content: "<p>Max width 720px.</p>", size: "m" });
-            });
-          }
-          if (lgBtn && !lgBtn.dataset.bound) {
-            lgBtn.dataset.bound = "1";
-            lgBtn.addEventListener("click", () => {
-              showModal({ title: "Large Modal", content: "<p>Max width 960px.</p>", size: "l" });
-            });
-          }
+      const basicBtn = root.getElementById("demoModalBasic");
+      const btnsBtn = root.getElementById("demoModalButtons");
+      const smallBtn = root.getElementById("demoModalSmall");
+      const medBtn = root.getElementById("demoModalMedium");
+      const lgBtn = root.getElementById("demoModalLarge");
+      if (basicBtn && !basicBtn.dataset.bound) {
+        basicBtn.dataset.bound = "1";
+        basicBtn.addEventListener("click", () => {
+          showModal({ title: "Basic Modal", content: "<p>This is a basic modal dialog. Click the X or press Escape to close.</p>" });
         });
-      });
+      }
+      if (btnsBtn && !btnsBtn.dataset.bound) {
+        btnsBtn.dataset.bound = "1";
+        btnsBtn.addEventListener("click", () => {
+          showModal({
+            title: "Confirm Action",
+            content: "<p>Are you sure you want to proceed?</p>",
+            buttons: [
+              { label: "Cancel", variant: "secondary", action: (m) => m.close() },
+              { label: "Confirm", variant: "accent", action: (m) => { showToast({ message: "Confirmed!", icon: "mdi:check" }); m.close(); } },
+            ]
+          });
+        });
+      }
+      if (smallBtn && !smallBtn.dataset.bound) {
+        smallBtn.dataset.bound = "1";
+        smallBtn.addEventListener("click", () => {
+          showModal({ title: "Small Modal", content: "<p>Max width 480px.</p>", size: "s" });
+        });
+      }
+      if (medBtn && !medBtn.dataset.bound) {
+        medBtn.dataset.bound = "1";
+        medBtn.addEventListener("click", () => {
+          showModal({ title: "Medium Modal", content: "<p>Max width 720px.</p>", size: "m" });
+        });
+      }
+      if (lgBtn && !lgBtn.dataset.bound) {
+        lgBtn.dataset.bound = "1";
+        lgBtn.addEventListener("click", () => {
+          showModal({ title: "Large Modal", content: "<p>Max width 960px.</p>", size: "l" });
+        });
+      }
       break;
     }
 
@@ -450,11 +384,11 @@ export function setupDemoListeners() {
           spinner.className = "ui-spinner ui-icon-loading";
           btn.style.display = "none";
           btn.parentNode.insertBefore(spinner, btn);
-          setTimeout(() => {
+          this._demoTimers.push(setTimeout(() => {
             spinner.remove();
             btn.style.display = "";
             delete btn.dataset.loading;
-          }, 2000);
+          }, 2000));
         });
       }
       break;
@@ -473,11 +407,11 @@ export function setupDemoListeners() {
           </div>
           <div class="ui-skeleton-reveal" style="--ui-anim-delay:0.06s;display:flex;align-items:center;gap:var(--ui-space-2);">
             <span style="width:8px;height:8px;border-radius:50%;background:var(--ui-success);flex-shrink:0;"></span>
-            <span style="font-size:var(--ui-font-s);color:var(--ui-text-mute);">3 lights on · 21°C · Motion detected</span>
+            <span style="font-size:var(--ui-font-s);color:var(--ui-text-mute);">3 lights on \u00b7 21\u00b0C \u00b7 Motion detected</span>
           </div>
           <div class="ui-skeleton-reveal" style="--ui-anim-delay:0.12s;display:flex;align-items:center;gap:var(--ui-space-2);">
             <span style="width:8px;height:8px;border-radius:50%;background:var(--ui-text-mute);opacity:0.4;flex-shrink:0;"></span>
-            <span style="font-size:var(--ui-font-s);color:var(--ui-text-mute);">TV off · Front door locked</span>
+            <span style="font-size:var(--ui-font-s);color:var(--ui-text-mute);">TV off \u00b7 Front door locked</span>
           </div>
         `;
 
@@ -491,23 +425,23 @@ export function setupDemoListeners() {
           reveal.innerHTML = skeletonHTML;
 
           // After 1s simulated fetch: fade skeletons out, then swap in content
-          setTimeout(() => {
+          this._demoTimers.push(setTimeout(() => {
             reveal.style.transition = "opacity 200ms ease-out";
             reveal.style.opacity = "0";
 
-            setTimeout(() => {
+            this._demoTimers.push(setTimeout(() => {
               // Content slides up into the space the skeletons occupied
               reveal.innerHTML = contentHTML;
               reveal.style.transition = "none";
               reveal.style.opacity = "1";
 
               // Reset after content has been visible
-              setTimeout(() => {
+              this._demoTimers.push(setTimeout(() => {
                 reveal.innerHTML = skeletonHTML;
                 delete reveal.dataset.loading;
-              }, 2800);
-            }, 200);
-          }, 1000);
+              }, 2800));
+            }, 200));
+          }, 1000));
         };
 
         runReveal();
@@ -517,72 +451,66 @@ export function setupDemoListeners() {
     }
 
     case "screen-border": {
-      import("/local/base/screen-border.js").then(({ flashScreenBorder }) => {
-        const btn = root.getElementById("demoScreenBorder");
-        if (btn && !btn.dataset.bound) {
-          btn.dataset.bound = "1";
-          btn.addEventListener("click", () => flashScreenBorder());
+      const btn = root.getElementById("demoScreenBorder");
+      if (btn && !btn.dataset.bound) {
+        btn.dataset.bound = "1";
+        btn.addEventListener("click", () => flashScreenBorder());
+      }
+      break;
+    }
+
+    case "tooltip": {
+      root.querySelectorAll('[data-demo-tooltip]').forEach(el => {
+        if (!el.dataset.bound) {
+          el.dataset.bound = "1";
+          const text = el.dataset.demoTooltip;
+          const pos = el.dataset.demoTooltipPos || "top";
+          const caret = el.dataset.demoTooltipCaret === "true";
+          const delay = el.dataset.demoTooltipDelay ? parseInt(el.dataset.demoTooltipDelay) : undefined;
+          el.addEventListener("mouseenter", () => showTooltip(el, text, { position: pos, caret, delay }));
+          el.addEventListener("mouseleave", () => hideTooltip());
+          el.addEventListener("focus", () => showTooltip(el, text, { position: pos, caret, delay }));
+          el.addEventListener("blur", () => hideTooltip());
         }
       });
       break;
     }
 
-    case "tooltip": {
-      import("/local/base/tooltips.js").then(({ showTooltip, hideTooltip, initTooltips }) => {
-        root.querySelectorAll('[data-demo-tooltip]').forEach(el => {
-          if (!el.dataset.bound) {
-            el.dataset.bound = "1";
-            const text = el.dataset.demoTooltip;
-            const pos = el.dataset.demoTooltipPos || "top";
-            const caret = el.dataset.demoTooltipCaret === "true";
-            const delay = el.dataset.demoTooltipDelay ? parseInt(el.dataset.demoTooltipDelay) : undefined;
-            el.addEventListener("mouseenter", () => showTooltip(el, text, { position: pos, caret, delay }));
-            el.addEventListener("mouseleave", () => hideTooltip());
-            el.addEventListener("focus", () => showTooltip(el, text, { position: pos, caret, delay }));
-            el.addEventListener("blur", () => hideTooltip());
-          }
-        });
-      });
-      break;
-    }
-
     case "rich-tooltip": {
-      import("/local/base/tooltips.js").then(({ showRichTooltip, hideRichTooltip }) => {
-        // Hover rich tooltips
-        root.querySelectorAll('[data-demo-rich-tooltip]').forEach(el => {
-          if (!el.dataset.bound) {
-            el.dataset.bound = "1";
-            const title = el.dataset.demoRichTitle || "";
-            const body = el.dataset.demoRichBody || "";
-            el.addEventListener("mouseenter", () => showRichTooltip(el, { title, body }));
-            el.addEventListener("mouseleave", () => hideRichTooltip());
-          }
-        });
-        // Persistent rich tooltips
-        root.querySelectorAll('[data-demo-rich-persistent]').forEach(el => {
-          if (!el.dataset.bound) {
-            el.dataset.bound = "1";
-            const title = el.dataset.demoRichTitle || "";
-            const body = el.dataset.demoRichBody || "";
-            el.addEventListener("click", () => showRichTooltip(el, { title, body }, { persistent: true, delay: 0 }));
-          }
-        });
-        // Action rich tooltips
-        root.querySelectorAll('[data-demo-rich-action]').forEach(el => {
-          if (!el.dataset.bound) {
-            el.dataset.bound = "1";
-            el.addEventListener("click", () => {
-              showRichTooltip(el, {
-                title: "With Action",
-                body: "This tooltip has a clickable action button."
-              }, {
-                persistent: true,
-                delay: 0,
-                action: { label: "Action", onClick: () => { /* no-op for demo */ } }
-              });
+      // Hover rich tooltips
+      root.querySelectorAll('[data-demo-rich-tooltip]').forEach(el => {
+        if (!el.dataset.bound) {
+          el.dataset.bound = "1";
+          const title = el.dataset.demoRichTitle || "";
+          const body = el.dataset.demoRichBody || "";
+          el.addEventListener("mouseenter", () => showRichTooltip(el, { title, body }));
+          el.addEventListener("mouseleave", () => hideRichTooltip());
+        }
+      });
+      // Persistent rich tooltips
+      root.querySelectorAll('[data-demo-rich-persistent]').forEach(el => {
+        if (!el.dataset.bound) {
+          el.dataset.bound = "1";
+          const title = el.dataset.demoRichTitle || "";
+          const body = el.dataset.demoRichBody || "";
+          el.addEventListener("click", () => showRichTooltip(el, { title, body }, { persistent: true, delay: 0 }));
+        }
+      });
+      // Action rich tooltips
+      root.querySelectorAll('[data-demo-rich-action]').forEach(el => {
+        if (!el.dataset.bound) {
+          el.dataset.bound = "1";
+          el.addEventListener("click", () => {
+            showRichTooltip(el, {
+              title: "With Action",
+              body: "This tooltip has a clickable action button."
+            }, {
+              persistent: true,
+              delay: 0,
+              action: { label: "Action", onClick: () => { /* no-op for demo */ } }
             });
-          }
-        });
+          });
+        }
       });
       break;
     }
@@ -608,18 +536,16 @@ export function setupDemoListeners() {
     }
 
     case "copy-button": {
-      import("/local/base/components.js").then(({ handleCopyButton }) => {
-        root.querySelectorAll('.demo-copy-interactive .ui-copy-btn').forEach(btn => {
-          if (!btn.dataset.bound) {
-            btn.dataset.bound = "1";
-            btn.addEventListener("click", () => {
-              handleCopyButton(btn, "Copied text example", {
-                onSuccess: () => {},
-                onError: () => {},
-              });
+      root.querySelectorAll('.demo-copy-interactive .ui-copy-btn').forEach(btn => {
+        if (!btn.dataset.bound) {
+          btn.dataset.bound = "1";
+          btn.addEventListener("click", () => {
+            handleCopyButton(btn, "Copied text example", {
+              onSuccess: () => {},
+              onError: () => {},
             });
-          }
-        });
+          });
+        }
       });
       break;
     }
@@ -667,7 +593,7 @@ export function setupDemoListeners() {
     }
 
     case "animation": {
-      // Keyframe cards — click to replay
+      // Keyframe cards - click to replay
       root.querySelectorAll('.cat-anim-card').forEach(card => {
         if (!card.dataset.bound) {
           card.dataset.bound = "1";
@@ -723,7 +649,7 @@ export function setupDemoListeners() {
         });
       });
 
-      // Cycling text crossfade — messages auto-cycle with per-char blur in/out
+      // Cycling text crossfade - messages auto-cycle with per-char blur in/out
       root.querySelectorAll('[data-anim-text-cycle]').forEach(container => {
         if (container.dataset.bound) return;
         container.dataset.bound = "1";
@@ -768,11 +694,11 @@ export function setupDemoListeners() {
             `<div style="position:absolute;inset:0;padding:inherit;z-index:2">${buildChars(messages[nextIdx], false)}</div>`;
 
           const animTime = (fadeDuration + charDelay * maxLen) * 1000;
-          setTimeout(() => {
+          this._demoTimers.push(setTimeout(() => {
             idx = nextIdx;
             showStatic(idx);
             isAnimating = false;
-          }, animTime);
+          }, animTime));
         };
 
         const startCycle = () => {
@@ -780,10 +706,12 @@ export function setupDemoListeners() {
           const maxLen = messages.reduce((m, t) => Math.max(m, t.length), 0);
           const totalCycle = displayTime + (fadeDuration + charDelay * maxLen) * 1000;
           cycleTimer = setInterval(crossfade, totalCycle);
+          this._demoTimers.push(cycleTimer);
         };
 
         showStatic(0);
-        setTimeout(() => { crossfade(); startCycle(); }, displayTime);
+        const initTimer = setTimeout(() => { crossfade(); startCycle(); }, displayTime);
+        this._demoTimers.push(initTimer);
 
         container.addEventListener("click", () => {
           clearInterval(cycleTimer);
@@ -792,7 +720,7 @@ export function setupDemoListeners() {
         });
       });
 
-      // Easing curve rows — click to animate dot across
+      // Easing curve rows - click to animate dot across
       root.querySelectorAll('.cat-anim-easing-row').forEach(row => {
         if (!row.dataset.bound) {
           row.dataset.bound = "1";
@@ -803,7 +731,7 @@ export function setupDemoListeners() {
             dot.style.transition = "none";
             dot.style.left = "0%";
             void dot.offsetWidth;
-            // Animate to 75% — spring curves visually overshoot past this point
+            // Animate to 75% - spring curves visually overshoot past this point
             dot.style.transition = `left 800ms ${easing}`;
             dot.style.left = "75%";
           });
@@ -830,7 +758,6 @@ export function setupDemoListeners() {
             }
           }
         });
-
       }
 
       // Simulate hover state on the demo slider
@@ -866,6 +793,21 @@ export function setupDemoListeners() {
     }
 
     case "colours": {
+      // Init collapsible for component colours section
+      const compColours = root.querySelector('.cat-component-colours');
+      if (compColours) initCollapsibleSections(compColours);
+
+      // Inject auto-counted token total into header meta tags
+      const meta = root.querySelector('.cat-comp-header__meta');
+      if (meta && !meta.dataset.countInjected) {
+        meta.dataset.countInjected = "1";
+        const count = root.querySelectorAll('[data-swatch-token]').length;
+        const tag = document.createElement("span");
+        tag.className = "cat-comp-header__tag";
+        tag.textContent = `${count} tokens`;
+        meta.appendChild(tag);
+      }
+
       // Shared helper: resolve a CSS token to { r, g, b, a } via probe element
       const resolveToken = (token) => {
         const probe = document.createElement("div");
@@ -947,7 +889,7 @@ export function setupDemoListeners() {
 
           write(toCopy).then(() => {
             // Show tick in label and success ring
-            if (labelEl) labelEl.textContent = "✓";
+            if (labelEl) labelEl.textContent = "\u2713";
             swatch.classList.add("cat-swatch--copied");
             setTimeout(() => {
               swatch.classList.remove("cat-swatch--copied");

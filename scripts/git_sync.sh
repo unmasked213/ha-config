@@ -53,22 +53,37 @@ trap cleanup EXIT
 render_template() {
   [ -f "$TEMPLATE_FILE" ] || { log_msg "Template not found: $TEMPLATE_FILE"; return 1; }
 
-  _token=$(cat /run/supervisor.token 2>/dev/null || echo "${SUPERVISOR_TOKEN:-}")
-  [ -n "$_token" ] || { log_msg "No supervisor token available"; return 1; }
-
-  _json_body=$(jq -n --arg t "$(cat "$TEMPLATE_FILE")" '{"template": $t}') || {
+  _json_body=$(python3 -c "import json,sys; print(json.dumps({'template': sys.stdin.read()}))" < "$TEMPLATE_FILE") || {
     log_msg "Failed to build JSON body"; return 1;
   }
+
+  # Token resolution: long-lived token from secrets.yaml (works from Core container),
+  # then supervisor token fallback (works from addon containers)
+  _token=$(grep '^git_sync_token:' "$REPO_DIR/secrets.yaml" 2>/dev/null | sed "s/^git_sync_token:[[:space:]]*//;s/^['\"]//;s/['\"][[:space:]]*$//")
+  if [ -n "$_token" ]; then
+    _api_url="http://localhost:8123/api/template"
+  else
+    _token=$(cat /run/supervisor.token 2>/dev/null || echo "${SUPERVISOR_TOKEN:-}")
+    _api_url="http://hassio/core/api/template"
+  fi
+
+  [ -n "$_token" ] || { log_msg "No API token available (checked secrets.yaml and supervisor)"; return 1; }
 
   _rendered=$(curl -sSL --max-time 30 \
     -H "Authorization: Bearer $_token" \
     -H "Content-Type: application/json" \
     -d "$_json_body" \
-    http://hassio/core/api/template 2>/dev/null) || {
-    log_msg "Template API call failed"; return 1;
+    "$_api_url" 2>/dev/null) || {
+    log_msg "Template API call failed (endpoint: $_api_url)"; return 1;
   }
 
   [ -n "$_rendered" ] || { log_msg "Template API returned empty response"; return 1; }
+
+  # Catch auth errors returned as body text
+  case "$_rendered" in
+    "401: Unauthorized"*|"403: Forbidden"*)
+      log_msg "Template API auth failed (endpoint: $_api_url)"; return 1 ;;
+  esac
 
   # Validate at least one section sentinel exists
   printf '%s' "$_rendered" | grep -q '<!-- section:' || {
@@ -156,6 +171,19 @@ if [ ! -d .git ]; then
   exit 1
 fi
 
+# Clear stale git index lock (left by crashed git processes)
+LOCK_FILE="$REPO_DIR/.git/index.lock"
+if [ -f "$LOCK_FILE" ]; then
+  LOCK_AGE=$(( $(date +%s) - $(stat -c %Y "$LOCK_FILE" 2>/dev/null || echo 0) ))
+  if [ "$LOCK_AGE" -gt 300 ]; then
+    log_msg "Removing stale index.lock (age: ${LOCK_AGE}s)"
+    rm -f "$LOCK_FILE"
+  else
+    log_result "Error: git index.lock exists (age: ${LOCK_AGE}s) - another git process may be running"
+    exit 1
+  fi
+fi
+
 # ── Phase 1: Render template (single API call) ───────────────────────────
 
 log_msg "Rendering template..."
@@ -208,11 +236,14 @@ for _sid in arch_header arch_packages arch_components arch_www_base \
   fi
 done
 
-# CLAUDE (1 section)
-if ! inject_section "$RENDERED" "$WORK_DIR/CLAUDE.md" \
-     "claude_summary" "<!-- CLAUDE:SUMMARY:START -->" "<!-- CLAUDE:SUMMARY:END -->"; then
-  CLAUDE_STATUS="FAIL"
-fi
+# CLAUDE (4 sections)
+for _csid in claude_summary claude_ha_version claude_domain_table claude_ui_system; do
+  _cmarker=$(printf '%s' "$_csid" | tr '[:lower:]' '[:upper:]' | sed 's/^CLAUDE_/CLAUDE:/')
+  if ! inject_section "$RENDERED" "$WORK_DIR/CLAUDE.md" \
+       "$_csid" "<!-- ${_cmarker}:START -->" "<!-- ${_cmarker}:END -->"; then
+    CLAUDE_STATUS="FAIL"
+  fi
+done
 
 log_msg "Injection complete [README $README_STATUS, ARCH $ARCH_STATUS, CLAUDE $CLAUDE_STATUS]"
 
@@ -240,12 +271,16 @@ for _sid in arch_header arch_packages arch_components arch_www_base \
   fi
 done
 
-# CLAUDE
-if ! validate_section "$WORK_DIR/CLAUDE.md" "<!-- CLAUDE:SUMMARY:START -->" "<!-- CLAUDE:SUMMARY:END -->"; then
-  CLAUDE_STATUS="FAIL"
-  VALIDATION_FAILED=true
-  log_msg "VALIDATION FAILED: CLAUDE.md summary section is empty"
-fi
+# CLAUDE — validate all 4 sections
+for _csid in claude_summary claude_ha_version claude_domain_table claude_ui_system; do
+  _cmarker=$(printf '%s' "$_csid" | tr '[:lower:]' '[:upper:]' | sed 's/^CLAUDE_/CLAUDE:/')
+  if ! validate_section "$WORK_DIR/CLAUDE.md" \
+       "<!-- ${_cmarker}:START -->" "<!-- ${_cmarker}:END -->"; then
+    CLAUDE_STATUS="FAIL"
+    VALIDATION_FAILED=true
+    log_msg "VALIDATION FAILED: CLAUDE.md section $_csid is empty"
+  fi
+done
 
 DOC_TAG="[docs: README $README_STATUS, ARCH $ARCH_STATUS, CLAUDE $CLAUDE_STATUS]"
 
@@ -283,7 +318,11 @@ log_msg "Working copies moved to originals"
 
 # ── Phase 8: Git add, commit, push ───────────────────────────────────────
 
-git add -A >/dev/null 2>&1 || true
+if ! git add -A 2>/tmp/git_sync_add.log; then
+  err="$(cat /tmp/git_sync_add.log | tr '\n' ' ')"
+  log_result "Error during git add: $err"
+  exit 1
+fi
 
 if git diff --cached --quiet; then
   branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"

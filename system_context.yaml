@@ -34,7 +34,7 @@ gotchas:
   CLAUDE.md structure: >-
     Root file plus domain-specific files in all 14 packages/ subdirectories
     (ai, communication, dashboard, device, health, lights, network, occupancy,
-    server, shopping, time, travel, weather) and www/base/docs/
+    server, shopping, time, travel, weather, work) and www/base/docs/
   Audit reports: >-
     Generated periodically via prompts — config-intel for metrics, failure-mode
     for resilience, meta-insights for unused capabilities, plus project-audit,
@@ -89,9 +89,9 @@ gotchas:
     (ui/ui_lovelace_resources.yaml) — cannot be removed without migrating that
     registry
   Tooltip dark mode: >-
-    tooltips.js TOOLTIP_STYLES block (lines ~590-630) contains hardcoded
-    rgb()/rgba() fallback values that must stay in sync with foundation.js
-    tokens — CSS var() fallbacks are not automatically updated
+    tooltips.js TOOLTIP_STYLES block contains hardcoded rgb()/rgba() fallback
+    values that must stay in sync with foundation.js tokens — CSS var()
+    fallbacks are not automatically updated
   Prompt scoring: >-
     Category-scoped structural reliability scoring (1.0–10.0) with hard ceiling
     thresholds (7.0/8.0/8.9/9.5), not subjective quality rating — scoring calls
@@ -127,7 +127,7 @@ file_locations:
     scripts/.imap_env
   Work actions pipeline: >-
     packages/work/work.yaml (trigger automation),
-    pyscript/action_extraction_pipeline.py (1,355-line pipeline),
+    pyscript/action_extraction_pipeline.py (extraction pipeline),
     packages/work/CLAUDE.md (domain docs)
   Work actions card: >-
     www/cards/work-actions-card/work-actions-card.js (UI),
@@ -170,7 +170,7 @@ naming:
   Camera helpers: input_*.c<NN>_<setting>
   WhatsApp: input_*.whatsapp_c_<feature>
   Input booleans: input_boolean.<feature>_<modifier>
-  Automations: <Domain> - <Feature> or <Domain> • <Feature> (newer)
+  Automations: <Domain> - <Feature>
   Scripts: <device>_<action>_<target> (snake_case)
   Packages: packages/<domain>/<specific_feature>.yaml
   Phone numbers: 447XXXXXXXXX@s.whatsapp.net (no leading +)
@@ -239,7 +239,7 @@ subsystems:
     Stable. Custom script with configurable toast stacking, protruding icons,
     SVG screen border flash with cutout geometry. scripts.yaml
   Prompt manager: >-
-    Active development. HACS custom component with category-scoped scoring
+    Active development. Local custom component with category-scoped scoring
     (script.score_prompt → async poll → numerical score 1.0–10.0 with ceiling
     thresholds), prompt optimization (script.optimize_prompt with scope
     directives), event-driven field generation (prompt_ai_request →
@@ -250,9 +250,8 @@ subsystems:
     theme management, camera view selectors, auto-refresh, TTS helpers, dad
     jokes, animated headers, tester entities, and bubble module storage.
   Shared UI system: >-
-    Active development. ~650 design tokens in foundation.js, components.js,
-    toggles.js, tooltips.js. Shadow DOM web components. Production cards
-    (specs-card, phone-card, presence-activity-card).
+    Active development. Design tokens in foundation.js, components in
+    components.js, toggles.js, tooltips.js. Shadow DOM web components.
     github.com/unmasked213/HA-UI-System
 
 data_flows:
@@ -309,7 +308,7 @@ capabilities:
   AI: ha_text_ai (multiple providers), LLM Vision
   Frontend: Custom UI stack (www/base/), button-card, card-mod, layout-card
   Cameras: Frigate (object detection), WebRTC
-  Integrations: MQTT, Zigbee, BLE passive monitoring
+  Integrations: MQTT, Zigbee
   Media: Sonos, Alexa media player
   Token governance: foundation.js is READ-ONLY, 48px touch target minimum
   MCP Server: >-
@@ -337,7 +336,7 @@ known_issues:
   Entity sprawl: Mix of legitimate helpers and potentially dead entities
   Dashboard styling: >-
     Dashboard JS uses raw hex/rgba, www/base uses tokens — two paradigms
-    coexist; convergence documented at 73.6% var-vs-rgba in dashboard_home
+    coexist with partial convergence ongoing
   YAML dashboard removal: >-
     Cannot remove without migrating the global resource registry
     (ui/ui_lovelace_resources.yaml) — load-bearing dependency

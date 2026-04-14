@@ -446,7 +446,7 @@ sheet.replaceSync(`
     --ui-overlay-scrim-strong: rgba(0, 0, 0, 0.60);
 
     /* ── Component Colors ──────────────────────────────────────────────── */
-    --ui-input-bg: rgb(226, 226, 238);
+    --ui-input-bg: rgb(238, 238, 251);
     --ui-switch-track-off: rgb(236, 236, 248);
     --ui-switch-outline-off: rgba(48, 50, 60, 0.22);
     --ui-switch-thumb-off: rgb(92, 94, 106);

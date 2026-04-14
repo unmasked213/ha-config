@@ -1,0 +1,22 @@
+
+# | START: claude_session_cleanup.yaml
+# |  PATH: /config/packages/server/claude_session_cleanup.yaml
+
+
+# ── AUTOMATION ─────────────────────────────────────────────────────────────────
+automation:
+
+# ➔ DAILY CLAUDE SESSION CLEANUP
+#   Runs tiered cleanup at 04:00 daily. Small sessions (<1MB) kept 1 day,
+#   large sessions (>1MB) kept 3 years.
+  - alias: Claude Session Cleanup Daily
+    id: claude_session_cleanup_daily
+    trigger:
+      - platform: time
+        at: "04:00:00"
+
+    action:
+      - action: shell_command.claude_session_cleanup
+
+
+# |  END: claude_session_cleanup.yaml

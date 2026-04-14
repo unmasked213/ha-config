@@ -3,7 +3,7 @@
 ## Summary
 
 <!-- CLAUDE:SUMMARY:START -->
-Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~2,985 runtime entities across 14 domain packages, 28 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
+Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~3,009 runtime entities across 14 domain packages, 29 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
 <!-- CLAUDE:SUMMARY:END -->
 
 ---
@@ -32,7 +32,7 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `addons/` | Local HA add-ons (ha-config-ai-agent) |
 | `ai_adversarial_system/` | Same-model collaboration pattern documentation and workspace |
 | `media/` | AI-generated images, recordings, transcripts |
-| `ARCHITECTURE.md` | System architecture documentation (v10.4) |
+| `ARCHITECTURE.md` | System architecture documentation (v10.6) |
 | `README.md` | Quick reference with auto-generated metrics (snapshot injected by `git_sync.sh` at commit time) |
 | `scripts/doc_snapshot.j2` | Jinja2 template for README + ARCHITECTURE + CLAUDE metrics — rendered via HA template API during git sync |
 | `scripts/claude_dispatch.sh` | Addon-side dispatch watcher for Claude Code bridge |
@@ -53,44 +53,50 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 
 Each domain has its own `CLAUDE.md` at `packages/<domain>/CLAUDE.md`, auto-loaded via `.claude/rules/`.
 
+<!-- CLAUDE:DOMAIN_TABLE:START -->
 | Domain | Files | Purpose | Key Entry Points |
 |--------|-------|---------|-----------------|
 | **ai** | 8 | AI text/image generation, prompts, Claude bridge + Code Dispatch, Alexa TTS | `ai_main.yaml`, `claude_bridge.yaml`, `prompt_manager.yaml` |
 | **communication** | 6 | WhatsApp messaging, notifications, transcript pipeline | `whatsapp_config.yaml`, `alerts.yaml`, `transcript_pipeline.yaml` |
 | **dashboard** | 1 | Report viewer backend sensors | `report_viewer.yaml` |
-| **device** | 10 | Cameras, covers/blinds, PC state, pet devices, Govee, Sonos | `cameras.yaml`, `curtains.yaml`, `pc.yaml` |
+| **device** | 9 | Cameras, covers/blinds, PC state, pet devices, Govee, Sonos | `cameras.yaml`, `curtains.yaml`, `pc.yaml` |
 | **health** | 2 | Withings body composition metrics (C and E) | `health.yaml`, `weight.yaml` |
 | **lights** | 5 | Per-floor lighting automation with manual override | `lights.yaml`, `lights_office.yaml`, `auto_lights.yaml` |
 | **network** | 1 | Device scanning, 63 MAC-to-device mappings | `ip_and_mac_address_mapping.yaml` |
 | **occupancy** | 6 | Presence detection (YAML anchors), doors, bed state, travel tracking | `presence_detection.yaml`, `doors.yaml`, `bed_state.yaml` |
-| **server** | 12 | Git sync, frontend helpers, server stats, theme management | `github_sync.yaml`, `frontend/frontend_server_stats.yaml` |
+| **server** | 14 | Git sync, frontend helpers, server stats, theme management | `github_sync.yaml`, `frontend/frontend_server_stats.yaml` |
 | **shopping** | 2 | Shopping lists (Tesco/Amazon), supermarket busyness | `shopping_list.yaml`, `tesco_sensors.yaml` |
 | **time** | 4 | Alarm tracking, hourly triggers, calendar event creation | `alarm_time.yaml`, `hourly_triggers.yaml` |
 | **travel** | 2 | Two-person location tracking, ETA, railway info | `map.yaml`, `railway.yaml` |
 | **weather** | 1 | Pirate Weather forecasts, AI clothing suggestions | `frontend_weather.yaml` |
 | **work** | 2 | Meeting action extraction pipeline, AI classification | `work.yaml`, `work_actions_card.yaml` |
+<!-- CLAUDE:DOMAIN_TABLE:END -->
 
 ### UI Design System (`www/base/`)
 
-Token-driven design system with 16 JS files. `foundation.js` is **READ-ONLY** (single source of truth for tokens). Governed by `www/base/docs/CLAUDE.md`.
+<!-- CLAUDE:UI_SYSTEM:START -->
+Token-driven design system with 18 JS files. `foundation.js` is **READ-ONLY** (single source of truth for tokens). Governed by `www/base/docs/CLAUDE.md`.
+<!-- CLAUDE:UI_SYSTEM:END -->
 
 ### Custom Cards (`www/cards/`)
 
 | Card | Files | Purpose |
 |------|-------|---------|
 | `prompt-manager/` | 9 | AI prompt CRUD, scoring, versioning, HA backend sync |
-| `report-viewer-card/` | 2 | Dynamic markdown report display |
-| `presence-activity-card/` | 3 | Presence visualisation |
-| `ui-catalogue-card/` | 8 | Dev-time component showcase |
-| `checklist-card/` | 1 | Todo list with animated checkboxes |
 | `priority-matrix-card/` | 5 | Task prioritisation matrix with circle sliders, scoring, FLIP animations, weights drawer |
+| `presence-activity-card/` | 3 | Presence visualisation |
+| `report-viewer-card/` | 2 | Dynamic markdown report display |
+| `ui-catalogue-card/` | 8 | Dev-time component showcase |
+| `specs-card-tabbed/` | 2 | Tabbed system specs display |
+| `checklist-card/` | 1 | Todo list with animated checkboxes |
+| `specs-card/` | 1 | System specs display |
 | `pico-hid-card/` | 1 | USB HID typing device controller |
 | `work-actions-card/` | 1 | Work todo list with completion animations, dropdown menu settings, meeting summary drawer, edit modal, new item indicators, touch interactions |
 | `phone-card/` | 1 | Phone display card |
 
 ### Python Automations (`pyscript/`)
 
-Key files: `dad_car_detection.py` (driveway CV + OpenAI Vision fallback), `action_extraction_pipeline.py` (meeting action extraction), `save_uploaded_file.py`, `log_errors.py`, `recorder_stats.py`, calendar cleanup scripts.
+Key files: `dad_car_detection.py` (driveway CV + OpenAI Vision fallback), `action_extraction_pipeline.py` (meeting action extraction), `speaker_rename.py` (meeting speaker rename/merge), `save_uploaded_file.py`, `log_errors.py`, `recorder_stats.py`, calendar cleanup scripts.
 
 ### AI Agent Add-on (`addons/ha-config-ai-agent/`)
 
@@ -110,7 +116,9 @@ These paths are equivalent. `A:\packages\` and `/config/packages/` refer to the 
 
 ### Setup
 
-- **HA version:** 2026.3.4 on HA OS 17.1
+<!-- CLAUDE:HA_VERSION:START -->
+- **HA version:** 2026.4.2 on HA OS 17.2
+<!-- CLAUDE:HA_VERSION:END -->
 - **No CI/CD pipeline** — local development only
 - **IDE config:** `.vscode/`, `.cursor/` present
 
@@ -134,13 +142,13 @@ haq call <domain> <service> <entity>  # Call a service
 
 | Environment | MCP tools | haq CLI | Config location |
 |-------------|-----------|---------|-----------------|
-| **Desktop (Code tab)** | 22 tools via Nabu Casa | No | `~/.claude.json` → `https://…nabu.casa/api/mcp` (type: http) |
-| **HA add-on** | 22 tools via Supervisor | Yes | `.claude/mcp.json` → `supervisor/core/api/mcp/sse` (type: sse) |
+| **Desktop (Code tab)** | 26 tools via Nabu Casa | No | `~/.claude.json` → `https://…nabu.casa/api/mcp` (type: http) |
+| **HA add-on** | 26 tools via Supervisor | Yes | `.claude/mcp.json` → `supervisor/core/api/mcp/sse` (type: sse) |
 | **Desktop (Chat tab)** | None | No | MCP not supported in Chat mode |
 
 > **Note:** The Supervisor CLI `ha` is a separate tool (system management). `haq` avoids conflicting with it.
 
-**MCP tools (22):** `HassTurnOn`, `HassTurnOff`, `HassSetPosition`, `HassStopMoving`, `HassCancelAllTimers`, `HassFanSetSpeed`, `HassLightSet`, `HassMediaUnpause`, `HassMediaPause`, `HassMediaNext`, `HassMediaPrevious`, `HassSetVolume`, `HassSetVolumeRelative`, `HassMediaPlayerMute`, `HassMediaPlayerUnmute`, `HassMediaSearchAndPlay`, `HassListAddItem`, `HassListCompleteItem`, `HassBroadcast`, `GetDateTime`, `calendar_get_events`, `todo_get_items`, `GetLiveContext`
+**MCP tools (26):** `HassTurnOn`, `HassTurnOff`, `HassSetPosition`, `HassStopMoving`, `HassCancelAllTimers`, `HassFanSetSpeed`, `HassLightSet`, `HassMediaUnpause`, `HassMediaPause`, `HassMediaNext`, `HassMediaPrevious`, `HassSetVolume`, `HassSetVolumeRelative`, `HassMediaPlayerMute`, `HassMediaPlayerUnmute`, `HassMediaSearchAndPlay`, `HassListAddItem`, `HassListCompleteItem`, `HassListRemoveItem`, `HassHumidifierSetpoint`, `HassHumidifierMode`, `HassBroadcast`, `GetDateTime`, `calendar_get_events`, `todo_get_items`, `GetLiveContext`
 
 ### Conversation History (claude-historian)
 
@@ -288,7 +296,7 @@ For discussions outside these paths, read the relevant CLAUDE.md manually.
 
 ## TODOs & Gaps
 
-- **281 unavailable entities** (9.1% of runtime) — trend: 979→751→152→251→173→**281** (regressed)
+- **147 unavailable entities** (4.9% of runtime) — trend: 979→751→152→251→173→281→154→**147** (improving)
 - **Floor 01 raw sensor coupling** — bypasses occupancy abstraction, fragile to sensor renames
 - **Health domain duplicate sensors** — `health.yaml` and `weight.yaml` define overlapping sensors; last-loaded wins
 - ~~**Health domain division-by-zero**~~ — resolved 2026-03-05: availability guards added
@@ -306,10 +314,11 @@ For discussions outside these paths, read the relevant CLAUDE.md manually.
 
 | Date | Commit | Change |
 |------|--------|--------|
+| 2026-04-12 | — | Metrics update: HA 2026.3.4→2026.4.1 (OS 17.1→17.2), unavailable 281→147, ARCHITECTURE.md v10.4→v10.6, MCP tools 22→26, device domain 10→9 files, server domain 12→13 files. Added specs-card/, specs-card-tabbed/ to cards table. Added speaker_rename.py to pyscript |
 | 2026-03-25 | — | Full metrics sweep: HA 2026.2.3→2026.3.4, entities 2,943→3,098, unavailable 173→281, ARCHITECTURE.md v10.0→v10.4, token adoption 73.6%→73.7%, www/base 15→16 JS files, .storage ~29→~32 MB, prompt-manager file count 8→9 (highlight.js module added) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format; added Structure, Key Components, Development Workflows, TODOs & Gaps sections; preserved session continuity protocol, safety rails, and quick reference |
 | 2026-02-22 | — | Previous version: pruned operational guide (~189 lines) |
 
 ---
 
-*Last Updated: 2026-03-25*
+*Last Updated: 2026-04-12*

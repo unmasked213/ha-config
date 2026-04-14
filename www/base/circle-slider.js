@@ -1,4 +1,4 @@
-// /config/www/cards/ui-circle-slider.js
+// /config/www/base/circle-slider.js
 //
 // CIRCULAR SLIDER COMPONENT
 // =========================
@@ -18,22 +18,8 @@
 
 import "/local/base/foundation.js";
 import { uiComponents } from "/local/base/components.js";
-import { applyThemeClass } from "/local/base/helpers.js";
-
-class UICircleSliderEditor extends HTMLElement {
-  setConfig(config) {
-    this._config = config;
-  }
-  connectedCallback() {
-    this.innerHTML = `<p style="padding:var(--ui-space-4);color:var(--secondary-text-color)">This card has no configurable options.</p>`;
-  }
-}
-customElements.define("ui-circle-slider-editor", UICircleSliderEditor);
 
 class UICircleSlider extends HTMLElement {
-  static getConfigElement() {
-    return document.createElement("ui-circle-slider-editor");
-  }
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -63,9 +49,6 @@ class UICircleSlider extends HTMLElement {
 
     // Fixed radius matching button-card reference (41% of viewBox)
     this._radius = 20.5;
-
-    // Home Assistant reference
-    this._hass = null;
 
     // Bound handlers for cleanup
     this._boundHandlers = null;
@@ -118,36 +101,6 @@ class UICircleSlider extends HTMLElement {
     }
 
     this.updateVisuals();
-  }
-
-  setConfig(config) {
-    this._type = (config.type === "interactive" || config.type === "light") ? "interactive" : "number";
-    this._value = config.value ?? 50;
-    this._min = config.min ?? 0;
-    this._max = config.max ?? 100;
-    this._step = config.step ?? 1;
-    this._size = config.size ?? 90;
-    this._strokeWidth = config.strokeWidth ?? 3;
-    this._showRollback = config.showRollback ?? true;
-    this._label = config.label ?? "Circular Slider";
-    this._disabled = config.disabled ?? false;
-    this._unit = config.unit ?? "%";
-
-    if (this.isConnected) {
-      this.render();
-      this.attachEvents();
-    }
-  }
-
-  getCardSize() {
-    return 2;
-  }
-
-  set hass(hass) {
-    const themeChanged = this._hass && hass.themes.darkMode !== this._hass.themes.darkMode;
-    this._hass = hass;
-    applyThemeClass(this, hass);
-    if (themeChanged) this._syncSvgFill();
   }
 
   connectedCallback() {

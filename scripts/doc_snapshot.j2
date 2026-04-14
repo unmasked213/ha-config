@@ -7,7 +7,8 @@
       ARCHITECTURE.md — arch_header, arch_packages, arch_components,
                         arch_www_base, arch_www_cards, arch_pyscript,
                         arch_themes, arch_entity_counts, arch_ui_location
-      CLAUDE.md     — claude_summary
+      CLAUDE.md     — claude_summary, claude_ha_version, claude_domain_table,
+                        claude_ui_system
 
     Each section is delimited by <!-- section:NAME --> sentinels.
     git_sync.sh extracts and injects each block into its target file.
@@ -101,7 +102,7 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 <!-- section:arch_entity_counts -->
 **Entity counts:**
 - Runtime: {{ '{:,}'.format(runtime) }} | Unavailable: {{ unavailable }} ({{ unavailable_pct }}%)
-- Dashboard-referenced: ~{{ state_attr(edb, 'dashboard_referenced_pct') | default('48') }}% ({{ 100 - (state_attr(edb, 'dashboard_referenced_pct') | default('48') | int) }}% unreferenced — many are legitimate helpers, stats sensors, or internal)
+- Dashboard-referenced: ~{{ state_attr(edb, 'dashboard_referenced_pct') | default(48, true) }}% ({{ 100 - (state_attr(edb, 'dashboard_referenced_pct') | default(48, true) | int) }}% unreferenced — many are legitimate helpers, stats sensors, or internal)
 - Domain breakdown: {{ state_attr(edb, 'sensors') | default('?') }} sensors, {{ state_attr(edb, 'binary_sensors') | default('?') }} binary, {{ state_attr(edb, 'automations') | default('?') }} automations, {{ state_attr(edb, 'scripts') | default('?') }} scripts, {{ state_attr(edb, 'scenes') | default('?') }} scenes, {{ state_attr(edb, 'lights') | default('?') }} lights, {{ state_attr(edb, 'switches') | default('?') }} switches, {{ state_attr(edb, 'cameras') | default('?') }} cameras, {{ helpers }} helpers
 
 *Auto-generated from live sensor data. Last sync: {{ now().strftime('%Y-%m-%d %H:%M %Z') }}*
@@ -111,8 +112,32 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 <!-- /section:arch_ui_location -->
 
 {#- ═══════════════════════════════════════════════════════════════════════
-    CLAUDE.md — Summary
+    CLAUDE.md sections
     ═══════════════════════════════════════════════════════════════════════ -#}
 <!-- section:claude_summary -->
 Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~{{ '{:,}'.format(runtime) }} runtime entities across 14 domain packages, {{ custom_cc }} custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
 <!-- /section:claude_summary -->
+<!-- section:claude_ha_version -->
+- **HA version:** {{ core_ver }} on HA OS {{ os_ver }}
+<!-- /section:claude_ha_version -->
+<!-- section:claude_domain_table -->
+| Domain | Files | Purpose | Key Entry Points |
+|--------|-------|---------|-----------------|
+| **ai** | {{ state_attr(pdb, 'ai_files') | int(0) }} | AI text/image generation, prompts, Claude bridge + Code Dispatch, Alexa TTS | `ai_main.yaml`, `claude_bridge.yaml`, `prompt_manager.yaml` |
+| **communication** | {{ state_attr(pdb, 'communication_files') | int(0) }} | WhatsApp messaging, notifications, transcript pipeline | `whatsapp_config.yaml`, `alerts.yaml`, `transcript_pipeline.yaml` |
+| **dashboard** | {{ state_attr(pdb, 'dashboard_files') | int(0) }} | Report viewer backend sensors | `report_viewer.yaml` |
+| **device** | {{ state_attr(pdb, 'device_files') | int(0) }} | Cameras, covers/blinds, PC state, pet devices, Govee, Sonos | `cameras.yaml`, `curtains.yaml`, `pc.yaml` |
+| **health** | {{ state_attr(pdb, 'health_files') | int(0) }} | Withings body composition metrics (C and E) | `health.yaml`, `weight.yaml` |
+| **lights** | {{ state_attr(pdb, 'lights_files') | int(0) }} | Per-floor lighting automation with manual override | `lights.yaml`, `lights_office.yaml`, `auto_lights.yaml` |
+| **network** | {{ state_attr(pdb, 'network_files') | int(0) }} | Device scanning, 63 MAC-to-device mappings | `ip_and_mac_address_mapping.yaml` |
+| **occupancy** | {{ state_attr(pdb, 'occupancy_files') | int(0) }} | Presence detection (YAML anchors), doors, bed state, travel tracking | `presence_detection.yaml`, `doors.yaml`, `bed_state.yaml` |
+| **server** | {{ state_attr(pdb, 'server_files') | int(0) }} | Git sync, frontend helpers, server stats, theme management | `github_sync.yaml`, `frontend/frontend_server_stats.yaml` |
+| **shopping** | {{ state_attr(pdb, 'shopping_files') | int(0) }} | Shopping lists (Tesco/Amazon), supermarket busyness | `shopping_list.yaml`, `tesco_sensors.yaml` |
+| **time** | {{ state_attr(pdb, 'time_files') | int(0) }} | Alarm tracking, hourly triggers, calendar event creation | `alarm_time.yaml`, `hourly_triggers.yaml` |
+| **travel** | {{ state_attr(pdb, 'travel_files') | int(0) }} | Two-person location tracking, ETA, railway info | `map.yaml`, `railway.yaml` |
+| **weather** | {{ state_attr(pdb, 'weather_files') | int(0) }} | Pirate Weather forecasts, AI clothing suggestions | `frontend_weather.yaml` |
+| **work** | {{ state_attr(pdb, 'work_files') | int(0) }} | Meeting action extraction pipeline, AI classification | `work.yaml`, `work_actions_card.yaml` |
+<!-- /section:claude_domain_table -->
+<!-- section:claude_ui_system -->
+Token-driven design system with {{ base_files }} JS files. `foundation.js` is **READ-ONLY** (single source of truth for tokens). Governed by `www/base/docs/CLAUDE.md`.
+<!-- /section:claude_ui_system -->

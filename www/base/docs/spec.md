@@ -68,7 +68,7 @@ All interactive components use identical state model with exact overlay percenta
 | Focus | `--ui-state-focus-ring` (50% accent, 2px ring) | Solid brightened color (`rgb(80, 210, 240)`) for visibility on dark surfaces |
 | Disabled | `--ui-state-disabled-opacity` (40%) | Same |
 
-**Ring spread:** All hover/pressed state rings use `--ui-state-ring-spread` (8px) for the `box-shadow` spread radius. Defined once in foundation.js, consumed across buttons, FABs, sliders, toggles, checkboxes, and radios.
+**Ring spread:** All hover/pressed state rings use `--ui-state-ring-spread` (6px) for the `box-shadow` spread radius. Defined once in foundation.js, consumed across buttons, FABs, sliders, toggles, checkboxes, and radios.
 
 **Focus outline offset:** All focus-visible outlines use `--ui-focus-outline-offset` (2px). Some components use `-2px` (inset) for elements where an outward ring would clip or look wrong — these reference the token negated, not a separate value.
 
@@ -144,11 +144,11 @@ The system uses a 4px base grid.
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--ui-radius-s` | 8px | Small controls, inner shapes |
-| `--ui-radius-m` | 12px | Buttons, cards, inputs |
-| `--ui-radius-l` | 18px | Modals, elevated surfaces |
-| `--ui-radius-xl` | 32px | Menus, large surfaces |
-| `--ui-radius-pill` | 999px | Pill buttons, slider thumbs |
+| `--ui-radius-s` | 8px | Small controls, inner shapes, tooltips, skeletons |
+| `--ui-radius-m` | 12px | Tab bar containers, toast radius, `.ui-surface` utility |
+| `--ui-radius-l` | 18px | Modals, textareas, drawers |
+| `--ui-radius-xl` | 32px | Cards, inputs, menus |
+| `--ui-radius-pill` | 999px | Buttons, badges, chips, progress bars |
 
 ### 5.3 Border widths
 
@@ -157,6 +157,8 @@ The system uses a 4px base grid.
 | `--ui-border-width-s` | 1px | Subtle separators, card outlines |
 | `--ui-border-width-m` | 2px | Standard component borders, focus outlines |
 | `--ui-border-width-l` | 3px | Emphasised outlines |
+
+**Border style:** `--ui-border-style` (`solid`) - default style for all borders.
 
 Border colours: `--ui-border-color-light`, `--ui-border-color-med`, `--ui-border-color-strong`
 
@@ -169,6 +171,8 @@ Border colours: `--ui-border-color-light`, `--ui-border-color-med`, `--ui-border
 | `--ui-font-m` | 1rem (16px) | Body text, input content |
 | `--ui-font-l` | 1.15rem (~18px) | Section headings |
 | `--ui-font-xl` | 1.32rem (~21px) | Page headings |
+
+**Font family:** `--ui-font-family` resolves via cascade: `var(--ui-font-family, var(--ha-font-family, system-ui, sans-serif))`. Set by `fonts.js` to `'Inter', system-ui, sans-serif` when Inter is loaded.
 
 **Weights:** `--ui-font-weight-s` (300), `--ui-font-weight-m` (400), `--ui-font-weight-l` (500)
 
@@ -187,6 +191,7 @@ Border colours: `--ui-border-color-light`, `--ui-border-color-med`, `--ui-border
 | `--ui-switch-secondary-motion` | 250ms ease-out | Toggle switch secondary |
 | `--ui-checkbox-motion` | 320ms cubic-bezier(0.22,2.2,0.64,1) | Checkbox/radio check animation |
 | `--ui-progress-motion` | 350ms cubic-bezier(0.34,1.56,0.64,1) | Progress bar fill wobble |
+| `--ui-circle-slider-bounce` | 350ms cubic-bezier(0.22,2.8,0.64,1) | Circle slider stroke bounce |
 
 **Easing curves:**
 
@@ -278,6 +283,15 @@ All animations must support `prefers-reduced-motion` by reducing durations to 0m
 | Disabled | 0.4 opacity | 0.4 opacity |
 
 Focus rings use `--ui-state-focus-ring`: light theme uses 50% alpha of accent (`rgba(0, 104, 128, 0.50)`); dark theme uses a solid brightened color (`rgb(80, 210, 240)`) for visibility on dark surfaces.
+
+#### Overlay / Scrim
+
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--ui-overlay-scrim` | rgba(0,0,0,0.40) | rgba(0,0,0,0.55) | Drawer backdrop |
+| `--ui-overlay-scrim-strong` | rgba(0,0,0,0.60) | rgba(0,0,0,0.78) | Modal backdrop |
+| `--ui-overlay-bg` | rgb(255,255,255) | rgb(30,33,42) | Overlay surface (toasts) |
+| `--ui-overlay-blur` | 12px | 12px | Backdrop blur radius |
 
 #### Tier / Grade colors
 
@@ -891,6 +905,7 @@ Lightweight horizontal dividers with title and optional actions.
 | Padding Y | `--ui-section-header-padding-y` | `--ui-space-3` (12px) |
 | Gap | `--ui-section-header-gap` | `--ui-space-1` (4px) |
 | Title font size | `--ui-section-header-title-size` | `--ui-font-xs` (12px) |
+| Subtitle font size | `--ui-section-header-subtitle-size` | `--ui-font-s` (~14px) |
 | Title font weight | `--ui-font-weight-l` | 500 |
 | Title letter spacing | `--ui-font-letter-spacing-m` | 0.5px |
 | Title color | `--ui-text-mute` | Muted text |
@@ -1054,11 +1069,13 @@ Light and dark themes via `.light-theme` and `.dark-theme` classes on the card e
 
 ## 11. Version History
 
+**Version 2.2 (Apr 2026):** Audit corrections. Fixed `--ui-state-ring-spread` from 8px to 6px (matching foundation.js). Fixed §5.2 radius usage column to match actual component usage (cards and inputs use `--ui-radius-xl`, buttons use `--ui-radius-pill`). Added `--ui-circle-slider-bounce` to §5.5 motion table. Added `--ui-section-header-subtitle-size` to §6.23. Added `--ui-font-family` note to §5.4. Added `--ui-border-style` to §5.3. Added overlay/scrim token table to §5.7. Fixed v1.9 changelog modal surface from `--ui-elevated-3` to `--ui-elevated-2` (matching implementation).
+
 **Version 2.1 (Mar 2026):** Input field variants: added `.ui-input--textarea` and `.ui-input--textarea-lg` (promoted from prompt-manager card-specific CSS to shared system), added `.ui-input--quiet` (label fades on populate, for inline-edit contexts). Circular slider (§6.21): renamed `type="light"` to `type="interactive"` (legacy accepted), added `--ui-circle-fill` consumer-overridable fill colour with `--ui-accent` fallback and smooth stroke transition, changed default unit from `"%"` to `""`, documented all three custom properties.
 
 **Version 2.0 (Mar 2026):** Full sweep. Added easing curve tokens (`--ui-ease-spring`, `--ui-ease-spring-heavy`, `--ui-ease-bounce`) and animation parameter tokens to §5.5. Added layout header/footer padding to §5.6. Added accent pink tokens (`--ui-pink`, `--ui-pink-soft`, `--ui-spinner-color`, `--ui-slider-rollback`) and activity color tokens to §5.7. Added z-index scale (§5.8) and icon size tokens (§5.9). Added missing slider tokens to §6.7 (`--ui-slider-thumb-height`, `--ui-slider-motion-duration`, `--ui-slider-motion-easing`, `--ui-slider-vertical-height`, `--ui-slider-value-offset-y/x`). Added toast close/z-index tokens to §6.13. Fixed tooltips.md cross-reference from §6.8 to §6.11.
 
-**Version 1.9 (Mar 2026):** Expanded modal specification (§6.12) from token table to full component spec — added structure, motion tokens, behaviour, ARIA, focus trap, light-DOM note. Fixed modal surface from ambiguous "elevated-2 or elevated-3" to definitive `--ui-elevated-3` and shadow from `--ui-shadow-3` to `--ui-shadow-4` (matching implementation). Fixed drawer default radius (§6.27) from `--ui-radius-xl` to `--ui-radius-l` (18px) — practice-proven across consuming cards. Updated authoring.md modal motion example from generic `--ui-motion-med` to dedicated `--ui-modal-motion-in/out` tokens.
+**Version 1.9 (Mar 2026):** Expanded modal specification (§6.12) from token table to full component spec — added structure, motion tokens, behaviour, ARIA, focus trap, light-DOM note. Fixed modal surface from ambiguous "elevated-2 or elevated-3" to definitive `--ui-elevated-2` and shadow from `--ui-shadow-3` to `--ui-shadow-4` (matching implementation). Fixed drawer default radius (§6.27) from `--ui-radius-xl` to `--ui-radius-l` (18px) — practice-proven across consuming cards. Updated authoring.md modal motion example from generic `--ui-motion-med` to dedicated `--ui-modal-motion-in/out` tokens.
 
 **Version 1.8 (Feb 2026):** Added clearable input variant (`.ui-input--clearable`) with `.ui-input__clear` button — 48px touch target, 4-step wobble pop-in animation (400ms `--ui-ease-spring-heavy`), `--ui-error-soft` default color transitioning to `--ui-error` on focus/hover with scale-up, pink border pulse on clear (`--ui-pink` snap → `--ui-accent` fade). CSS-driven visibility via `.has-value`, reduced motion support. Extended `initInputs()` with init guard and clear button wiring. Added `--ui-pink-soft` token. Prompt-manager card migrated from custom `.clear-button` to shared variant; eliminated all `color-mix()` usage. Created `docs/componentry/clearable-input.md` for timing exceptions.
 

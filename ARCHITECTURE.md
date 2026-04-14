@@ -3,11 +3,10 @@
 
 
 <!-- ARCH:HEADER:START -->
-**Document Version:** 10.5
-**Last Updated:** 2026-04-08
-**Home Assistant Version:** 2026.4.1 | OS 17.2 | Supervisor 2026.03.3
+**Last Updated:** 2026-04-14
+**Home Assistant Version:** 2026.4.2 | OS 17.2 | Supervisor 2026.04.0
 
-This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~2,985 runtime entities (154 unavailable, 5.2%), ~341,457 lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
+This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~3,009 runtime entities (154 unavailable, 5.1%), ~324,575 lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
 <!-- ARCH:HEADER:END -->
 
 ---
@@ -33,14 +32,14 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 
 ```
 /config/                               # Home Assistant config root
-├── configuration.yaml                 # Core configuration (155 lines)
+├── configuration.yaml                 # Core configuration (162 lines)
 ├── automations.yaml                   # Root automations (~35 top-level, 2,533 lines)
-├── scripts.yaml                       # All scripts (3,967 lines)
+├── scripts.yaml                       # All scripts (3,962 lines)
 ├── scenes.yaml                        # Scene definitions (148 lines)
 ├── secrets.yaml                       # Sensitive credentials (gitignored)
 │
 <!-- ARCH:PACKAGES:START -->
-├── packages/                          # PRIMARY EDIT LOCATION (62 files, 11,092 lines)
+├── packages/                          # PRIMARY EDIT LOCATION (63 files, 11,272 lines)
 <!-- ARCH:PACKAGES:END -->
 │   ├── ai/                            # AI integrations (8 files)
 │   │   ├── CLAUDE.md                  # Domain context
@@ -115,45 +114,48 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │       └── work.yaml, work_actions_card.yaml
 │
 <!-- ARCH:COMPONENTS:START -->
-├── custom_components/                 # 28 custom integrations
+├── custom_components/                 # 29 custom integrations
 <!-- ARCH:COMPONENTS:END -->
 │   ├── ha_text_ai/                    # AI text generation
 │   ├── whatsapp/, whatsapp_chat/      # WhatsApp integration
 │   ├── frigate/                       # Camera NVR
 │   ├── alexa_media/, pyscript/, browser_mod/
-│   └── [29 more...]
+│   └── [23 more...]
 │
 ├── www/                               # Web-accessible static files
 <!-- ARCH:WWW_BASE:START -->
-│   ├── base/                          # Shared UI foundation (17 files, 12,261 lines)
+│   ├── base/                          # Shared UI foundation (18 files, 13,001 lines)
 <!-- ARCH:WWW_BASE:END -->
 │   │   ├── docs/                      # UI documentation
 │   │   │   └── CLAUDE.md              # Token governance - READ-ONLY rules
 │   │   ├── foundation.js              # Design tokens — READ-ONLY
 │   │   ├── components.js              # Reusable components
-│   │   └── [checkboxes, helpers, modals, radios, screen-border,
-│   │        skeletons, templates, templates.test, toasts, toggles,
-│   │        tooltips, utilities]
+│   │   └── [checkboxes, circle-slider, drawer, fonts, helpers, modals,
+│   │        number-input, radios, screen-border, skeletons, templates,
+│   │        templates.test, toasts, toggles, tooltips, utilities]
 <!-- ARCH:WWW_CARDS:START -->
-│   ├── cards/                         # Custom card implementations (34 JS files, 23,885 lines)
+│   ├── cards/                         # Custom card implementations (33 JS files, 23,623 lines)
 <!-- ARCH:WWW_CARDS:END -->
 │   │   ├── prompt-manager/            # Prompt Manager card (modular, 9 files)
+│   │   ├── priority-matrix-card/      # Priority matrix card (modular, 5 files)
 │   │   ├── presence-activity-card/    # Presence card (modular, 3 files)
 │   │   ├── report-viewer-card/        # Report viewer card (2 files)
-│   │   ├── ui-catalogue-card/         # UI component catalogue (7 files)
+│   │   ├── ui-catalogue-card/         # UI component catalogue (8 files)
+│   │   ├── specs-card-tabbed/         # Tabbed specs card (2 files)
+│   │   ├── specs-card/                # Specs card (1 file)
 │   │   ├── checklist-card/            # Checklist card (1 file)
 │   │   ├── pico-hid-card/             # Pico keyboard emulator card (1 file)
 │   │   ├── work-actions-card/         # Work actions card (1 file)
-│   │   └── [specs-card, specs-card-tabbed, phone-card, ui-circle-slider]
+│   │   └── phone-card/               # Phone display card (1 file)
 │   └── whatsapp_histories/            # Chat history storage
 │
 <!-- ARCH:PYSCRIPT:START -->
-├── pyscript/                          # Python automation (14 files, 3,297 lines)
+├── pyscript/                          # Python automation (14 files, 3,306 lines)
 <!-- ARCH:PYSCRIPT:END -->
 │   └── action_extraction_pipeline.py, dad_car_detection.py,
 │       save_uploaded_file.py, log_errors.py, recorder_stats.py,
 │       system_context.py, theme_sync.py, save_rota_image.py,
-│       dump_log_breakdown.py,
+│       dump_log_breakdown.py, speaker_rename.py,
 │       calendar ops (3 files: cleanup, delete batch, delete single)
 │
 <!-- ARCH:THEMES:START -->
@@ -176,7 +178,7 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 ├── .storage/                          # HA internal storage
 │   ├── lovelace.dashboard_home        # Primary dashboard (5.4 MB)
 │   ├── lovelace                       # Default dashboard (6.4 MB)
-│   ├── lovelace.dashboard_tester      # Development dashboard (351 KB)
+│   ├── lovelace.dashboard_tester      # Development dashboard (331 KB)
 │   └── [11 more lovelace files: test/dev dashboards, echo_show, map,
 │        developer_tools, playground_archive, resources, registries]
 │
@@ -224,7 +226,7 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 ### Presence Detection
 **Status:** Mature
 **Key files:** `/config/packages/occupancy/presence_detection.yaml`, `doors.yaml`, `bed_state.yaml`
-**Architecture:** Two-tiered model — steady sensors (motion/occupancy from FP2) and edge sensors (doors). YAML anchor `&presence_area_base` provides DRY instantiation across all areas. Template sensors aggregate raw signals into unified presence per area with attributes: `lux`, `contributing_sensors`, `active_sensors`, `last_movement`, `confidence_tier` (6 levels: absent → reinforced). Default edge_hold: 30s (high-traffic: 15s). Auto-exclusion of raw sensors via `contributing_raw_sensors` attribute prevents double-counting. Uses `area_entities()` scoping within `expand()` calls for maintainability over hardcoded lists (~17 `expand()` calls remain, scoped via `area_entities()`).
+**Architecture:** Two-tiered model - steady sensors (motion/occupancy from FP2) and edge sensors (doors). YAML anchor `&presence_area_base` provides DRY instantiation across all areas. Template sensors aggregate raw signals into unified presence per area with attributes: `lux`, `contributing_sensors`, `active_sensors`, `last_movement`, `confidence_tier` (6 levels: absent -> reinforced). Default edge_hold: 30s (high-traffic: 15s). Auto-exclusion of raw sensors via `contributing_raw_sensors` attribute prevents double-counting. Uses `area_entities()` scoping within `expand()` calls for maintainability over hardcoded lists (~17 `expand()` calls remain, scoped via `area_entities()`).
 **Rationale:** YAML anchor pattern documented in `/config/packages/occupancy/CLAUDE.md` as deliberate DRY abstraction.
 
 ### Lighting Automation
@@ -248,13 +250,13 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 ### AI Text Generation
 **Status:** Mature
 **Key files:** `/config/packages/ai/generate_text.yaml`, `ai_system_prompts.yaml`, `prompt_manager.yaml`
-**Architecture:** Multi-provider support via `ha_text_ai`. System prompts stored as sensor attributes (bypasses input_text 255 char limit). Event-driven prompt management: `prompt_ai_request` → `prompt_ai_response`. Image generation via DALL-E with local gallery (weekly cleanup, 30-day retention, max 50 entries). Alexa TTS requires SSML `<speak>` wrapping.
+**Architecture:** Multi-provider support via `ha_text_ai`. System prompts stored as sensor attributes (bypasses input_text 255 char limit). Event-driven prompt management: `prompt_ai_request` -> `prompt_ai_response`. Image generation via DALL-E with local gallery (weekly cleanup, 30-day retention, max 50 entries). Alexa TTS requires SSML `<speak>` wrapping.
 **Rationale:** Sensor attribute pattern documented in `/config/packages/ai/CLAUDE.md`.
 
 ### Claude Bridge
 **Status:** Stable
 **Key files:** `/config/packages/ai/claude_bridge.yaml`
-**Architecture:** Bidirectional text channel between Claude (via MCP `todo` intents) and HA automations/scripts. Write path: Claude calls `HassListAddItem` on `todo.claude_bridge` → relay automation timestamps the payload and copies to `input_text.claude_bridge_payload` (~244 usable chars after timestamp prefix); todo item cleared after relay. Read path: HA scripts write to `todo.claude_bridge_response` (summary + description field); Claude reads via `todo_get_items` (no practical size limit on description).
+**Architecture:** Bidirectional text channel between Claude (via MCP `todo` intents) and HA automations/scripts. Write path: Claude calls `HassListAddItem` on `todo.claude_bridge` -> relay automation timestamps the payload and copies to `input_text.claude_bridge_payload` (~244 usable chars after timestamp prefix); todo item cleared after relay. Read path: HA scripts write to `todo.claude_bridge_response` (summary + description field); Claude reads via `todo_get_items` (no practical size limit on description). Claude Code Dispatch extends this with `todo.claude_code_tasks` for automated task dispatch to the Claude Code addon.
 **Rationale:** Enables Claude to trigger HA automations from conversation, and for HA to surface structured data back without a persistent webhook or polling loop.
 
 ### Prompt Manager Card
@@ -262,6 +264,12 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 **Key files:** `/config/www/cards/prompt-manager/prompt-manager.js` (entry), `/config/www/cards/prompt-manager/modules/` (8 modules), `/config/packages/server/ha_snapshot_sensor.yaml`
 **Architecture:** Modular web component split into render, events, styles, constants, scoring, data, variables, highlight. Flat score-sorted grid (no tier groupings). Adopts shared UI system via `adoptedStyleSheets`. Data persisted via `prompt_manager` custom component (WebSocket commands `prompt_manager/get_prompts` / `prompt_manager/set_prompts`) with `localStorage` fallback. Fill-modal inject button reads `sensor.ha_server_snapshot.snapshot` attribute (from `/config/packages/server/ha_snapshot_sensor.yaml`) to inject HA system context into prompt templates.
 **Rationale:** Documented in `/config/www/cards/prompt-manager/CLAUDE.md`.
+
+### Priority Matrix Card
+**Status:** Active development (added 2026-03)
+**Key files:** `/config/www/cards/priority-matrix-card/priority-matrix-card.js` (entry), `constants.js`, `events.js`, `render.js`, `styles.js`
+**Architecture:** Modular web component for task prioritisation with circle sliders for scoring, FLIP animations, configurable weights drawer, and shared UI system integration. 5 files including CLAUDE.md. Adopts shared UI system via `adoptedStyleSheets`.
+**Rationale:** Documented in `/config/www/cards/priority-matrix-card/CLAUDE.md`.
 
 ### Camera/Frigate
 **Status:** Stable
@@ -272,13 +280,13 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 ### Device Management
 **Status:** Stable
 **Key files:** `/config/packages/device/curtains.yaml`, `pc.yaml`, `pet_devices.yaml`, `driveway_detection.yaml`
-**Architecture:** Cover morning phased open (`15% → 45% → 95%`) with vacancy guards, sun elevation gates, holiday awareness, abort triggers. Cover evening close at sun elevation < -4°, night safety check on person departure after dark. PC session state machine (off/locked/unlocked) via HASS.Agent heartbeat (150s grace period). Driveway car detection via pyscript CV with OpenAI Vision fallback. Pet water fountain hourly polling workaround (welfare-critical). Cover position clamped to 1-95% (never fully open/closed to protect mechanism).
+**Architecture:** Cover morning phased open (`15% -> 45% -> 95%`) with vacancy guards, sun elevation gates, holiday awareness, abort triggers. Cover evening close at sun elevation < -4 degrees, night safety check on person departure after dark. PC session state machine (off/locked/unlocked) via HASS.Agent heartbeat (150s grace period). Driveway car detection via pyscript CV with OpenAI Vision fallback. Pet water fountain hourly polling workaround (welfare-critical). Cover position clamped to 1-95% (never fully open/closed to protect mechanism).
 **Rationale:** Documented in `/config/packages/device/CLAUDE.md`.
 
 ### UI Design System
 **Status:** Active development
 **Key files:** `/config/www/base/foundation.js`, `components.js`, `docs/spec.md`
-**Architecture:** Token-driven design with governance-controlled tokens. All values derive from `foundation.js`. Strict governance: foundation.js is READ-ONLY. 16 JS files in `/config/www/base/` providing components, tooltips, modals, toggles, toasts, checkboxes, radios, drawer, utilities, templates, helpers, skeletons, screen-border. Priority hierarchy: safety/accessibility → immutable geometry → token adherence → state model → theme equality → user instruction. Number-input component added 2026-03-23 (`<ui-number-input>`, spec at `docs/componentry/number-input.md`).
+**Architecture:** Token-driven design with governance-controlled tokens. All values derive from `foundation.js`. Strict governance: foundation.js is READ-ONLY. 18 JS files in `/config/www/base/` providing components, tooltips, modals, toggles, toasts, checkboxes, radios, drawer, circle-slider, fonts, number-input, utilities, templates, helpers, skeletons, screen-border. Document authority chain: foundation.js (CANONICAL) > CLAUDE.md (BINDING) > spec.md (DEFINITIVE) > authoring.md (PRESCRIPTIVE) > componentry/*.md (EXCEPTION) > components.js (PRECEDENT). Priority hierarchy: safety/accessibility -> immutable geometry -> token adherence -> state model -> theme equality -> user instruction.
 **Rationale:** Documented in `/config/www/base/docs/CLAUDE.md`.
 
 ### Server Statistics
@@ -296,19 +304,25 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 ### Meeting Action Extraction
 **Status:** Active (deployed 2026-03-11)
 **Key files:** `/config/packages/work/work.yaml`, `/config/pyscript/action_extraction_pipeline.py`
-**Architecture:** Five-phase pipeline triggered by state changes on `todo.meeting_summaries`. Phase 1: snapshot-diff identifies unprocessed summaries via idempotency ledger (`todo.action_pipeline_ledger`) with two-phase lease (processing → complete, 300s TTL). Phase 2: deterministic extraction of `## My Actions` section with `| date` delimiter parsing and intra-summary dedup. Phase 3: fetch existing items from `todo.work_actions` (active + completed within 90 days). Phase 4: AI classification via `ai_task.generate_data` — each candidate gets a verdict: NEW, PROGRESSION, or DUPLICATE. Phase 5: write NEW items, update PROGRESSION items (with manual edit protection via SHA-256 hash), skip DUPLICATEs. Trigger automation uses `mode: single` for concurrency control. Safety bias: uncertain classifications default to NEW. Only error notifications are persistent; success events go to `log.info`. Dashboard display via work-actions-card (see below).
+**Architecture:** Five-phase pipeline triggered by state changes on `todo.meeting_summaries`. Phase 1: snapshot-diff identifies unprocessed summaries via idempotency ledger (`todo.action_pipeline_ledger`) with two-phase lease (processing -> complete, 300s TTL). Phase 2: deterministic extraction of `## My Actions` section with `| date` delimiter parsing and intra-summary dedup. Phase 3: fetch existing items from `todo.work_actions` (active + completed within 90 days). Phase 4: AI classification via `ai_task.generate_data` - each candidate gets a verdict: NEW, PROGRESSION, or DUPLICATE. Phase 5: write NEW items, update PROGRESSION items (with manual edit protection via SHA-256 hash), skip DUPLICATEs. Trigger automation uses `mode: single` for concurrency control. Safety bias: uncertain classifications default to NEW. Only error notifications are persistent; success events go to `log.info`. Speaker rename service (`pyscript/speaker_rename.py`) modifies transcript files and updates todo entities. Dashboard display via work-actions-card (see below).
 **Rationale:** Documented in `/config/packages/work/CLAUDE.md` and `/config/tmp/action-extraction-plan-v2.1-final.md`.
 
 ### Work Actions Card
 **Status:** Active development
 **Key files:** `/config/www/cards/work-actions-card/work-actions-card.js`, `/config/packages/work/work_actions_card.yaml`
-**Architecture:** Single-file Web Component displaying `todo.work_actions` as an animated checklist. Patch-based diffing (no full re-renders). Optimistic toggle with fire-and-forget service calls and catch-based rollback. FLIP and entry/exit animations for layout transitions. Three interaction modes: single tap (toggle), double-tap (edit modal), hover/long-press (rich tooltip with meeting summary action). PM-style dropdown menu for sort (newest/urgency/active), completed filter, hover tooltip toggle, and height/expiry settings modal. New item indicators (pink dot, localStorage, configurable auto-expire). Meeting summary drawer fetches from `todo.meeting_summaries` on demand. Edit modal modifies item title and due date via `todo.update_item` — preserves pipeline description metadata (manual edit protection handles hash mismatch safely). Five HA input helpers for persistent settings.
+**Architecture:** Single-file Web Component displaying `todo.work_actions` as an animated checklist. Patch-based diffing (no full re-renders). Optimistic toggle with fire-and-forget service calls and catch-based rollback. FLIP and entry/exit animations for layout transitions. Three interaction modes: single tap (toggle), double-tap (edit modal), hover/long-press (rich tooltip with meeting summary action). PM-style dropdown menu for sort (newest/urgency/active), completed filter, hover tooltip toggle, and height/expiry settings modal. New item indicators (pink dot, localStorage, configurable auto-expire). Meeting summary drawer fetches from `todo.meeting_summaries` on demand. Edit modal modifies item title and due date via `todo.update_item` - preserves pipeline description metadata (manual edit protection handles hash mismatch safely). Six HA input helpers for persistent settings.
 **Rationale:** Documented in `/config/www/cards/work-actions-card/CLAUDE.md`.
 
 ### Report Viewer
 **Status:** Stable (added 2026-02-12)
 **Key files:** `/config/packages/dashboard/report_viewer.yaml`, `/config/www/cards/report-viewer-card/`
-**Architecture:** Command-line sensors that index `docs/reports/` subdirectories and preload the latest markdown report per category as sensor attributes (10-40KB per report). The `report-viewer-card` custom card reads these sensors for instant tab switching. Categories are discovered dynamically — adding a new report type just requires creating a folder. Hourly refresh. Report content excluded from recorder to avoid database bloat (critical — without this, 10-40KB per sensor writes to DB every hour).
+**Architecture:** Command-line sensors that index `docs/reports/` subdirectories and preload the latest markdown report per category as sensor attributes (10-40KB per report). The `report-viewer-card` custom card reads these sensors for instant tab switching. Categories are discovered dynamically - adding a new report type just requires creating a folder. Hourly refresh. Report content excluded from recorder to avoid database bloat (critical - without this, 10-40KB per sensor writes to DB every hour).
+
+### Specs Card (Tabbed)
+**Status:** Active development (refactored 2026-04)
+**Key files:** `/config/www/cards/specs-card-tabbed/specs-card-tabbed.js`
+**Architecture:** Single-file Web Component with tabbed interface for displaying system specifications. Refactored from standalone file to directory structure. Has its own CLAUDE.md.
+**Rationale:** Documented in `/config/www/cards/specs-card-tabbed/CLAUDE.md`.
 
 ---
 
@@ -318,10 +332,10 @@ Non-obvious choices that affect how work should be done. Each decision classifie
 
 | Decision | Rationale | Evidence | Classification |
 |----------|-----------|----------|----------------|
-| **Floor 01 uses raw FP2 sensors, Floor 02 uses presence abstraction** | Unknown — both approaches exist without documented reason for difference | `/config/packages/lights/CLAUDE.md:43-49` warns about coupling | **Undocumented** |
+| **Floor 01 uses raw FP2 sensors, Floor 02 uses presence abstraction** | Unknown - both approaches exist without documented reason for difference | `/config/packages/lights/CLAUDE.md:43-49` warns about coupling | **Undocumented** |
 | **Automations split between root file and packages** | Historical organisation, both merged at runtime | `CLAUDE.md` notes both locations | **Documented** |
 | **Dashboard JS coexists with token system** | Dashboard JS has majority token adoption alongside residual rgba()/hex. Two paradigms converging but not yet unified | Intel Reports track var-vs-rgba metric (73.7% as of Mar 15) | **Documented convergence** |
-| **Presence uses YAML anchors for area instantiation** | DRY pattern — structural changes ripple automatically to all areas | `/config/packages/occupancy/CLAUDE.md` | **Documented** |
+| **Presence uses YAML anchors for area instantiation** | DRY pattern - structural changes ripple automatically to all areas | `/config/packages/occupancy/CLAUDE.md` | **Documented** |
 | **Manual override via timer with restore:true** | Persist override across HA restarts, 2-min base / 5-min extended | `/config/packages/lights/auto_lights.yaml:12-16` | **Documented** |
 | **Contact mapping in sensor attributes** | Centralised source of truth for all WhatsApp routing (3 lookup maps) | `/config/packages/communication/CLAUDE.md` | **Documented** |
 | **System prompts in sensor attributes** | Bypass input_text 255 char limit | `/config/packages/ai/CLAUDE.md` | **Documented** |
@@ -333,24 +347,25 @@ Non-obvious choices that affect how work should be done. Each decision classifie
 | **Cover position clamped 1-95%** | Never fully open/closed to protect physical mechanism | `/config/packages/device/CLAUDE.md` | **Documented** |
 | **WhatsApp dual-client isolation** | clientId "c" and "e" are separate integrations, must never mix | `/config/packages/communication/CLAUDE.md` | **Documented** |
 | **PC session state never returns unknown** | 150-second heartbeat with 3-sensor consensus falls back to "off" | `/config/packages/device/CLAUDE.md` | **Documented** |
-| **Door → Presence uses raw contact sensors** | `presence_detection.yaml` references raw contact/vibration sensors, not unified `binary_sensor.door_*` entities | Data flow verification | **Undocumented implementation detail** |
+| **Door -> Presence uses raw contact sensors** | `presence_detection.yaml` references raw contact/vibration sensors, not unified `binary_sensor.door_*` entities | Data flow verification | **Undocumented implementation detail** |
 | **Dynamic report category discovery** | Adding a report type only requires creating a subdirectory under `docs/reports/` | `/config/packages/dashboard/CLAUDE.md` | **Documented** |
 | **Shopping list text sanitisation** | Regex filter, whitespace normalisation, case normalisation, min 3 chars | `/config/packages/shopping/CLAUDE.md` | **Documented** |
 | **Travel stale location detection** | Returns "Lost" if sensor is unknown/unavailable OR same coords + >5 min stale | `/config/packages/travel/CLAUDE.md` | **Documented** |
-| **Work pipeline mode: single** | Prevents concurrency; sole automation targeting `todo.meeting_summaries` — adding second automation causes silent race conditions | `/config/packages/work/CLAUDE.md` | **Documented** |
+| **Work pipeline mode: single** | Prevents concurrency; sole automation targeting `todo.meeting_summaries` - adding second automation causes silent race conditions | `/config/packages/work/CLAUDE.md` | **Documented** |
 | **Action extraction safety bias** | Uncertain AI classifications default to NEW (missed action is worse than false duplicate) | `/config/packages/work/CLAUDE.md` | **Documented** |
+| **UI document authority chain** | 6-tier hierarchy: foundation.js > CLAUDE.md > spec.md > authoring.md > componentry/*.md > components.js | `/config/www/base/docs/CLAUDE.md` | **Documented** |
 
 **Classification key:**
-- **Documented** — Rationale explicitly stated in code comments or CLAUDE.md
-- **Undocumented** — Decision exists but reasoning never recorded
-- **Undocumented gap** — Absence of expected pattern, no stated reason
-- **Documented convergence** — Active migration in progress
+- **Documented** - Rationale explicitly stated in code comments or CLAUDE.md
+- **Undocumented** - Decision exists but reasoning never recorded
+- **Undocumented gap** - Absence of expected pattern, no stated reason
+- **Documented convergence** - Active migration in progress
 
 ---
 
 ## 5. Coupling Hotspots
 
-Consolidated from domain CLAUDE.md files, Intel Report (2026-03-15), and Failure Mode Report (2026-03-06).
+Consolidated from domain CLAUDE.md files, Intel Report (2026-04-08), and Failure Mode Report (2026-03-06).
 
 ### High-Impact Dependencies
 
@@ -377,13 +392,13 @@ Consolidated from domain CLAUDE.md files, Intel Report (2026-03-15), and Failure
 | Source | Affects | Coupling Type | Warning |
 |--------|---------|---------------|---------|
 | `&presence_area_base` anchor | All area presence sensors | Template dependency | Anchor changes ripple to bedroom, office, all floors |
-| FP2 raw sensors in Floor 01 | `/config/packages/lights/lights.yaml` | Entity reference | Bypasses abstraction — rename breaks silently |
-| `foundation.js` tokens | All www/base components (16 files) | File dependency | Token changes require component verification |
+| FP2 raw sensors in Floor 01 | `/config/packages/lights/lights.yaml` | Entity reference | Bypasses abstraction - rename breaks silently |
+| `foundation.js` tokens | All www/base components (18 files) | File dependency | Token changes require component verification |
 | Tooltip dark mode values | `tooltips.js:605-623` | File dependency | Must manually sync with foundation.js |
 | FP2 raw sensors in covers | Bedroom + office vacancy check | Entity reference | `/config/packages/device/CLAUDE.md` documents specific sensor IDs |
 | Alexa device list (21 sensors) | `alarm_or_timer_active` binary sensor | Entity reference | Adding/removing Echo requires sensor list update |
 | `docs/reports/` directory structure | Report viewer sensors + card | File dependency | Categories = subdirectories; requires Python3 in container |
-| `map.yaml` state access (3 calls) | Travel template sensors | Template dependency | Unguarded `states[variable]` — entity unavailability causes `AttributeError` |
+| `map.yaml` state access (3 calls) | Travel template sensors | Template dependency | Unguarded `states[variable]` - entity unavailability causes `AttributeError` |
 
 ### Before Modifying
 
@@ -403,115 +418,117 @@ Consolidated from domain CLAUDE.md files, Intel Report (2026-03-15), and Failure
 | Health sensors | Both `health.yaml` AND `weight.yaml` (duplicate definitions exist) |
 | Shopping list sanitisation | `packages/shopping/CLAUDE.md` for regex and normalisation rules |
 | Action pipeline | `packages/work/CLAUDE.md`; ledger entity, AI entity, pyscript file |
-| Travel template sensors | `map.yaml` has 3 unguarded `states[variable]` calls at lines 63, 88, 125 |
+| Travel template sensors | `map.yaml` has 3 unguarded `states[variable]` calls at lines 63, 89, 127 |
 
 ---
 
 ## 6. Data Flow and Key Relationships
 
-### Presence → Lighting
+### Presence -> Lighting
 ```
-FP2/motion sensors → binary_sensor.presence_* (template aggregation)
-  → packages/lights/*.yaml (trigger on state change)
-  → light.* (turn_on/turn_off)
-  ↳ timer.light_override gates automation (if active, suppressed)
-  ↳ sun.sun / lux gates darkness detection
+FP2/motion sensors -> binary_sensor.presence_* (template aggregation)
+  -> packages/lights/*.yaml (trigger on state change)
+  -> light.* (turn_on/turn_off)
+  -> timer.light_override gates automation (if active, suppressed)
+  -> sun.sun / lux gates darkness detection
 ```
 
-### Door → Presence
+### Door -> Presence
 ```
-Contact + Vibration sensors → binary_sensor.door_* (unified template)
-  → Presence edge_hold extended (30s default, 15s high-traffic)
-  → binary_sensor.presence_* updated
+Contact + Vibration sensors -> binary_sensor.door_* (unified template)
+  -> Presence edge_hold extended (30s default, 15s high-traffic)
+  -> binary_sensor.presence_* updated
   Note: Implementation uses raw contact/vibration sensors, not unified door entities
 ```
 
 ### WhatsApp Inbound
 ```
-whatsapp_message event → Filter (exclude broadcasts, groups)
-  → Contact lookup (phone_to_name → full_name_to_name → fuzzy → unknown)
-  → Update unread (count + boolean — BOTH must clear together)
-  → Log to history → [Optional] AI generate reply options
+whatsapp_message event -> Filter (exclude broadcasts, groups)
+  -> Contact lookup (phone_to_name -> full_name_to_name -> fuzzy -> unknown)
+  -> Update unread (count + boolean - BOTH must clear together)
+  -> Log to history -> [Optional] AI generate reply options
 ```
 
 ### WhatsApp Outbound
 ```
-input_text change → Translation check → Phone lookup
-  → whatsapp.send_message (clientId-isolated) → Log → Clear unread
-  ↳ No delivery confirmation — counters cleared before send (silent loss risk)
+input_text change -> Translation check -> Phone lookup
+  -> whatsapp.send_message (clientId-isolated) -> Log -> Clear unread
+  -> No delivery confirmation - counters cleared before send (silent loss risk)
 ```
 
 ### Manual Override
 ```
-Physical switch → automation detects unexpected state
-  → timer.light_override.start (2 min, restore:true)
-  → Auto-lights check timer.idle → suppressed until expiry
+Physical switch -> automation detects unexpected state
+  -> timer.light_override.start (2 min, restore:true)
+  -> Auto-lights check timer.idle -> suppressed until expiry
 ```
 
 ### Cover Morning Phase
 ```
-Time trigger → script.cover_morning_phase
-  → Vacancy check (room empty ≥5min via raw FP2 sensors)
-  → Sun elevation gate (weekday ≥3°, weekend/holiday ≥6°)
-  → Phased open: 15% → 45% → 95% (1-min dwell)
-  ↳ Abort: presence detected, manual close, timeout
+Time trigger -> script.cover_morning_phase
+  -> Vacancy check (room empty >=5min via raw FP2 sensors)
+  -> Sun elevation gate (weekday >=3 degrees, weekend/holiday >=6 degrees)
+  -> Phased open: 15% -> 45% -> 95% (1-min dwell)
+  -> Abort: presence detected, manual close, timeout
 ```
 
 ### Cover Evening/Night
 ```
-Sun elevation < -4° → automation → close covers
-Person departure after dark → night safety check → close if empty
+Sun elevation < -4 degrees -> automation -> close covers
+Person departure after dark -> night safety check -> close if empty
 ```
 
 ### Camera Day/Night
 ```
-sun.sun → hourly_triggers.yaml → C09 colour/BW mode switch
-packages/device/cameras.yaml → input_select day_night_mode per camera
+sun.sun -> hourly_triggers.yaml -> C09 colour/BW mode switch
+packages/device/cameras.yaml -> input_select day_night_mode per camera
 ```
 
 ### AI Prompt Pipeline
 ```
-UI component → prompt_ai_request event
-  → automation → ai_task.generate_data
-  → prompt_ai_response event → UI update
+UI component -> prompt_ai_request event
+  -> automation -> ai_task.generate_data
+  -> prompt_ai_response event -> UI update
 ```
 
-### Weather → Clothing Suggestion
+### Weather -> Clothing Suggestion
 ```
-Hourly trigger + HA start (5-min delay) → ha_text_ai.ask_question
-  → Context: condition, temp, humidity, wind, clouds, 24h forecast
-  → input_text.ai_weather_clothing_suggestion
+Hourly trigger + HA start (5-min delay) -> ha_text_ai.ask_question
+  -> Context: condition, temp, humidity, wind, clouds, 24h forecast
+  -> input_text.ai_weather_clothing_suggestion
 ```
 
 ### Claude Bridge (Bidirectional)
 ```
-Write: claude.ai → HassListAddItem → todo.claude_bridge
-  → relay automation → input_text.claude_bridge_payload (~244 chars)
-Read: HA → todo.add_item → todo.claude_bridge_response
-  → claude.ai reads via todo_get_items (label=summary, description=full payload)
+Write: claude.ai -> HassListAddItem -> todo.claude_bridge
+  -> relay automation -> input_text.claude_bridge_payload (~244 chars)
+Read: HA -> todo.add_item -> todo.claude_bridge_response
+  -> claude.ai reads via todo_get_items (label=summary, description=full payload)
+Dispatch: claude.ai -> todo.claude_code_tasks -> addon watcher -> claude -p
+  -> output -> todo.claude_bridge_response ([Dispatch] prefix)
 ```
 
 ### Transcript Pipeline
 ```
-Plaud recording → auto-email → Gmail (fragment0044)
-  → IMAP event (subject must contain [Plaud-AutoFlow])
-  → fetch automation → www/transcripts/*.txt (descriptive slugified filenames)
-  → sensor.transcript_latest (attributes: transcript, summary, filename, timestamp)
-  → todo.meeting_summaries (lightweight, Claude reads first)
-  → todo.meeting_transcripts (full text, Claude reads on demand)
-  ↳ Paired by due_datetime; daily cleanup removes items >7 days old
+Plaud recording -> auto-email -> Gmail (fragment0044)
+  -> IMAP event (subject must contain [Plaud-AutoFlow])
+  -> fetch automation -> www/transcripts/*.txt (descriptive slugified filenames)
+  -> sensor.transcript_latest (attributes: transcript, summary, filename, timestamp)
+  -> todo.meeting_summaries (lightweight, Claude reads first)
+  -> todo.meeting_transcripts (full text, Claude reads on demand)
+  -> Paired by due_datetime; daily cleanup removes items >7 days old
 ```
 
 ### Meeting Action Extraction
 ```
-todo.meeting_summaries state change → automation (5s debounce, mode: single)
-  → pyscript.action_extraction_pipeline
-  → Phase 1: snapshot-diff vs todo.action_pipeline_ledger (lease acquisition)
-  → Phase 2: parse ## My Actions section (deterministic, | date split)
-  → Phase 3: fetch todo.work_actions (active + completed ≤90 days)
-  → Phase 4: ai_task.generate_data → NEW / PROGRESSION / DUPLICATE per candidate
-  → Phase 5: write NEW items, update PROGRESSION (hash-checked), skip DUPLICATE
-  → Ledger finalised (processing → complete), pruned after 14 days
+todo.meeting_summaries state change -> automation (5s debounce, mode: single)
+  -> pyscript.action_extraction_pipeline
+  -> Phase 1: snapshot-diff vs todo.action_pipeline_ledger (lease acquisition)
+  -> Phase 2: parse ## My Actions section (deterministic, | date split)
+  -> Phase 3: fetch todo.work_actions (active + completed <=90 days)
+  -> Phase 4: ai_task.generate_data -> NEW / PROGRESSION / DUPLICATE per candidate
+  -> Phase 5: write NEW items, update PROGRESSION (hash-checked), skip DUPLICATE
+  -> Ledger finalised (processing -> complete), pruned after 14 days
 ```
 
 ---
@@ -529,32 +546,32 @@ Based on Failure Mode Report (2026-03-06), located at `docs/reports/failure-mode
 | Sleep Context | Group unavailable | Fallback (unknown = asleep in window) | Self-heal |
 | TTS Alerts | Sonos unavailable | None | Manual-only |
 | Timer Override | Timer stuck | Expiry (5 min max) + restore:true survives restart | Self-heal |
-| WhatsApp Contacts | Sensor unavailable | None — all message processing halts | **Manual-only** |
+| WhatsApp Contacts | Sensor unavailable | None - all message processing halts | **Manual-only** |
 | WhatsApp Delivery | Integration offline | Counters cleared before delivery; silent message loss | **None** |
-| Claude Bridge | Todo service unavailable | None — no timeout or watchdog | Manual-only |
+| Claude Bridge | Todo service unavailable | None - no timeout or watchdog | Manual-only |
 | Mobile Notifications | Service fails | None | Manual-only |
 | Curtains | Calendar unavailable | Logs and continues | Self-heal |
 | Sun detection | sun.sun unavailable | HA core recovery | Self-heal |
 | Action Pipeline | Ledger lease stuck | 300s TTL auto-expires; failed entries need manual cleanup | Partial self-heal |
 
-**System characteristic:** Bifurcated resilience. Occupancy and lighting have mature availability guards and startup recovery. Communication and AI subsystems exhibit cliff-edge failure — a single external service outage (ha_text_ai, WhatsApp, IMAP) causes silent degradation with no feedback to the user.
+**System characteristic:** Bifurcated resilience. Occupancy and lighting have mature availability guards and startup recovery. Communication and AI subsystems exhibit cliff-edge failure - a single external service outage (ha_text_ai, WhatsApp, IMAP) causes silent degradation with no feedback to the user.
 
-**Critical cascade path — WhatsApp contact hub (FM highest risk):**
+**Critical cascade path - WhatsApp contact hub (FM highest risk):**
 ```
 sensor.whatsapp_contacts_config [unavailable]
-  → whatsapp_config.yaml:607 [template read: from_json] — contact lookup returns None
-    → whatsapp_config.yaml:648 [condition: contact is not none] — blocks normal path
-      → whatsapp_config.yaml:678-682 [else branch] — STOP: incoming message dropped
-    → whatsapp_config.yaml:705 [template: contacts[sender]] — KeyError
-      → STOP: automation halts mid-execution
+  -> whatsapp_config.yaml:607 [template read: from_json] - contact lookup returns None
+    -> whatsapp_config.yaml:648 [condition: contact is not none] - blocks normal path
+      -> whatsapp_config.yaml:678-682 [else branch] - STOP: incoming message dropped
+    -> whatsapp_config.yaml:705 [template: contacts[sender]] - KeyError
+      -> STOP: automation halts mid-execution
 ```
 
-**Critical cascade path — Floor 02 lighting:**
+**Critical cascade path - Floor 02 lighting:**
 ```
 binary_sensor.presence_sensor_fp2_* [unavailable]
-  → binary_sensor.presence_floor_02
-  → automation.auto_lights_floor_02
-  → light.floor_02 [STOP: safety-critical stair lights fail]
+  -> binary_sensor.presence_floor_02
+  -> automation.auto_lights_floor_02
+  -> light.floor_02 [STOP: safety-critical stair lights fail]
 ```
 
 **Temporal risks:** DST-sensitive comparisons use `now().hour` without timezone-aware guards in 9 locations across: quiet hours (lights), sleep window (bed_state), desk presence, earliest time (curtains), busyness calculation (tesco_sensors). Impact is low (2x/year) but failures are silent.
@@ -579,7 +596,7 @@ binary_sensor.presence_sensor_fp2_* [unavailable]
 | Integration | Purpose | Failure Impact |
 |-------------|---------|----------------|
 | Alexa Media | TTS, voice control, alarm tracking | Voice announcements, alarm detection fail |
-| pyscript | Python automation (12 files) | Custom scripts fail |
+| pyscript | Python automation (14 files) | Custom scripts fail |
 | browser_mod | Browser control, auto-refresh | Popups, page refresh fail |
 | Aqara FP2 | Presence detection (3 units) | Presence automation degrades |
 | Pirate Weather | Weather data, AI clothing suggestion | Weather cards, forecast fail |
@@ -618,8 +635,8 @@ binary_sensor.presence_sensor_fp2_* [unavailable]
 
 | Item | Type | Impact | Status |
 |------|------|--------|--------|
-| Unavailable entities (see Entity Counts for current) | Entity bloat | Registry bloat, broken refs | Active — trend (manual, as of 2026-03-25): 979→949→779→801→800→758→751→152→251→325→173→281 |
-| Dashboard JS residual rgba() calls | Dual paradigm | Maintenance burden | **Converging** — 73.7% var-vs-rgba adoption. See latest Intel Report |
+| Unavailable entities (see Entity Counts for current) | Entity bloat | Registry bloat, broken refs | Active - trend: 979->949->779->801->800->758->751->152->251->325->173->281->154->147 |
+| Dashboard JS residual rgba() calls | Dual paradigm | Maintenance burden | **Converging** - 73.7% var-vs-rgba adoption. See latest Intel Report |
 | Floor 01 raw sensor coupling | Fragility | Silent failure on rename | Documented warning |
 | Dashboard duplication (default vs home) | Redundancy | Confusion | Acknowledged |
 | Mixed automation alias styles | Cosmetic | ~55% follow `Domain - Feature` | Migrate opportunistically |
@@ -630,23 +647,24 @@ binary_sensor.presence_sensor_fp2_* [unavailable]
 | Health domain duplicate sensor definitions | Fragility | `health.yaml` and `weight.yaml` both define sensors with same names; last-loaded wins | Acknowledged |
 | Room transition events unconsumed | Dead code | `floor02_travel_tracking.yaml` fires `room_occupancy_change` events and produces `sensor.floor02_zone_active`, but zero automations listen | Acknowledged |
 | Confidence tier unconsumed | Dead code | 6-level scoring on every presence sensor; no automation reads it | Acknowledged |
-| `map.yaml` unguarded state access | Fragility | 3 `states[variable].last_updated` calls without None guards (lines 63, 88, 125) — entity unavailability causes template failure | Identified (Intel Report I-03, Mar 15) |
-| DST-sensitive `now().hour` comparisons | Temporal fragility | 9 instances across lights, bed_state, presence_desks, tesco_sensors — silent 1-hour offset 2x/year | Identified (Intel Report I-04, Mar 15) |
+| `map.yaml` unguarded state access | Fragility | 3 `states[variable].last_updated` calls without None guards (lines 63, 89, 127) - entity unavailability causes template failure | Identified (Intel Report I-03, Mar 15) |
+| DST-sensitive `now().hour` comparisons | Temporal fragility | 9 instances across lights, bed_state, presence_desks, tesco_sensors - silent 1-hour offset 2x/year | Identified (Intel Report I-04, Mar 15) |
+| Dashboard JS duplication (363 groups) | Maintenance risk | ~950K chars redundant; largest: 113 copies of animation snippet, 9 copies of light circle (5,769 chars) | Identified (Intel Report I-06, Apr 8) |
 
 Previously resolved items (startup recovery, division-by-zero guards, namespace bugs, stale file cleanup, component removals) are tracked in the document changelog and git history.
 
 **Automation distribution:**
 - automations.yaml: 35 top-level automations (includes nested choose/conditions with multiple aliases)
-- Packages: ~35 automations across package files
-- Registry total: 82 (some from Node-RED, UI-created, or integration-generated)
+- Packages: ~50 automations across package files
+- Registry total: 85 (some from Node-RED, UI-created, or integration-generated)
 
 <!-- ARCH:ENTITY_COUNTS:START -->
 **Entity counts:**
-- Runtime: 2,985 | Unavailable: 154 (5.2%)
+- Runtime: 3,009 | Unavailable: 154 (5.1%)
 - Dashboard-referenced: ~48% (52% unreferenced — many are legitimate helpers, stats sensors, or internal)
-- Domain breakdown: 1,385 sensors, 170 binary, 84 automations, 68 scripts, 147 scenes, 45 lights, 205 switches, 27 cameras, 316 helpers
+- Domain breakdown: 1408 sensors, 175 binary, 86 automations, 68 scripts, 147 scenes, 45 lights, 200 switches, 29 cameras, 346 helpers
 
-*Auto-generated from live sensor data. Last sync: 2026-04-08 03:57 UTC*
+*Auto-generated from live sensor data. Last sync: 2026-04-14 19:20 BST*
 <!-- ARCH:ENTITY_COUNTS:END -->
 
 ---
@@ -654,26 +672,28 @@ Previously resolved items (startup recovery, division-by-zero guards, namespace 
 ## 10. UI Design System Summary
 
 <!-- ARCH:UI_LOCATION:START -->
-**Location:** `/config/www/base/` (17 files, 12,261 lines) with documentation in `/config/www/base/docs/`
+**Location:** `/config/www/base/` (18 files, 13,001 lines) with documentation in `/config/www/base/docs/`
 <!-- ARCH:UI_LOCATION:END -->
 
 **Key files:**
-- `foundation.js` — Token definitions (READ-ONLY)
-- `components.js` — Reusable UI components
-- `docs/spec.md` — Full system specification
-- `docs/CLAUDE.md` — AI governance rules
-- `docs/authoring.md` — Component creation patterns
-- `docs/componentry/tooltips.md` — Tooltip exception documentation
-- `docs/componentry/number-input.md` — Number input specification (added 2026-03-23)
+- `foundation.js` - Token definitions (READ-ONLY)
+- `components.js` - Reusable UI components
+- `circle-slider.js` - Circle slider component (moved from cards/ to base/)
+- `docs/spec.md` - Full system specification
+- `docs/CLAUDE.md` - AI governance rules
+- `docs/authoring.md` - Component creation patterns
+- `docs/componentry/tooltips.md` - Tooltip exception documentation
+- `docs/componentry/number-input.md` - Number input specification (added 2026-03-23)
 
 **Token governance:**
 1. All values must derive from defined tokens
 2. No arbitrary pixel values, custom colors, or interpolation
 3. Critical geometry is immutable (Button 40px, Touch target 48px min)
-4. foundation.js is READ-ONLY — propose changes in prose, wait for approval
-5. Priority hierarchy: safety/accessibility → immutable geometry → token adherence → state model → theme equality → user instruction
+4. foundation.js is READ-ONLY - propose changes in prose, wait for approval
+5. Priority hierarchy: safety/accessibility -> immutable geometry -> token adherence -> state model -> theme equality -> user instruction
+6. Document authority chain: foundation.js (CANONICAL) > CLAUDE.md (BINDING) > spec.md (DEFINITIVE) > authoring.md (PRESCRIPTIVE) > componentry/*.md (EXCEPTION) > components.js (PRECEDENT)
 
-**Custom cards:** `/config/www/cards/` contains 28 JS files across 8 card directories and 4 standalone files.
+**Custom cards:** `/config/www/cards/` contains 33 JS files across 11 card directories. Notable modular cards: prompt-manager (9 files), priority-matrix-card (5 files), ui-catalogue-card (8 files), presence-activity-card (3 files).
 
 **Token adoption:** Full adoption in `www/base/` and `www/cards/` components. Dashboard inline JS is converging (73.7% var-vs-rgba adoption; majority var(), residual rgba()/hex from legacy and SVG icons). See latest Intel Report in `docs/reports/config-intel/` for current metrics.
 
@@ -685,34 +705,37 @@ Previously resolved items (startup recovery, division-by-zero guards, namespace 
 
 ### Non-Obvious Behaviours
 
-1. **Presence edge_hold**: Door events extend presence 30s after motion clears — intentional for "in-transit"
-2. **Unified door sensors**: `binary_sensor.door_*` are templates, not raw devices — but presence system uses raw sensors, not these
+1. **Presence edge_hold**: Door events extend presence 30s after motion clears - intentional for "in-transit"
+2. **Unified door sensors**: `binary_sensor.door_*` are templates, not raw devices - but presence system uses raw sensors, not these
 3. **Design tokens in JS**: Core system in `/config/www/base/foundation.js`, not theme files
 4. **Dashboard storage**: Primary content in `.storage/lovelace.dashboard_home` (JSON)
-5. **Floor 01 bypasses abstraction**: Uses raw FP2 entity IDs — fragile to renames
+5. **Floor 01 bypasses abstraction**: Uses raw FP2 entity IDs - fragile to renames
 6. **Confidence tier is produced but unconsumed**: 6-level confidence scoring exists on every presence sensor but no automation reads it
 7. **Room transition events fire into void**: `floor02_travel_tracking.yaml` fires `room_occupancy_change` events and produces `sensor.floor02_zone_active`, but zero automations listen
-8. **Cover vacancy uses raw FP2 sensors**: Not unified presence entities — specific sensor IDs hardcoded
+8. **Cover vacancy uses raw FP2 sensors**: Not unified presence entities - specific sensor IDs hardcoded
 9. **PC session never returns unknown**: Falls back to "off" after 150s heartbeat timeout
 10. **Pet fountain polling is welfare-critical**: Hourly button press forces sensor refresh; removal risks stale water data
 11. **Bed occupancy group**: `group.bed_occupancy_sensors` is defined in `bed_state.yaml` with Withings in-bed sensors (C-side + E-side)
 12. **Camera view selector mismatch**: `server/frontend/advanced_camera_card_backend.yaml` selector options do not exactly match `device/cameras.yaml` options (server includes live views like Doorbell, Garden, Front)
 13. **Sleep metrics are UI-only**: Sleep score, deep_sleep, rem_sleep, snoring tracked but have zero automation consumers
-14. **Occupancy expand() calls**: ~17 `expand()` calls remain in `presence_detection.yaml`, scoped via `area_entities()` — not eliminated as some documentation claims
-15. **WhatsApp silent message loss**: Unread counters are cleared before delivery confirmation — if integration is offline, messages are lost silently
+14. **Occupancy expand() calls**: ~17 `expand()` calls remain in `presence_detection.yaml`, scoped via `area_entities()` - not eliminated as some documentation claims
+15. **WhatsApp silent message loss**: Unread counters are cleared before delivery confirmation - if integration is offline, messages are lost silently
 16. **Office lighting has no startup trigger**: Unlike Floor 01/02 which recover state on HA restart, office lighting requires manual intervention after restart
+17. **Circle slider moved to base**: `circle-slider.js` relocated from `www/cards/` to `www/base/` as a shared component
+18. **Specs cards restructured**: `specs-card.js` and `specs-card-tabbed.js` moved from standalone files in `www/cards/` to their own subdirectories
 
 ### Common Misconceptions
 
 | Misconception | Reality |
 |---------------|---------|
-| "automations.yaml has all the automations" | Split between root (~35) and packages (~35); others from Node-RED/UI |
+| "automations.yaml has all the automations" | Split between root (~35) and packages (~50); others from Node-RED/UI |
 | "Dashboard JS bypasses token system" | Convergence in progress; 73.7% var-vs-rgba adoption |
 | "Presence sensors are raw devices" | They're template aggregations via YAML anchor |
 | "Door entities feed presence" | Presence uses raw contact/vibration sensors, not unified door entities |
 | "olympus.yaml is the active theme" | Material You is set as default via `frontend_theme_management.yaml` |
 | "tesco_sensors.yaml tracks Tesco" | Actually tracks Sainsbury's Local |
-| "All lighting has startup recovery" | Only Floor 01 and Floor 02 — office lighting does not |
+| "All lighting has startup recovery" | Only Floor 01 and Floor 02 - office lighting does not |
+| "Custom components count is 36" | Actual count on disk is 29 directories (Intel Report I-01, Apr 8) |
 
 ### Red Flags
 

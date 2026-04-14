@@ -146,7 +146,7 @@ weights:                       # optional, all default 1.0
 **Depends on:**
 - `todo.ha_priorities` — Local to-do entity (created via HA UI)
 - `www/base/foundation.js`, `components.js`, `number-input.js`, `drawer.js`, `tooltips.js` — shared UI system
-- `www/cards/ui-circle-slider.js` — circle slider web component
+- `www/base/circle-slider.js` — circle slider web component
 
 **Consumed by:**
 - Dashboard views that include the `priority-matrix-card` custom element

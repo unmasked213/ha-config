@@ -6,7 +6,7 @@ import { uiComponents } from "/local/base/components.js";
 import { applyThemeClass, initButtons } from "/local/base/helpers.js";
 import { uiNumberInput } from "/local/base/number-input.js";
 import { uiDrawer } from "/local/base/drawer.js";
-import "/local/cards/ui-circle-slider.js";
+import "/local/base/circle-slider.js";
 
 import { cardStyles } from "./styles.js";
 import { buildCard, updateSortIndicators } from "./render.js";

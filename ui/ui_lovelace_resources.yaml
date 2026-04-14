@@ -40,7 +40,7 @@
 # ── SHARED UI: CATALOGUE ────────────────────────────────────────────────────
 #   Single-card interactive catalogue for all shared UI components
 
-  - url: /local/cards/ui-circle-slider.js
+  - url: /local/base/circle-slider.js
     type: module
   - url: /local/cards/ui-catalogue-card/ui-catalogue-card.js
     type: module
@@ -51,9 +51,9 @@
 # ── SHARED UI: COMPLIANT CARDS ────────────────────────────────────────────────
 #   These cards utilize my Shared UI system
 
-  - url: /local/cards/specs-card.js
+  - url: /local/cards/specs-card/specs-card.js
     type: module
-  - url: /local/cards/specs-card-tabbed.js
+  - url: /local/cards/specs-card-tabbed/specs-card-tabbed.js?v=3
     type: module
   - url: /local/document-upload-card.js
     type: module

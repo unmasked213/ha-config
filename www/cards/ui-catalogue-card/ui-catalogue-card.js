@@ -13,7 +13,7 @@ import { uiRadios } from "/local/base/radios.js";
 import { uiSkeletons } from "/local/base/skeletons.js";
 import { uiDrawer } from "/local/base/drawer.js";
 import { uiNumberInput } from "/local/base/number-input.js";
-import { applyThemeClass, initButtons } from "/local/base/helpers.js";
+import { applyThemeClass } from "/local/base/helpers.js";
 
 import { catalogueStyles } from "./styles.js";
 import { COMPONENT_REGISTRY, getCategories, getComponentsByCategory } from "./registry.js";
@@ -53,6 +53,7 @@ class UICatalogueCard extends HTMLElement {
 
     this._hass = null;
     this._config = {};
+    this._demoTimers = [];
 
     // Bound handlers for cleanup
     this._outsideClickHandler = (e) => {
@@ -150,6 +151,11 @@ Object.assign(UICatalogueCard.prototype, demoMethods);
 UICatalogueCard.prototype._updateCatClearButton = function () {
   const btn = this.shadow.getElementById("catSearchClear");
   if (btn) btn.style.display = this.state.searchTerm ? "inline-flex" : "none";
+};
+
+UICatalogueCard.prototype._clearDemoTimers = function () {
+  this._demoTimers.forEach(id => { clearTimeout(id); clearInterval(id); });
+  this._demoTimers = [];
 };
 
 

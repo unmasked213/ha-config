@@ -417,7 +417,7 @@ The unified state model requires pseudo-element overlays, not direct background 
 }
 
 .ui-card {
-  border-radius: var(--ui-radius-m);
+  border-radius: var(--ui-radius-xl);
 }
 
 .ui-menu {
@@ -434,7 +434,7 @@ The unified state model requires pseudo-element overlays, not direct background 
 }
 
 .ui-modal {
-  background: var(--ui-elevated-3);
+  background: var(--ui-elevated-2);
   box-shadow: var(--ui-shadow-4);
 }
 ```
@@ -503,7 +503,8 @@ import { uiDrawer, openDrawer, closeDrawer } from '/local/base/drawer.js';
 import { showModal, closeModal } from '/local/base/modals.js';
 import { showToast, clearAllToasts, getToastCount } from '/local/base/toasts.js';
 import { uiNumberInput } from '/local/base/number-input.js';
-import { initInputs, initSliders, applyThemeClass, callService, sleep, getHelperNumber, getHelperBoolean, getHelperSelect, persistHelper } from '/local/base/helpers.js';
+import { initInputs, initButtons, initSliders, applyThemeClass, callService, sleep, getHelperNumber, getHelperBoolean, getHelperSelect, persistHelper } from '/local/base/helpers.js';
+import { flashScreenBorder, hideScreenBorder, isScreenBorderVisible } from '/local/base/screen-border.js';
 import { escapeHtml } from '/local/base/utilities.js';
 ```
 

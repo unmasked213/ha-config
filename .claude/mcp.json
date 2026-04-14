@@ -17,6 +17,14 @@
         "Content-Type": "application/json"
       },
       "dangerouslySkipPermissions": true
+    },
+    "claude-historian": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["claude-historian-mcp"],
+      "env": {
+        "HISTORY_FILE": "/data/home/.claude/history.jsonl"
+      }
     }
   }
 }

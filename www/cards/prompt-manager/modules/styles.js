@@ -1052,7 +1052,7 @@ pmStyles.replaceSync(`
     padding: var(--ui-space-1) var(--ui-space-3);
     border-radius: var(--ui-radius-pill);
     background: var(--ui-elevated-2);
-    border: var(--ui-border-width-s) solid var(--ui-border-color-light);
+    border: none;
     color: var(--ui-text-mute);
     font-size: var(--ui-font-xs);
     font-weight: var(--ui-font-weight-l);
@@ -1107,7 +1107,7 @@ pmStyles.replaceSync(`
      See CLAUDE.md "UI Token Exceptions" for governance. */
 
   .view-content:has(.pm-highlighted) {
-    --hl-bg:      var(--ui-elevated-3);
+    --hl-bg:      var(--ui-surface);
     --hl-fg:      #f8f8f2;
     --hl-comment: #6272a4;
     --hl-cyan:    #79c8d8;
@@ -1318,8 +1318,8 @@ pmStyles.replaceSync(`
 
   .pm-code-expand {
     display: block;
-    text-align: center;
-    padding: var(--ui-space-1) 0 var(--ui-space-2);
+    text-align: left;
+    padding: var(--ui-space-1) 0 var(--ui-space-2) var(--ui-space-3);
     cursor: pointer;
     color: var(--ui-accent);
     font-size: var(--ui-font-xs);

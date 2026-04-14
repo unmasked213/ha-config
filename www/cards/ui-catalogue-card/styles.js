@@ -248,6 +248,10 @@ catalogueStyles.replaceSync(/* css */`
     background: var(--ui-error);
   }
 
+  .cat-sidebar__dot--experimental {
+    background: var(--ui-info);
+  }
+
   .cat-sidebar__group-label {
     font-size: 10px;
     font-weight: 600;
@@ -675,6 +679,62 @@ catalogueStyles.replaceSync(/* css */`
     color: var(--ui-success);
     background: var(--ui-elevated-2);
     text-align: center;
+  }
+
+
+  /* ── Component Colours Collapsible ─────────────────────────────────────── */
+
+  .cat-component-colours {
+    margin-top: var(--ui-space-4);
+  }
+
+  .cat-component-colours__count {
+    font-size: 11px;
+    color: var(--ui-text-mute);
+    font-weight: var(--ui-font-weight-m);
+    margin-left: var(--ui-space-2);
+  }
+
+  .cat-component-colours__desc {
+    font-size: var(--ui-font-xs);
+    color: var(--ui-text-mute);
+    margin-bottom: var(--ui-space-5);
+    line-height: var(--ui-font-line-height-m);
+  }
+
+  .cat-component-colours__grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-5);
+  }
+
+  .cat-component-colours__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-2);
+  }
+
+  .cat-component-colours__group-label {
+    font-size: 11px;
+    font-weight: var(--ui-font-weight-l);
+    color: var(--ui-text-mute);
+    text-transform: uppercase;
+    letter-spacing: var(--ui-font-letter-spacing-s);
+  }
+
+  .cat-component-colours__swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: var(--ui-space-2);
+  }
+
+  .cat-component-colours__swatches .cat-swatch__color {
+    height: 36px;
+  }
+
+  .cat-component-colours__swatches .cat-swatch__label {
+    font-size: 10px;
+    padding: var(--ui-space-1) var(--ui-space-2);
   }
 
 

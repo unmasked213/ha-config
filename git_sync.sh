@@ -1,5 +1,5 @@
 #!/bin/sh
-# DEPRECATED: Replaced by scripts/git_sync.sh. Will be deleted after first successful sync from new path.
+# Git sync script — renders scripts/doc_snapshot.j2 and injects metrics into README.md, ARCHITECTURE.md, CLAUDE.md
 set -eu
 
 OUTPUT_FILE="/config/git_sync_result.txt"
@@ -43,36 +43,6 @@ update_readme_tree() {
   mv "$TMPFILE" "$README_FILE"
 }
 
-update_readme_snapshot() {
-  TEMPLATE_FILE="$REPO_DIR/readme_snapshot.j2"
-  README_FILE="$REPO_DIR/README.md"
-
-  [ -f "$TEMPLATE_FILE" ] || return 0
-  [ -f "$README_FILE" ] || return 0
-  grep -q '<!-- SNAPSHOT:START -->' "$README_FILE" || return 0
-  grep -q '<!-- SNAPSHOT:END -->' "$README_FILE" || return 0
-
-  TOKEN=$(cat /run/supervisor.token 2>/dev/null || echo "${SUPERVISOR_TOKEN:-}")
-  [ -n "$TOKEN" ] || return 0
-
-  JSON_BODY=$(jq -n --arg t "$(cat "$TEMPLATE_FILE")" '{"template": $t}') || return 0
-
-  RENDERED=$(curl -sSL --max-time 30 \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$JSON_BODY" \
-    http://hassio/core/api/template 2>/dev/null) || return 0
-
-  [ -n "$RENDERED" ] || return 0
-  printf '%s' "$RENDERED" | grep -q '## Key Metrics' || return 0
-
-  TMPFILE=$(mktemp) || return 0
-  sed -n '1,/<!-- SNAPSHOT:START -->/p' "$README_FILE" > "$TMPFILE"
-  printf '\n%s\n' "$RENDERED" >> "$TMPFILE"
-  sed -n '/<!-- SNAPSHOT:END -->/,$p' "$README_FILE" >> "$TMPFILE"
-  mv "$TMPFILE" "$README_FILE"
-}
-
 # inject_section RENDERED TARGET_FILE SECTION_ID START_MARKER END_MARKER
 #   Extracts <!-- section:SECTION_ID --> block from RENDERED and injects it
 #   between START_MARKER and END_MARKER in TARGET_FILE.
@@ -98,8 +68,8 @@ inject_section() {
   mv "$_tmpfile" "$_target"
 }
 
-update_architecture_snapshot() {
-  TEMPLATE_FILE="$REPO_DIR/architecture_snapshot.j2"
+update_doc_snapshot() {
+  TEMPLATE_FILE="$REPO_DIR/scripts/doc_snapshot.j2"
   [ -f "$TEMPLATE_FILE" ] || return 0
 
   TOKEN=$(cat /run/supervisor.token 2>/dev/null || echo "${SUPERVISOR_TOKEN:-}")
@@ -117,9 +87,14 @@ update_architecture_snapshot() {
   # Validate render produced at least one section sentinel
   printf '%s' "$RENDERED" | grep -q '<!-- section:arch_header -->' || return 0
 
+  README_FILE="$REPO_DIR/README.md"
   ARCH_FILE="$REPO_DIR/ARCHITECTURE.md"
   CLAUDE_FILE="$REPO_DIR/CLAUDE.md"
 
+  # README.md
+  inject_section "$RENDERED" "$README_FILE" "readme_snapshot" "<!-- SNAPSHOT:START -->" "<!-- SNAPSHOT:END -->"
+
+  # ARCHITECTURE.md
   inject_section "$RENDERED" "$ARCH_FILE" "arch_header" "<!-- ARCH:HEADER:START -->" "<!-- ARCH:HEADER:END -->"
   inject_section "$RENDERED" "$ARCH_FILE" "arch_packages" "<!-- ARCH:PACKAGES:START -->" "<!-- ARCH:PACKAGES:END -->"
   inject_section "$RENDERED" "$ARCH_FILE" "arch_components" "<!-- ARCH:COMPONENTS:START -->" "<!-- ARCH:COMPONENTS:END -->"
@@ -129,12 +104,16 @@ update_architecture_snapshot() {
   inject_section "$RENDERED" "$ARCH_FILE" "arch_themes" "<!-- ARCH:THEMES:START -->" "<!-- ARCH:THEMES:END -->"
   inject_section "$RENDERED" "$ARCH_FILE" "arch_entity_counts" "<!-- ARCH:ENTITY_COUNTS:START -->" "<!-- ARCH:ENTITY_COUNTS:END -->"
   inject_section "$RENDERED" "$ARCH_FILE" "arch_ui_location" "<!-- ARCH:UI_LOCATION:START -->" "<!-- ARCH:UI_LOCATION:END -->"
+
+  # CLAUDE.md
   inject_section "$RENDERED" "$CLAUDE_FILE" "claude_summary" "<!-- CLAUDE:SUMMARY:START -->" "<!-- CLAUDE:SUMMARY:END -->"
+  inject_section "$RENDERED" "$CLAUDE_FILE" "claude_ha_version" "<!-- CLAUDE:HA_VERSION:START -->" "<!-- CLAUDE:HA_VERSION:END -->"
+  inject_section "$RENDERED" "$CLAUDE_FILE" "claude_domain_table" "<!-- CLAUDE:DOMAIN_TABLE:START -->" "<!-- CLAUDE:DOMAIN_TABLE:END -->"
+  inject_section "$RENDERED" "$CLAUDE_FILE" "claude_ui_system" "<!-- CLAUDE:UI_SYSTEM:START -->" "<!-- CLAUDE:UI_SYSTEM:END -->"
 }
 
 update_readme_tree || true
-update_readme_snapshot || true
-update_architecture_snapshot || true
+update_doc_snapshot || true
 
 git add -A >/dev/null 2>&1 || true
 

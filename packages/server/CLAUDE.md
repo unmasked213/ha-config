@@ -1,6 +1,6 @@
 # CLAUDE - Server Domain
 
-> **Scope:** Git sync, frontend, server stats
+> **Scope:** Git sync, frontend, server stats, session cleanup
 > **Last reviewed:** 2026-02
 > **Read root CLAUDE.md first for session protocol and universal rules**
 
@@ -16,7 +16,8 @@ The server domain provides system-level infrastructure including git-based backu
 
 | File | Purpose |
 |------|---------|
-| `github_sync.yaml` | Shell command + sensor for git backup; shows toast notification and fires `notify_e_or_c` event on completion |
+| `claude_session_cleanup.yaml` | Daily automation (04:00) for tiered Claude Code session cleanup |
+| `github_sync.yaml` | Shell commands (git sync + session cleanup) + sensor for git backup; toast notification and `notify_e_or_c` event on completion |
 | `ha_snapshot_sensor.yaml` | Pre-formatted HA server snapshot for prompt manager inject button; static sections read from `sensor.ha_system_context` |
 | `frontend/advanced_camera_card_backend.yaml` | Camera main/secondary view selectors with mirror-previous automation |
 | `frontend/bubble_modules.yaml` | Event-driven storage for Bubble Card module config |
@@ -69,6 +70,14 @@ These sensors **only work on Home Assistant OS** with Supervisor. They will fail
 
 `frontend_tts_setup.yaml` defines helpers (input_text, input_select, input_boolean) but the `script.send_tts_message` is entirely commented out. The helpers are still live -- likely consumed by the UI directly.
 
+### Claude Session Cleanup
+
+`claude_session_cleanup.yaml` + `scripts/claude_session_cleanup.sh` -- tiered retention for Claude Code conversation history at `/data/home/.claude/projects/-config/`:
+- **Under 1MB:** deleted after 1 day (throwaway sessions)
+- **Over 1MB:** deleted after 3 years (substantive sessions)
+- Runs daily at 04:00 via `shell_command.claude_session_cleanup`
+- Can be triggered manually via Developer Tools > Services
+
 ### Key Entities
 
 - **Stat sensors:** `sensor.uptime_formatted`, `sensor.dashboard_complexity`, `sensor.entity_domain_breakdown`
@@ -119,6 +128,7 @@ Server stats shell commands require the Supervisor API and `mosquitto_sub`. Thes
 - browser_mod integration -- auto refresh
 - `jq` binary in container -- dashboard complexity parsing
 - Git sync shell script (`/config/scripts/git_sync.sh`, `/config/git_sync_result.txt`)
+- Claude session cleanup script (`/config/scripts/claude_session_cleanup.sh`, `/data/home/.claude/projects/-config/`)
 
 **This domain is consumed by:**
 - Dashboard cards (specs-card, phone-card) reference these stat sensors
@@ -143,6 +153,7 @@ None currently identified.
 
 | Date | Commit | Note |
 |------|--------|------|
+| 2026-04-12 | -- | Added claude_session_cleanup.yaml + shell script; tiered session retention (1d/<1MB, 3y/>1MB) |
 | 2026-02-24 | `b350903` | Restructured to 8-section format; all existing content preserved |
 
-*Last Updated: 2026-02-24*
+*Last Updated: 2026-04-12*

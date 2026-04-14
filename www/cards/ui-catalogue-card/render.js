@@ -1,6 +1,14 @@
 // ══════════════════════════════════════════════════════════════════════════════
 //  RENDER MODULE
-//  Main render, navigation, view switching, and demo area composition.
+//  Skeleton rendering, targeted DOM updates, and view composition.
+//
+//  Architecture:
+//    render()           — first call builds skeleton + binds shell listeners;
+//                         subsequent calls delegate to _fullUpdate().
+//    _updateCategory()  — tabs + sidebar + demo + info tooltip
+//    _updateComponent() — sidebar active state + demo
+//    _updateVariant()   — demo area only
+//    _updateSearch()    — tabs + sidebar + demo
 // ══════════════════════════════════════════════════════════════════════════════
 
 import {
@@ -11,6 +19,7 @@ import {
   CATEGORY_ORDER,
 } from "./registry.js";
 import { COMPONENT_USAGE } from "./usage.js";
+import { TOOLTIP_CONTENT, CATEGORY_TOOLTIPS } from "./constants.js";
 
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -25,33 +34,184 @@ function esc(str) {
 // ── Main Render ──────────────────────────────────────────────────────────────
 
 export function render() {
-  const categories = getCategories();
-  const { activeCategory, activeComponent, searchTerm } = this.state;
-
-  // Determine component list (search or category-based)
-  let components;
-  if (searchTerm) {
-    components = searchComponents(searchTerm);
-  } else {
-    components = getComponentsByCategory(activeCategory);
+  if (!this._skeletonRendered) {
+    this._renderSkeleton();
+    this._setupShellListeners();
+    this._skeletonRendered = true;
   }
+  this._fullUpdate();
+}
 
-  const active = getComponentById(activeComponent);
+
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+// Built once. Creates persistent container elements that survive interactions.
+
+export function _renderSkeleton() {
+  const categories = getCategories();
 
   this._rootEl.innerHTML = `
     ${this.renderHeader()}
     ${this.renderCategoryTabs(categories)}
     <div class="cat-body">
       <div class="cat-sidebar-backdrop" id="catSidebarBackdrop"></div>
-      ${this.renderSidebar(components)}
-      <div class="cat-demo">
-        ${active ? this.renderComponentView(active) : this.renderEmpty()}
-      </div>
+      <nav class="cat-sidebar" id="catSidebar" role="listbox" aria-label="Components"></nav>
+      <div class="cat-demo" id="catDemo"></div>
     </div>
   `;
 
-  this.setupEventListeners();
+  // Cache persistent element refs
+  this._tabsEl = this._rootEl.querySelector("#catTabs");
+  this._sidebarEl = this._rootEl.querySelector("#catSidebar");
+  this._demoEl = this._rootEl.querySelector("#catDemo");
+}
+
+
+// ── Full Update ──────────────────────────────────────────────────────────────
+// Refreshes all regions. Safe fallback for theme changes and initial render.
+
+export function _fullUpdate() {
+  if (!this._demoEl || !this._sidebarEl) return;
+  const { searchTerm, activeComponent } = this.state;
+
+  this._updateTabActive();
+
+  const components = searchTerm
+    ? searchComponents(searchTerm)
+    : getComponentsByCategory(this.state.activeCategory);
+  this._sidebarEl.innerHTML = this._renderSidebarItems(components);
+
+  this._clearDemoTimers();
+  const active = getComponentById(activeComponent);
+  this._demoEl.innerHTML = active ? this.renderComponentView(active) : this.renderEmpty();
+
+  this._updateInfoTooltip();
+  this._updateCatClearButton();
   this.setupDemoListeners();
+}
+
+
+// ── Targeted Update: Category ────────────────────────────────────────────────
+
+export function _updateCategory(cat) {
+  this.state.activeCategory = cat;
+  this.state.searchTerm = "";
+  this.state.activeVariant = null;
+
+  const comps = getComponentsByCategory(cat);
+  if (comps.length > 0) this.state.activeComponent = comps[0].id;
+
+  // Clear persistent search input
+  const search = this.shadow.getElementById("catSearch");
+  if (search) search.value = "";
+  const pill = this.shadow.querySelector(".cat-search-container .ui-input__pill");
+  if (pill) pill.classList.remove("has-value");
+  this._updateCatClearButton();
+
+  this._updateTabActive();
+  this._sidebarEl.innerHTML = this._renderSidebarItems(comps);
+
+  this._clearDemoTimers();
+  const active = getComponentById(this.state.activeComponent);
+  this._demoEl.innerHTML = active ? this.renderComponentView(active) : this.renderEmpty();
+
+  this._updateInfoTooltip();
+  this.setupDemoListeners();
+}
+
+
+// ── Targeted Update: Component ───────────────────────────────────────────────
+
+export function _updateComponent(componentId) {
+  this.state.activeComponent = componentId;
+  this.state.activeVariant = null;
+
+  // Toggle sidebar active class without rebuilding sidebar content
+  this._sidebarEl.querySelectorAll(".cat-sidebar__item").forEach(item => {
+    const isActive = item.dataset.component === componentId;
+    item.classList.toggle("is-active", isActive);
+    item.setAttribute("aria-selected", String(isActive));
+  });
+
+  this._clearDemoTimers();
+  const active = getComponentById(componentId);
+  this._demoEl.innerHTML = active ? this.renderComponentView(active) : this.renderEmpty();
+  this.setupDemoListeners();
+}
+
+
+// ── Targeted Update: Variant ─────────────────────────────────────────────────
+
+export function _updateVariant(variantName) {
+  this.state.activeVariant = variantName;
+
+  this._clearDemoTimers();
+  const active = getComponentById(this.state.activeComponent);
+  this._demoEl.innerHTML = active ? this.renderComponentView(active) : this.renderEmpty();
+  this.setupDemoListeners();
+}
+
+
+// ── Targeted Update: Search ──────────────────────────────────────────────────
+
+export function _updateSearch(term) {
+  this.state.searchTerm = term;
+
+  const components = term
+    ? searchComponents(term)
+    : getComponentsByCategory(this.state.activeCategory);
+
+  // Auto-select first result when actively searching;
+  // when clearing, reset if active component is not in the restored category
+  if (term && components.length > 0) {
+    this.state.activeComponent = components[0].id;
+    this.state.activeVariant = null;
+  } else if (!term && components.length > 0) {
+    const inCategory = components.some(c => c.id === this.state.activeComponent);
+    if (!inCategory) {
+      this.state.activeComponent = components[0].id;
+      this.state.activeVariant = null;
+    }
+  }
+
+  this._updateTabActive();
+  this._sidebarEl.innerHTML = this._renderSidebarItems(components);
+
+  this._clearDemoTimers();
+  const active = getComponentById(this.state.activeComponent);
+  this._demoEl.innerHTML = active ? this.renderComponentView(active) : this.renderEmpty();
+
+  this._updateInfoTooltip();
+  this.setupDemoListeners();
+}
+
+
+// ── Tab Active State ─────────────────────────────────────────────────────────
+
+export function _updateTabActive() {
+  const { activeCategory, searchTerm } = this.state;
+  if (!this._tabsEl) return;
+  this._tabsEl.querySelectorAll(".ui-tab-bar__tab").forEach(tab => {
+    tab.classList.toggle(
+      "ui-tab-bar__tab--active",
+      !searchTerm && tab.dataset.category === activeCategory
+    );
+  });
+}
+
+
+// ── Info Tooltip ─────────────────────────────────────────────────────────────
+
+export function _updateInfoTooltip() {
+  const headerInfo = this.shadow.querySelector(
+    '.ui-card-header ui-info-icon[data-tooltip-key="cardHeader"]'
+  );
+  if (headerInfo) {
+    const activeCat = this.state.activeCategory;
+    headerInfo.tooltipContent =
+      activeCat && CATEGORY_TOOLTIPS[activeCat]
+        ? CATEGORY_TOOLTIPS[activeCat]
+        : TOOLTIP_CONTENT.cardHeader;
+  }
 }
 
 
@@ -113,13 +273,21 @@ export function renderCategoryTabs(categories) {
 }
 
 
-// ── Sidebar ──────────────────────────────────────────────────────────────────
+// ── Sidebar Items ────────────────────────────────────────────────────────────
+// Returns inner HTML for the persistent sidebar container.
 
-export function renderSidebar(components) {
-  const { activeComponent, sidebarOpen, searchTerm } = this.state;
+export function _renderSidebarItems(components) {
+  const { activeComponent, searchTerm } = this.state;
 
-  let itemsHtml;
-  if (searchTerm && components.length > 0) {
+  if (components.length === 0) {
+    return `
+      <div style="padding: var(--ui-space-4); color: var(--ui-text-mute); font-size: var(--ui-font-s);">
+        No components found
+      </div>
+    `;
+  }
+
+  if (searchTerm) {
     // Group search results by category, sorted by canonical order
     const grouped = {};
     components.forEach(c => {
@@ -127,24 +295,13 @@ export function renderSidebar(components) {
       grouped[c.category].push(c);
     });
     const sortedCats = CATEGORY_ORDER.filter(c => grouped[c]);
-    itemsHtml = sortedCats.map(cat => `
+    return sortedCats.map(cat => `
       <div class="cat-sidebar__group-label">${esc(cat)}</div>
       ${grouped[cat].map(c => sidebarItem(c, activeComponent)).join("")}
     `).join("");
-  } else {
-    itemsHtml = components.map(c => sidebarItem(c, activeComponent)).join("");
   }
 
-  return `
-    <nav class="cat-sidebar${sidebarOpen ? " is-open" : ""}" id="catSidebar" role="listbox" aria-label="Components">
-      ${itemsHtml}
-      ${components.length === 0 ? `
-        <div style="padding: var(--ui-space-4); color: var(--ui-text-mute); font-size: var(--ui-font-s);">
-          No components found
-        </div>
-      ` : ""}
-    </nav>
-  `;
+  return components.map(c => sidebarItem(c, activeComponent)).join("");
 }
 
 function sidebarItem(c, activeId) {
@@ -188,7 +345,7 @@ export function renderComponentHeader(comp) {
       <div class="cat-comp-header__desc">${esc(comp.description)}</div>
       <div class="cat-comp-header__meta">
         <span class="cat-comp-header__source">${esc(comp.source)}</span>
-        ${comp.tags.length ? '<span class="cat-comp-header__sep">·</span>' : ''}
+        ${comp.tags.length ? '<span class="cat-comp-header__sep">\u00b7</span>' : ''}
         ${comp.tags.map(t => `<span class="cat-comp-header__tag">${esc(t)}</span>`).join("")}
       </div>
     </div>
