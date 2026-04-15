@@ -19,6 +19,7 @@ image/
 llmvision/
 media/
 tts/
+uploads/
 
 custom_components/
 !custom_components/prompt_manager/
@@ -26,17 +27,13 @@ custom_components/
 !custom_components/whatsapp_chat/
 !custom_components/whatsapp/
 
-docs/reference/car_incident_evidence_*/
-docs/reference/enhy/
-docs/reference/work-environment/
-docs/research/work/
-docs/research/personal_device/
-docs/research/enhy/
+docs/
 
 # --------------------------------------------
 # WWW rules — ignore subfolders except authored code
 # --------------------------------------------
 www/*/
+www/*.csv
 !www/base/
 !www/cards/
 
@@ -78,13 +75,28 @@ __pycache__/
 
 
 # --------------------------------------------
+# Ignore OS artifacts
+# --------------------------------------------
+.DS_Store
+Thumbs.db
+
+# --------------------------------------------
+# Ignore runtime/generated files
+# --------------------------------------------
+.ha_run.lock
+config_dir_tree.md
+tracked_files.txt
+tmp/*.log
+FAILURE_MODE_REPORT_*.md
+
+# --------------------------------------------
 # Ignore individual files
 # --------------------------------------------
 .activities_list.json
 .cursorignore
 .HA_VERSION
 .shopping_list.json
-go2rtc-1.9.4
+go2rtc-*
 home-assistant.log
 home-assistant*
 home-assistant_backup_default
@@ -96,6 +108,7 @@ scripts/.imap_env
 .claude/ha_token
 .git-credentials
 .mcp.json
+frigate_config_v2.yml
 theme_variables.md
 ui_conversation.md
 ui_research.md
