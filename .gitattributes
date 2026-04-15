@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Collapse auto-generated metric sections in GitHub diffs
+README.md linguist-generated
+ARCHITECTURE.md linguist-generated
+config_dir_tree.md linguist-generated
