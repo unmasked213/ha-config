@@ -1,8 +1,0 @@
-home-assistant_v2.db*
-*.db-shm
-*.db-wal
-*.log
-/.cloud/*
-/.media/*
-/secrets.yaml
-/secrets/**

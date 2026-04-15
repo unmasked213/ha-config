@@ -37,7 +37,7 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `scripts/doc_snapshot.j2` | Jinja2 template for README + ARCHITECTURE + CLAUDE metrics — rendered via HA template API during git sync |
 | `scripts/claude_dispatch.sh` | Addon-side dispatch watcher for Claude Code bridge |
 | `docs/projects/claude/bridge/claude-dispatch-protocol.md` | Dispatch protocol reference and claude.ai setup instructions |
-| `git_sync.sh` | Git synchronisation script |
+| `scripts/git_sync.sh` | Git sync, doc snapshot injection, commit & push |
 | `ui-lovelace.yaml` | Legacy dashboard config |
 | `example.yaml` | Reference/template file |
 
@@ -124,7 +124,7 @@ These paths are equivalent. `A:\packages\` and `/config/packages/` refer to the 
 
 - Branch pattern: `claude/<description>-<session-id>` (MUST match or push fails)
 - Commit format: `<Action> <component> <description>`
-- Sync script: `git_sync.sh`
+- Sync script: `scripts/git_sync.sh`
 
 ### Common Commands
 
