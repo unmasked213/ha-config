@@ -61,10 +61,10 @@
 | **Integrations** | {{ custom_cc }} custom · {{ states('sensor.integrations_frontend_count') | default('?') }} HACS · {{ states('sensor.addons_frontend_count') | default('?') }} add-ons · {{ states('sensor.lovelace_resources_count') | default('?') }} lovelace resources |
 | **Dashboard** | {{ views }} views · {{ '{:,}'.format(total_cards) }} cards ({{ '{:,}'.format(custom_cards) }} custom / {{ '{:,}'.format(standard_cards) }} standard) |
 | **Entities** | **{{ '{:,}'.format(runtime) }} total** ({{ unavailable }} unavailable) |
-| Sensors | {{ '{:,}'.format(state_attr(edb, 'sensors') | int(0)) }} sensor · {{ state_attr(edb, 'binary_sensors') | default('?') }} binary |
-| Automation | {{ state_attr(edb, 'automations') | default('?') }} automations · {{ state_attr(edb, 'scripts') | default('?') }} scripts · {{ state_attr(edb, 'scenes') | default('?') }} scenes |
-| Hardware | {{ state_attr(edb, 'lights') | default('?') }} lights · {{ state_attr(edb, 'switches') | default('?') }} switches · {{ state_attr(edb, 'covers') | default('?') }} covers · {{ state_attr(edb, 'media_players') | default('?') }} media players |
-| Other | {{ state_attr(edb, 'cameras') | default('?') }} cameras · {{ helpers }} helpers · {{ state_attr(edb, 'updates') | default('?') }} updates · {{ state_attr(edb, 'zones') | default('?') }} zones |
+| **Sensors** | {{ '{:,}'.format(state_attr(edb, 'sensors') | int(0)) }} sensor · {{ state_attr(edb, 'binary_sensors') | default('?') }} binary |
+| **Automation** | {{ state_attr(edb, 'automations') | default('?') }} automations · {{ state_attr(edb, 'scripts') | default('?') }} scripts · {{ state_attr(edb, 'scenes') | default('?') }} scenes |
+| **Hardware** | {{ state_attr(edb, 'lights') | default('?') }} lights · {{ state_attr(edb, 'switches') | default('?') }} switches · {{ state_attr(edb, 'covers') | default('?') }} covers · {{ state_attr(edb, 'media_players') | default('?') }} media players |
+| **Other** | {{ state_attr(edb, 'cameras') | default('?') }} cameras · {{ helpers }} helpers · {{ state_attr(edb, 'updates') | default('?') }} updates · {{ state_attr(edb, 'zones') | default('?') }} zones |
 
 *Auto-generated from live sensor data at each git sync. Last updated: {{ now().strftime('%Y-%m-%d %H:%M %Z') }}*
 <!-- /section:readme_snapshot -->

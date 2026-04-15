@@ -1,6 +1,10 @@
 # Home Assistant Configuration
 
-A production Home Assistant system organised into 14 package-scoped domains, each with localised AI context. `configuration.yaml` acts as a bootstrap layer - all substantive behaviour resides within the domain structure.
+This is the working config for a mature, architecture-driven Home Assistant system.
+
+System logic is organised into package-scoped domains, each with its own localised AI context. `configuration.yaml` acts only as a bootstrap layer, all substantive behaviour resides within the domain structure.
+
+The system operates at a non-trivial scale, with purposeful complexity and nuance. Metrics are derived from live sensor data.
 
 ---
 
@@ -55,18 +59,18 @@ A production Home Assistant system organised into 14 package-scoped domains, eac
 | | |
 |--|--|
 | **Platform** | HA Core 2026.4.2 · OS 17.2 · Supervisor 2026.04.0 |
-| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 564.8 / 938.2 GB disk |
+| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 564.9 / 938.2 GB disk |
 | **Storage** | SQLite · 7 day retention · 1.9 GB |
 | **Config** | 324,612 lines (49,954 YAML · 228,813 dashboard JSON) |
 | **Integrations** | 29 custom · 76 HACS · 16 add-ons · 47 lovelace resources |
 | **Dashboard** | 109 views · 9,405 cards (5,164 custom / 4,241 standard) |
 | **Entities** | **3,009 total** (144 unavailable) |
-| Sensors | 1,408 sensor · 175 binary |
-| Automation | 86 automations · 68 scripts · 147 scenes |
-| Hardware | 45 lights · 200 switches · 10 covers · 6 media players |
-| Other | 29 cameras · 346 helpers · 121 updates · 37 zones |
+| **Sensors** | 1,408 sensor · 175 binary |
+| **Automation** | 86 automations · 68 scripts · 147 scenes |
+| **Hardware** | 45 lights · 200 switches · 10 covers · 6 media players |
+| **Other** | 29 cameras · 346 helpers · 121 updates · 37 zones |
 
-*Auto-generated from live sensor data at each git sync. Last updated: 2026-04-15 14:35 BST*
+*Auto-generated from live sensor data at each git sync. Last updated: 2026-04-15 14:36 BST*
 <!-- SNAPSHOT:END -->
 
 ---
