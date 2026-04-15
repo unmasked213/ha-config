@@ -3223,3 +3223,68 @@ show_ui_toast:
         \ showToast({\n    message: {{ msg | tojson }},\n    icon: {{ icn | tojson
         }},\n    color: {{ clr | tojson }},\n    duration: Number({{ dur }})\n  });\n})();\n"
       user_id: '{{ user_id | default(''person.apple'') }}'
+'1704345695698':
+  alias: Structure - Curtains - Open
+  sequence:
+  - alias: Open curtains
+    if:
+    - condition: template
+      value_template: '{{ is_state(''input_boolean.curtain_quietdrift_mode'', ''on'')
+        }}'
+      alias: 'Check if quiet-mode is: ON'
+    then:
+    - service: rest_command.curtain_sbapi_setposition_quiet
+      data:
+        position: 1
+      alias: 'Open curtains using mode: QUIETDRIFT'
+    - repeat:
+        count: 6
+        sequence:
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 30
+            milliseconds: 0
+        - service: homeassistant.update_entity
+          data: {}
+          target:
+            entity_id: sensor.curtain_position
+    else:
+    - if:
+      - condition: template
+        value_template: '{{ is_state(''input_boolean.curtain_quietdrift_mode'', ''off'')
+          }}'
+        alias: 'Check if quiet-mode is: OFF'
+      then:
+      - service: cover.open_cover
+        metadata: {}
+        data: {}
+        target:
+          entity_id: cover.curtain_3_a659
+        alias: 'Open curtains using mode: NORMAL'
+  mode: single
+'1704455948337':
+  alias: Structure - Curtains - Close
+  sequence:
+  - delay: 00:00:02
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.curtain_quietdrift_mode
+        state: 'on'
+      sequence:
+      - data:
+          position: 99
+        action: rest_command.curtain_sbapi_setposition_quiet
+      - repeat:
+          count: 6
+          sequence:
+          - delay: 00:00:30
+          - target:
+              entity_id: sensor.curtain_position
+            action: homeassistant.update_entity
+    default:
+    - target:
+        entity_id: cover.curtain_3_a659
+      action: cover.close_cover
+  mode: single
