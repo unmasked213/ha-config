@@ -13,6 +13,7 @@ addons/*/
 !addons/ha-config-ai-agent/
 !addons/whatsapp_addon/
 custom_icons/
+blueprints/
 deps/
 downloads/
 image/
@@ -86,7 +87,7 @@ Thumbs.db
 .ha_run.lock
 config_dir_tree.md
 tracked_files.txt
-tmp/*.log
+tmp/
 FAILURE_MODE_REPORT_*.md
 
 # --------------------------------------------
@@ -122,4 +123,5 @@ zigbee.db
 zigbee.db-shm
 zigbee.db-wal
 git_sync_result.txt
+example.yaml
 *.log

@@ -6,7 +6,7 @@
 **Last Updated:** 2026-04-15
 **Home Assistant Version:** 2026.4.2 | OS 17.2 | Supervisor 2026.04.0
 
-This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~3,009 runtime entities (144 unavailable, 4.8%), ~324,611 lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
+This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~3,009 runtime entities (144 unavailable, 4.8%), ~324,612 lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
 <!-- ARCH:HEADER:END -->
 
 ---
@@ -664,7 +664,7 @@ Previously resolved items (startup recovery, division-by-zero guards, namespace 
 - Dashboard-referenced: ~48% (52% unreferenced — many are legitimate helpers, stats sensors, or internal)
 - Domain breakdown: 1408 sensors, 175 binary, 86 automations, 68 scripts, 147 scenes, 45 lights, 200 switches, 29 cameras, 346 helpers
 
-*Auto-generated from live sensor data. Last sync: 2026-04-15 09:17 BST*
+*Auto-generated from live sensor data. Last sync: 2026-04-15 14:14 BST*
 <!-- ARCH:ENTITY_COUNTS:END -->
 
 ---

@@ -38,8 +38,6 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `scripts/claude_dispatch.sh` | Addon-side dispatch watcher for Claude Code bridge |
 | `docs/projects/claude/bridge/claude-dispatch-protocol.md` | Dispatch protocol reference and claude.ai setup instructions |
 | `git_sync.sh` | Git synchronisation script |
-| `extract_js.py` | JavaScript extraction utility |
-| `ip_bans.yaml` | IP ban list |
 | `ui-lovelace.yaml` | Legacy dashboard config |
 | `example.yaml` | Reference/template file |
 

@@ -39,7 +39,7 @@ EXCLUDE_DIRS: frozenset[str] = frozenset({
 
 # Self-referential files to skip at root
 SELF_FILES: frozenset[str] = frozenset({
-    "ha_dir_tree.py", "dir_tree.py", "config_dir_tree.md",
+    "ha_dir_tree.py", "config_dir_tree.md",
 })
 
 # Extensions to skip everywhere (runtime/binary)
