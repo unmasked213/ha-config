@@ -1,10 +1,10 @@
 # Home Assistant Configuration
 
-This is the working config for a mature, architecture-driven Home Assistant system.
+This is the working configuration for a mature, architecture-driven Home Assistant system.
 
-System logic is organised into package-scoped domains, each with its own localised AI context. `configuration.yaml` acts only as a bootstrap layer, all substantive behaviour resides within the domain structure.
+System logic is organised into package-scoped domains, each with its own localised AI context. `configuration.yaml` serves only as a bootstrap layer. All substantive behaviour resides within the domain structure.
 
-The system operates at a non-trivial scale, with purposeful complexity and nuance. Metrics are derived from live sensor data.
+The system operates at a non-trivial scale, with deliberate complexity and nuance. Metrics are derived from live sensor data.
 
 ---
 
@@ -59,7 +59,7 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 | | |
 |--|--|
 | **Platform** | HA Core 2026.4.2 · OS 17.2 · Supervisor 2026.04.0 |
-| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 559.7 / 938.2 GB disk |
+| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 560.3 / 938.2 GB disk |
 | **Storage** | SQLite · 7 day retention · 1.9 GB |
 | **Config** | 324,612 lines (49,954 YAML · 228,813 dashboard JSON) |
 | **Integrations** | 29 custom · 76 HACS · 16 add-ons · 47 lovelace resources |
@@ -81,7 +81,7 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 |----------|---------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data flows, entity relationships |
 | [CLAUDE.md](CLAUDE.md) | AI assistant context, session protocol, safety rails |
-| `packages/*/CLAUDE.md` | Domain-specific rules (all 13 domains) |
+| `packages/*/CLAUDE.md` | Domain-specific rules (all domains) |
 | [www/base/README.md](www/base/README.md) | UI design system project map |
 | [www/base/docs/](www/base/docs/) | UI spec, authoring guide, AI briefing |
 
