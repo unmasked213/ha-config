@@ -59,7 +59,7 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 | | |
 |--|--|
 | **Platform** | HA Core 2026.4.2 · OS 17.2 · Supervisor 2026.04.0 |
-| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 559.5 / 938.2 GB disk |
+| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 559.7 / 938.2 GB disk |
 | **Storage** | SQLite · 7 day retention · 1.9 GB |
 | **Config** | 324,612 lines (49,954 YAML · 228,813 dashboard JSON) |
 | **Integrations** | 29 custom · 76 HACS · 16 add-ons · 47 lovelace resources |
@@ -85,8 +85,3 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 | [www/base/README.md](www/base/README.md) | UI design system project map |
 | [www/base/docs/](www/base/docs/) | UI spec, authoring guide, AI briefing |
 
----
-
-## Development
-
-Developed with [Claude Code](https://claude.ai/claude-code) across PC (Desktop, Samba) and mobile (HA addon). The `.claude/` directory provides cross-device session persistence.
