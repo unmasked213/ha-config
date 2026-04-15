@@ -57,7 +57,7 @@ Each domain has its own `CLAUDE.md` at `packages/<domain>/CLAUDE.md`, auto-loade
 | Domain | Files | Purpose | Key Entry Points |
 |--------|-------|---------|-----------------|
 | **ai** | 8 | AI text/image generation, prompts, Claude bridge + Code Dispatch, Alexa TTS | `ai_main.yaml`, `claude_bridge.yaml`, `prompt_manager.yaml` |
-| **communication** | 6 | WhatsApp messaging, notifications, transcript pipeline | `whatsapp_config.yaml`, `alerts.yaml`, `transcript_pipeline.yaml` |
+| **communication** | 7 | WhatsApp messaging, notifications, transcript pipeline | `whatsapp_config.yaml`, `alerts.yaml`, `transcript_pipeline.yaml` |
 | **dashboard** | 1 | Report viewer backend sensors | `report_viewer.yaml` |
 | **device** | 9 | Cameras, covers/blinds, PC state, pet devices, Govee, Sonos | `cameras.yaml`, `curtains.yaml`, `pc.yaml` |
 | **health** | 2 | Withings body composition metrics (C and E) | `health.yaml`, `weight.yaml` |
