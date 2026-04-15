@@ -52,8 +52,8 @@
 <!-- section:readme_snapshot -->
 ## Key Metrics
 
-| | |
-|--|--|
+| Metric | Value |
+|--------|-------|
 | **Platform** | HA Core {{ core_ver }} · OS {{ os_ver }} · Supervisor {{ sup_ver }} |
 | **Hardware** | {{ state_attr('sensor.cpu_speed', 'brand') | default('?') }} · {{ states('sensor.cpu_thread_count') | default('?') }} threads · {{ states('sensor.memory_total_gb') | default('?') }} GB RAM · {{ states('sensor.disk_use') | default('?') }} / {{ states('sensor.home_assistant_host_disk_total') | default('?') }} GB disk |
 | **Storage** | {{ states(dbc) | default('?') }} · {{ state_attr(dbc, 'purge_keep_days') | default('?') }} day retention · {{ (state_attr(sdb, 'config_db_mb') | float(0) / 1024) | round(1) }} GB |
