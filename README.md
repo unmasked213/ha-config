@@ -56,10 +56,10 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 <!-- SNAPSHOT:START -->
 ## Key Metrics
 
-| Metric | Value |
-|--------|-------|
+| | |
+|--|--|
 | **Platform** | HA Core 2026.4.2 · OS 17.2 · Supervisor 2026.04.0 |
-| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 558.8 / 938.2 GB disk |
+| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 559.5 / 938.2 GB disk |
 | **Storage** | SQLite · 7 day retention · 1.9 GB |
 | **Config** | 324,612 lines (49,954 YAML · 228,813 dashboard JSON) |
 | **Integrations** | 29 custom · 76 HACS · 16 add-ons · 47 lovelace resources |
@@ -70,7 +70,7 @@ The system operates at a non-trivial scale, with purposeful complexity and nuanc
 | **Hardware** | 45 lights · 200 switches · 10 covers · 6 media players |
 | **Other** | 29 cameras · 346 helpers · 121 updates · 37 zones |
 
-*Auto-generated from live sensor data at each git sync. Last updated: 2026-04-15 14:39 BST*
+*Sensor-derived · Synced 15 Apr '26*
 <!-- SNAPSHOT:END -->
 
 ---
