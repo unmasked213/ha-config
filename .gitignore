@@ -109,6 +109,10 @@ scripts/.imap_env
 .git-credentials
 .mcp.json
 frigate_config_v2.yml
+packages/communication/whatsapp_private.yaml
+packages/communication/whatsapp_config.yaml
+packages/communication/c_whatsapp_auto_reply.yaml
+packages/network/ip_and_mac_address_mapping.yaml
 theme_variables.md
 ui_conversation.md
 ui_research.md
