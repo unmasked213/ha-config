@@ -3,36 +3,37 @@
 ## Summary
 
 <!-- CLAUDE:SUMMARY:START -->
-Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~3,009 runtime entities across 14 domain packages, 29 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
+Home Assistant configuration for a two-person household (Cam and Enhy), running on HA OS. The system manages ~3,003 runtime entities across 14 domain packages, 29 custom integrations, a token-driven UI design system, and Python automations. AI-assisted development uses cross-device session persistence (PC via Claude Desktop, tablet/phone via HA addon).
 <!-- CLAUDE:SUMMARY:END -->
 
 ---
 
 ## Structure
 
+<!-- CLAUDE:STRUCTURE:START -->
 | Path | Description |
 |------|-------------|
 | `configuration.yaml` | Core HA loader — minimal, delegates to packages via `!include_dir_named` |
 | `automations.yaml` | Root automations (~35 top-level, ~110 with nested aliases) |
-| `scripts.yaml` | 48 reusable service-call sequences (68 in registry incl. UI/integration-created) |
+| `scripts.yaml` | Reusable service-call sequences (68 in registry incl. UI/integration-created) |
 | `scenes.yaml` | Named scene snapshots |
 | `frigate.yml` | Frigate NVR config (C11 camera, MQTT, go2rtc) |
 | `secrets.yaml` | Credentials store (gitignored, `!secret` references only) |
-| `packages/` | **14 domain packages** — primary config (62 YAML files, ~10.9K lines) |
-| `custom_components/` | **28 installed integrations** (never modify directly) |
+| `packages/` | **14 domain packages** — primary config (64 YAML files, ~12.1K lines) |
+| `custom_components/` | **29 installed integrations** (never modify directly) |
 | `www/` | Web assets — UI design system (`base/`), custom cards (`cards/`), community cards, media |
 | `system_context.yaml` | Single source of truth for static system context (read by pyscript → `sensor.ha_system_context`) |
-| `pyscript/` | Python automations (12 files) — CV detection, calendar ops, logging, system context, action extraction |
+| `pyscript/` | Python automations (14 files) — CV detection, calendar ops, logging, system context, action extraction |
 | `themes/` | Theme definitions — Material You (active), Catppuccin, VisionOS, Olympus (legacy) |
 | `ui/` | Dashboard config — lovelace resources, views, templates, extra modules |
-| `.storage/` | HA internal storage — dashboards (JSON), auth, registries (~32 MB, never modify) |
+| `.storage/` | HA internal storage — dashboards (JSON), auth, registries (never modify) |
 | `.claude/` | AI session management — session.md, rules/, hooks/, mcp.json |
 | `docs/` | Reports (config-intel, failure-mode, meta-insights, shared-ui-audit), reference docs, and claude.ai skill backups |
 | `docs/projects/claude/skills/CLAUDE.md` | Skill file quality gate — auto-triggers via `.claude/rules/skills.md` |
 | `addons/` | Local HA add-ons (ha-config-ai-agent) |
 | `ai_adversarial_system/` | Same-model collaboration pattern documentation and workspace |
 | `media/` | AI-generated images, recordings, transcripts |
-| `ARCHITECTURE.md` | System architecture documentation (v10.6) |
+| `ARCHITECTURE.md` | System architecture documentation |
 | `README.md` | Quick reference with auto-generated metrics (snapshot injected by `git_sync.sh` at commit time) |
 | `scripts/doc_snapshot.j2` | Jinja2 template for README + ARCHITECTURE + CLAUDE metrics — rendered via HA template API during git sync |
 | `scripts/claude_dispatch.sh` | Addon-side dispatch watcher for Claude Code bridge |
@@ -42,6 +43,7 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 | `example.yaml` | Reference/template file |
 
 **Directories not listed above** (runtime/generated, not manually edited): `appdaemon/`, `bin/`, `blueprints/`, `custom_icons/`, `deps/`, `downloads/`, `go2rtc-*/`, `llmvision/`, `python_scripts/`, `scripts/`, `templates/`, `tmp/`, `tts/`, `uploads/`
+<!-- CLAUDE:STRUCTURE:END -->
 
 ---
 
@@ -115,7 +117,7 @@ These paths are equivalent. `A:\packages\` and `/config/packages/` refer to the 
 ### Setup
 
 <!-- CLAUDE:HA_VERSION:START -->
-- **HA version:** 2026.4.2 on HA OS 17.2
+- **HA version:** 2026.4.3 on HA OS 17.2
 <!-- CLAUDE:HA_VERSION:END -->
 - **No CI/CD pipeline** — local development only
 - **IDE config:** `.vscode/`, `.cursor/` present
@@ -141,7 +143,7 @@ haq call <domain> <service> <entity>  # Call a service
 | Environment | MCP tools | haq CLI | Config location |
 |-------------|-----------|---------|-----------------|
 | **Desktop (Code tab)** | 26 tools via Nabu Casa | No | `~/.claude.json` → `https://…nabu.casa/api/mcp` (type: http) |
-| **HA add-on** | 26 tools via Supervisor | Yes | `.claude/mcp.json` → `supervisor/core/api/mcp/sse` (type: sse) |
+| **HA add-on** | 26 tools via Supervisor | Yes | `.claude/mcp.json` → stdio proxy (`mcp-proxy.py`) → `supervisor/core/api/mcp` |
 | **Desktop (Chat tab)** | None | No | MCP not supported in Chat mode |
 
 > **Note:** The Supervisor CLI `ha` is a separate tool (system management). `haq` avoids conflicting with it.
@@ -280,6 +282,8 @@ Preserve decorative comment boxes when editing:
 - **WhatsApp:** `input_*.whatsapp_c_<feature>`
 - **Person prefixes:** C = Cam, E = Enhy
 
+> Full naming convention table (17 patterns): [ARCHITECTURE.md Section 2](ARCHITECTURE.md#2-naming-conventions)
+
 ### Domain Documentation
 
 Domain rules auto-load via `.claude/rules/` when touching files in these paths. All 14 package domains have `CLAUDE.md` at `packages/<domain>/CLAUDE.md`, auto-triggered on `packages/<domain>/**`:
@@ -295,16 +299,9 @@ For discussions outside these paths, read the relevant CLAUDE.md manually.
 ## TODOs & Gaps
 
 - **147 unavailable entities** (4.9% of runtime) — trend: 979→751→152→251→173→281→154→**147** (improving)
-- **Floor 01 raw sensor coupling** — bypasses occupancy abstraction, fragile to sensor renames
-- **Health domain duplicate sensors** — `health.yaml` and `weight.yaml` define overlapping sensors; last-loaded wins
-- ~~**Health domain division-by-zero**~~ — resolved 2026-03-05: availability guards added
-- ~~**No startup recovery on Floor 01**~~ — resolved 2026-03-05: both floors now have startup triggers
-- **Confidence tier unconsumed** — 6-level presence scoring, zero automation readers
-- **Room transition events fire into void** — `floor02_travel_tracking.yaml` events have no listeners
-- **Mixed automation alias styles** — ~55% compliant with naming convention
-- **Dashboard JS residual rgba()** — 73.7% var-vs-rgba token adoption (stable)
-- **tesco_sensors.yaml misnomer** — actually tracks Sainsbury's Local, not Tesco
 - **No automated test suite** — validation is manual (HA logs, traces, template tester)
+
+> Full technical debt inventory (15+ items): [ARCHITECTURE.md Section 9](ARCHITECTURE.md#9-technical-debt-and-legacy)
 
 ---
 

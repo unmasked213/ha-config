@@ -8,7 +8,7 @@
                         arch_www_base, arch_www_cards, arch_pyscript,
                         arch_themes, arch_entity_counts, arch_ui_location
       CLAUDE.md     — claude_summary, claude_ha_version, claude_domain_table,
-                        claude_ui_system
+                        claude_ui_system, claude_structure
 
     Each section is delimited by <!-- section:NAME --> sentinels.
     git_sync.sh extracts and injects each block into its target file.
@@ -138,3 +138,37 @@ Home Assistant configuration for a two-person household (Cam and Enhy), running 
 <!-- section:claude_ui_system -->
 Token-driven design system with {{ base_files }} JS files. `foundation.js` is **READ-ONLY** (single source of truth for tokens). Governed by `www/base/docs/CLAUDE.md`.
 <!-- /section:claude_ui_system -->
+<!-- section:claude_structure -->
+| Path | Description |
+|------|-------------|
+| `configuration.yaml` | Core HA loader — minimal, delegates to packages via `!include_dir_named` |
+| `automations.yaml` | Root automations (~35 top-level, ~110 with nested aliases) |
+| `scripts.yaml` | Reusable service-call sequences ({{ state_attr(edb, 'scripts') | default('?') }} in registry incl. UI/integration-created) |
+| `scenes.yaml` | Named scene snapshots |
+| `frigate.yml` | Frigate NVR config (C11 camera, MQTT, go2rtc) |
+| `secrets.yaml` | Credentials store (gitignored, `!secret` references only) |
+| `packages/` | **14 domain packages** — primary config ({{ pkg_files }} YAML files, ~{{ (pkg_lines / 1000) | round(1) }}K lines) |
+| `custom_components/` | **{{ custom_cc }} installed integrations** (never modify directly) |
+| `www/` | Web assets — UI design system (`base/`), custom cards (`cards/`), community cards, media |
+| `system_context.yaml` | Single source of truth for static system context (read by pyscript → `sensor.ha_system_context`) |
+| `pyscript/` | Python automations ({{ py_files }} files) — CV detection, calendar ops, logging, system context, action extraction |
+| `themes/` | Theme definitions — Material You (active), Catppuccin, VisionOS, Olympus (legacy) |
+| `ui/` | Dashboard config — lovelace resources, views, templates, extra modules |
+| `.storage/` | HA internal storage — dashboards (JSON), auth, registries (never modify) |
+| `.claude/` | AI session management — session.md, rules/, hooks/, mcp.json |
+| `docs/` | Reports (config-intel, failure-mode, meta-insights, shared-ui-audit), reference docs, and claude.ai skill backups |
+| `docs/projects/claude/skills/CLAUDE.md` | Skill file quality gate — auto-triggers via `.claude/rules/skills.md` |
+| `addons/` | Local HA add-ons (ha-config-ai-agent) |
+| `ai_adversarial_system/` | Same-model collaboration pattern documentation and workspace |
+| `media/` | AI-generated images, recordings, transcripts |
+| `ARCHITECTURE.md` | System architecture documentation |
+| `README.md` | Quick reference with auto-generated metrics (snapshot injected by `git_sync.sh` at commit time) |
+| `scripts/doc_snapshot.j2` | Jinja2 template for README + ARCHITECTURE + CLAUDE metrics — rendered via HA template API during git sync |
+| `scripts/claude_dispatch.sh` | Addon-side dispatch watcher for Claude Code bridge |
+| `docs/projects/claude/bridge/claude-dispatch-protocol.md` | Dispatch protocol reference and claude.ai setup instructions |
+| `scripts/git_sync.sh` | Git sync, doc snapshot injection, commit & push |
+| `ui-lovelace.yaml` | Legacy dashboard config |
+| `example.yaml` | Reference/template file |
+
+**Directories not listed above** (runtime/generated, not manually edited): `appdaemon/`, `bin/`, `blueprints/`, `custom_icons/`, `deps/`, `downloads/`, `go2rtc-*/`, `llmvision/`, `python_scripts/`, `scripts/`, `templates/`, `tmp/`, `tts/`, `uploads/`
+<!-- /section:claude_structure -->

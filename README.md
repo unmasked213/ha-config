@@ -58,19 +58,19 @@ The system operates at a non-trivial scale, with deliberate complexity and nuanc
 
 | | |
 |--|--|
-| **Platform** | HA Core 2026.4.2 · OS 17.2 · Supervisor 2026.04.0 |
-| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 560.3 / 938.2 GB disk |
-| **Storage** | SQLite · 7 day retention · 1.9 GB |
-| **Config** | 324,612 lines (49,954 YAML · 228,813 dashboard JSON) |
+| **Platform** | HA Core 2026.4.3 · OS 17.2 · Supervisor 2026.04.0 |
+| **Hardware** | 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz · 8 threads · 32.0 GB RAM · 208.4 / 938.2 GB disk |
+| **Storage** | SQLite · 7 day retention · 2.0 GB |
+| **Config** | 324,802 lines (49,954 YAML · 228,949 dashboard JSON) |
 | **Integrations** | 29 custom · 76 HACS · 16 add-ons · 47 lovelace resources |
-| **Dashboard** | 109 views · 9,405 cards (5,164 custom / 4,241 standard) |
-| **Entities** | **3,009 total** (144 unavailable) |
-| **Sensors** | 1,408 sensor · 175 binary |
+| **Dashboard** | 109 views · 9,407 cards (5,166 custom / 4,241 standard) |
+| **Entities** | **3,003 total** (133 unavailable) |
+| **Sensors** | 1,402 sensor · 175 binary |
 | **Automation** | 86 automations · 68 scripts · 147 scenes |
 | **Hardware** | 45 lights · 200 switches · 10 covers · 6 media players |
 | **Other** | 29 cameras · 346 helpers · 121 updates · 37 zones |
 
-*Sensor-derived · Synced 15 Apr '26*
+*Sensor-derived · Synced 18 Apr '26*
 <!-- SNAPSHOT:END -->
 
 ---

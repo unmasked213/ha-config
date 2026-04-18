@@ -3,10 +3,10 @@
 
 
 <!-- ARCH:HEADER:START -->
-**Last Updated:** 2026-04-15
-**Home Assistant Version:** 2026.4.2 | OS 17.2 | Supervisor 2026.04.0
+**Last Updated:** 2026-04-18
+**Home Assistant Version:** 2026.4.3 | OS 17.2 | Supervisor 2026.04.0
 
-This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~3,009 runtime entities (144 unavailable, 4.8%), ~324,612 lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
+This is a mature, intentionally architected Home Assistant configuration for a two-person household. Scale, abstraction, and layering are deliberate design choices. The system contains ~3,003 runtime entities (133 unavailable, 4.4%), ~324,802 lines of configuration, a token-driven UI design system, and AI-powered WhatsApp integration across 14 package domains.
 <!-- ARCH:HEADER:END -->
 
 ---
@@ -134,7 +134,7 @@ This is a mature, intentionally architected Home Assistant configuration for a t
 │   │        number-input, radios, screen-border, skeletons, templates,
 │   │        templates.test, toasts, toggles, tooltips, utilities]
 <!-- ARCH:WWW_CARDS:START -->
-│   ├── cards/                         # Custom card implementations (34 JS files, 24,043 lines)
+│   ├── cards/                         # Custom card implementations (35 JS files, 24,820 lines)
 <!-- ARCH:WWW_CARDS:END -->
 │   │   ├── prompt-manager/            # Prompt Manager card (modular, 9 files)
 │   │   ├── priority-matrix-card/      # Priority matrix card (modular, 5 files)
@@ -660,11 +660,11 @@ Previously resolved items (startup recovery, division-by-zero guards, namespace 
 
 <!-- ARCH:ENTITY_COUNTS:START -->
 **Entity counts:**
-- Runtime: 3,009 | Unavailable: 144 (4.8%)
+- Runtime: 3,003 | Unavailable: 133 (4.4%)
 - Dashboard-referenced: ~48% (52% unreferenced — many are legitimate helpers, stats sensors, or internal)
-- Domain breakdown: 1408 sensors, 175 binary, 86 automations, 68 scripts, 147 scenes, 45 lights, 200 switches, 29 cameras, 346 helpers
+- Domain breakdown: 1402 sensors, 175 binary, 86 automations, 68 scripts, 147 scenes, 45 lights, 200 switches, 29 cameras, 346 helpers
 
-*Auto-generated from live sensor data. Last sync: 2026-04-15 14:53 BST*
+*Auto-generated from live sensor data. Last sync: 2026-04-18 22:54 BST*
 <!-- ARCH:ENTITY_COUNTS:END -->
 
 ---

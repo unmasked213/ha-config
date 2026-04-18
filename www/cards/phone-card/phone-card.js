@@ -30,7 +30,16 @@ class PhoneCard extends HTMLElement {
     this._config = {
       card_title: config.card_title || "Phone",
       ringer_entity: config.ringer_entity || "sensor.phone_c_ringer_mode",
-      flashlight_entity: config.flashlight_entity || "binary_sensor.phone_c_flashlight"
+      flashlight_entity: config.flashlight_entity || "binary_sensor.phone_c_flashlight",
+      location_entity: config.location_entity || "person.cam",
+      home_zone: config.home_zone || "zone.home",
+      places_entity: config.places_entity || "sensor.location_cam_phone",
+      status_entities: Object.assign({
+        status: "sensor.location_status_display",
+        distance: "sensor.location_distance_display",
+        eta: "sensor.location_eta_display",
+        updated: "sensor.location_updated_display"
+      }, config.status_entities || {})
     };
 
     if (this._hass) {
@@ -58,6 +67,7 @@ class PhoneCard extends HTMLElement {
 
   disconnectedCallback() {
     this._isRendered = false;
+    this._mapEl = null;
     document.removeEventListener("click", this._boundHandleOutsideClick);
   }
 
@@ -123,6 +133,155 @@ class PhoneCard extends HTMLElement {
     if (torchBtn) {
       torchBtn.classList.toggle("is-selected", this.isFlashlightOn());
     }
+
+    // Keep ha-map's hass reference fresh so the marker moves without re-render
+    if (this._mapEl) this._mapEl.hass = this._hass;
+
+    // Update status strip text
+    this.updateStatusStrip();
+
+    // Update location overlay label
+    this.updateLocationLabel();
+  }
+
+  getStatusText(entityId) {
+    const entity = this._hass?.states?.[entityId];
+    const state = entity?.state;
+    if (!state || state === "unknown" || state === "unavailable") return "—";
+    return state;
+  }
+
+  updateStatusStrip() {
+    const root = this.shadowRoot;
+    const cfg = this._config.status_entities;
+    const map = {
+      status: cfg.status,
+      distance: cfg.distance,
+      eta: cfg.eta,
+      updated: cfg.updated
+    };
+    Object.keys(map).forEach(key => {
+      const el = root.querySelector(`.phone-card__status-value[data-key="${key}"]`);
+      if (el) el.textContent = this.getStatusText(map[key]);
+    });
+  }
+
+  async mountMap() {
+    const slot = this.shadowRoot.querySelector("#mapSlot");
+    if (!slot || this._mapEl) return;
+
+    // ha-map is lazy-loaded by HA — only registered when a map card is
+    // present. On dashboards without one, we trigger the bundle by
+    // creating a throwaway hui-map-card via the official card-helpers API.
+    if (!customElements.get("ha-map")) {
+      try {
+        const helpers = await window.loadCardHelpers();
+        await helpers.createCardElement({
+          type: "map",
+          entities: [this._config.home_zone]
+        });
+      } catch (e) {
+        console.warn("[phone-card] Failed to bootstrap ha-map loader:", e);
+      }
+    }
+
+    // Give the lazy import a short deadline; if it never resolves,
+    // surface a visible fallback instead of hanging forever.
+    const deadline = new Promise((_, rej) => setTimeout(() => rej(new Error("ha-map load timeout")), 5000));
+    try {
+      await Promise.race([customElements.whenDefined("ha-map"), deadline]);
+    } catch (e) {
+      slot.textContent = "Map unavailable";
+      slot.style.display = "flex";
+      slot.style.alignItems = "center";
+      slot.style.justifyContent = "center";
+      slot.style.color = "var(--ui-text-mute)";
+      console.error("[phone-card]", e);
+      return;
+    }
+
+    const map = document.createElement("ha-map");
+    map.hass = this._hass;
+    map.entities = [this._config.location_entity, this._config.home_zone];
+    map.zoom = 15;
+    map.autoFit = true;
+    map.fitZones = true;
+    map.interactiveZones = false;
+    map.renderPassive = false;
+
+    slot.appendChild(map);
+    this._mapEl = map;
+
+    this.injectMapShadowStyles(map);
+  }
+
+  injectMapShadowStyles(map) {
+    // ha-map's shadow root hosts the Leaflet container. Inject our
+    // styles directly — CSS custom properties inherit through shadow
+    // boundaries so our --ui-* and --phone-card-map-* tokens resolve.
+    const apply = () => {
+      if (!map.shadowRoot || map._phoneCardStyled) return;
+      const styleEl = document.createElement("style");
+      styleEl.textContent = `
+        .leaflet-control-zoom,
+        .leaflet-control-attribution,
+        mwc-icon-button {
+          display: none !important;
+        }
+        .leaflet-tile {
+          filter: var(--phone-card-map-filter, none) !important;
+          transition: filter 0.3s ease;
+        }
+        .leaflet-container {
+          background: var(--ui-elevated-1) !important;
+        }
+        .leaflet-overlay-pane path {
+          stroke: var(--ui-accent, rgba(35, 165, 245, 1)) !important;
+          stroke-opacity: 0.8 !important;
+          fill: var(--ui-accent, rgba(35, 165, 245, 1)) !important;
+          fill-opacity: 0.12 !important;
+        }
+      `;
+      map.shadowRoot.appendChild(styleEl);
+      map._phoneCardStyled = true;
+    };
+    apply();
+    if (!map._phoneCardStyled) requestAnimationFrame(apply);
+  }
+
+  getLocationLabel() {
+    const entity = this._hass?.states?.[this._config.places_entity];
+    if (!entity || entity.state === "unknown" || entity.state === "unavailable") {
+      return { name: "—", area: "" };
+    }
+    const a = entity.attributes || {};
+    const abbreviate = s => s
+      ?.replace(/\bAvenue\b/i, "Av")
+      ?.replace(/\bRoad\b/i, "Rd")
+      ?.replace(/\bStreet\b/i, "St")
+      ?.replace(/\bLane\b/i, "Ln")
+      ?.replace(/\bDrive\b/i, "Dr");
+    const name = abbreviate(a.street) || a.place_name || entity.state || "Unknown";
+    const area = a.neighbourhood || a.city || a.locality || "";
+    const postcode = (a.postal_code || "").trim().split(" ")[0];
+    const areaLine = [area, postcode].filter(Boolean).join(" · ");
+    return { name, area: areaLine };
+  }
+
+  updateLocationLabel() {
+    const root = this.shadowRoot;
+    const { name, area } = this.getLocationLabel();
+    const nameEl = root.querySelector(".phone-card__map-label-name");
+    const areaEl = root.querySelector(".phone-card__map-label-area");
+    if (nameEl) nameEl.textContent = name;
+    if (areaEl) {
+      areaEl.textContent = area;
+      areaEl.style.display = area ? "block" : "none";
+    }
+  }
+
+  focusMap() {
+    if (this._mapEl?.fitMap) this._mapEl.fitMap();
   }
 
   toggleMenu() {
@@ -180,14 +339,114 @@ class PhoneCard extends HTMLElement {
           z-index: 1;
         }
 
-        .phone-card__map-placeholder {
+        :host {
+          --phone-card-map-filter: saturate(60%) brightness(0.98) contrast(1.02);
+        }
+        :host(.dark-theme) {
+          --phone-card-map-filter: saturate(45%) brightness(0.82) contrast(1.08) hue-rotate(185deg);
+        }
+
+        .phone-card__map {
+          position: relative;
+          border-radius: var(--ui-radius-xl);
+          height: 240px; /* 60×4, 4px-grid aligned */
+          overflow: hidden;
           background: var(--ui-elevated-1);
+        }
+
+        .phone-card__map ha-map {
+          width: 100%;
+          height: 100%;
+          display: block;
+          --map-background-color: var(--ui-elevated-1);
+        }
+
+        .phone-card__map-label {
+          position: absolute;
+          bottom: var(--ui-space-3);
+          left: var(--ui-space-3);
+          z-index: 2;
+          background: var(--ui-elevated-2);
           border-radius: var(--ui-radius-l);
-          height: 200px;
-          display: flex;
+          padding: var(--ui-space-3) var(--ui-space-4);
+          color: var(--ui-text);
+          max-width: 60%;
+          line-height: 1.3;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+          pointer-events: none;
+        }
+
+        .phone-card__map-label-name {
+          font-size: 0.875rem;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .phone-card__map-label-area {
+          font-size: 0.75rem;
+          color: var(--ui-text-mute);
+          margin-top: 2px;
+        }
+
+        .phone-card__map-focus {
+          position: absolute;
+          bottom: var(--ui-space-3);
+          right: var(--ui-space-3);
+          z-index: 2;
+          width: 40px;
+          height: 40px;
+          border: none;
+          border-radius: var(--ui-radius-l);
+          background: var(--ui-elevated-2);
+          color: var(--ui-text);
+          display: inline-flex;
           align-items: center;
           justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+          transition: transform var(--ui-motion-fast, 120ms), background var(--ui-motion-fast, 120ms);
+        }
+
+        .phone-card__map-focus:hover {
+          background: var(--ui-elevated-3);
+          transform: scale(1.04);
+        }
+
+        .phone-card__map-focus:active {
+          transform: scale(0.96);
+        }
+
+        .phone-card__map-focus svg {
+          width: 18px;
+          height: 18px;
+        }
+
+        .phone-card__status {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--ui-space-4);
+          padding: var(--ui-space-2) var(--ui-space-1);
           color: var(--ui-text-mute);
+          font: var(--ui-type-body-s);
+        }
+
+        .phone-card__status-item {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--ui-space-2);
+        }
+
+        .phone-card__status-item svg {
+          width: 16px;
+          height: 16px;
+          opacity: 0.8;
+          flex-shrink: 0;
+        }
+
+        .phone-card__status-value {
+          font-variant-numeric: tabular-nums;
         }
       </style>
 
@@ -238,8 +497,39 @@ class PhoneCard extends HTMLElement {
             </button>
           </div>
 
-          <div class="phone-card__map-placeholder">
-            Map placeholder
+          <div class="phone-card__map" id="mapSlot">
+            <div class="phone-card__map-label" id="mapLabel">
+              <div class="phone-card__map-label-name">—</div>
+              <div class="phone-card__map-label-area"></div>
+            </div>
+            <button class="phone-card__map-focus" id="mapFocusBtn" aria-label="Recentre map">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9V5a1 1 0 0 1 1-1h4"/>
+                <path d="M4 15v4a1 1 0 0 0 1 1h4"/>
+                <path d="M20 9V5a1 1 0 0 0-1-1h-4"/>
+                <path d="M20 15v4a1 1 0 0 1-1 1h-4"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="phone-card__status" role="status">
+            <span class="phone-card__status-item">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              <span class="phone-card__status-value" data-key="status">—</span>
+            </span>
+            <span class="phone-card__status-item">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <span class="phone-card__status-value" data-key="distance">—</span>
+            </span>
+            <span class="phone-card__status-item">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+              <span class="phone-card__status-value" data-key="eta">—</span>
+            </span>
+            <span class="phone-card__status-item">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.73 10H17.65A5.997 5.997 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35zM12.5 8H11v5l4.25 2.52.75-1.23-3.5-2.08V8z"/></svg>
+              <span class="phone-card__status-value" data-key="updated">—</span>
+            </span>
           </div>
         </div>
       </div>
@@ -247,6 +537,9 @@ class PhoneCard extends HTMLElement {
 
     this._isRendered = true;
     this.attachEvents();
+    this.mountMap();
+    this.updateStatusStrip();
+    this.updateLocationLabel();
   }
 
   attachEvents() {
@@ -278,6 +571,13 @@ class PhoneCard extends HTMLElement {
     const torchBtn = root.querySelector("#torchBtn");
     torchBtn?.addEventListener("click", () => {
       this.callScript("phone_c_flashlight_toggle");
+    });
+
+    // Map focus / recentre button
+    const focusBtn = root.querySelector("#mapFocusBtn");
+    focusBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.focusMap();
     });
   }
 }

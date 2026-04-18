@@ -845,31 +845,51 @@ export function renderScrollableDemo(comp) {
 
 
 export function renderSurfaceDemo(comp) {
-  const elevBox = (level) => `
-    <div style="background:var(--ui-elevated-${level});padding:var(--ui-space-4);border-radius:var(--ui-radius-m);text-align:center;border:1px solid var(--ui-border-color-light);">
-      <div style="font-size:var(--ui-font-s);font-weight:500;color:var(--ui-text);">elevated-${level}</div>
-      <div style="font-size:11px;color:var(--ui-text-mute);font-family:monospace;">--ui-elevated-${level}</div>
-    </div>
-  `;
-
-  const shadowBox = (level) => `
-    <div style="background:var(--ui-elevated-1);padding:var(--ui-space-4);border-radius:var(--ui-radius-m);text-align:center;box-shadow:var(--ui-shadow-${level});">
-      <div style="font-size:var(--ui-font-s);font-weight:500;color:var(--ui-text);">shadow-${level}</div>
-      <div style="font-size:11px;color:var(--ui-text-mute);font-family:monospace;">--ui-shadow-${level}</div>
+  const stackHTML = `
+    <div class="cat-surface-stack">
+      <div class="cat-surface-stack__layer cat-surface-stack__layer--alt">
+        <span class="cat-surface-stack__label">surface-alt</span>
+      </div>
+      <div class="cat-surface-stack__layer cat-surface-stack__layer--alt2">
+        <span class="cat-surface-stack__label">surface-alt-2</span>
+      </div>
+      <span class="cat-surface-stack__label cat-surface-stack__label--base">surface</span>
     </div>
   `;
 
   return `
+    ${this.renderPlayground(stackHTML, comp.variants, this.state.activeVariant)}
     <div class="cat-demo-section">
-      <div class="cat-section-label">Elevation Backgrounds</div>
-      <div class="cat-states cat-states--wide">
-        ${[0, 1, 2, 3, 4].map(i => `<div class="cat-state-box"><div class="cat-state-preview cat-state-preview--auto">${elevBox(i)}</div></div>`).join("")}
-      </div>
-    </div>
-    <div class="cat-demo-section">
-      <div class="cat-section-label">Shadow Levels</div>
-      <div class="cat-states cat-states--wide">
-        ${[0, 1, 2, 3, 4].map(i => `<div class="cat-state-box"><div class="cat-state-preview cat-state-preview--auto">${shadowBox(i)}</div></div>`).join("")}
+      <div class="cat-surface-detail">
+        <div class="cat-section-label">Elevation Tiers</div>
+        <div class="cat-elevation-showcase">
+          ${[0, 1, 2, 3, 4].map(i => `
+            <div class="cat-elev-card cat-elev-card--${i}">
+              <span class="cat-elev-card__tier">${i}</span>
+              <span class="cat-elev-card__token">elevated</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="cat-section-label">Shadows</div>
+        <div class="cat-shadow-grid">
+          ${[1, 2, 3, 4].map(i => `
+            <div class="cat-shadow-box" style="box-shadow:var(--ui-shadow-${i})">
+              <span class="cat-shadow-box__label">shadow-${i}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="cat-section-label">Overlays</div>
+        <div class="cat-overlay-grid">
+          <div class="cat-overlay-box" style="background:var(--ui-overlay-bg)">
+            <span class="cat-overlay-box__label">overlay-bg</span>
+          </div>
+          <div class="cat-overlay-box" style="background:var(--ui-overlay-scrim)">
+            <span class="cat-overlay-box__label cat-overlay-box__label--on-dark">overlay-scrim</span>
+          </div>
+          <div class="cat-overlay-box" style="background:var(--ui-overlay-scrim-strong)">
+            <span class="cat-overlay-box__label cat-overlay-box__label--on-dark">scrim-strong</span>
+          </div>
+        </div>
       </div>
     </div>
   `;

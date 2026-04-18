@@ -107,6 +107,8 @@ home-assistant_v2.db-wal
 secrets.yaml
 scripts/.imap_env
 .claude/ha_token
+.claude/mcp.json
+.claude/session.md
 .git-credentials
 .mcp.json
 frigate_config_v2.yml

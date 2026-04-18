@@ -236,8 +236,8 @@ for _sid in arch_header arch_packages arch_components arch_www_base \
   fi
 done
 
-# CLAUDE (4 sections)
-for _csid in claude_summary claude_ha_version claude_domain_table claude_ui_system; do
+# CLAUDE (5 sections)
+for _csid in claude_summary claude_ha_version claude_domain_table claude_ui_system claude_structure; do
   _cmarker=$(printf '%s' "$_csid" | tr '[:lower:]' '[:upper:]' | sed 's/^CLAUDE_/CLAUDE:/')
   if ! inject_section "$RENDERED" "$WORK_DIR/CLAUDE.md" \
        "$_csid" "<!-- ${_cmarker}:START -->" "<!-- ${_cmarker}:END -->"; then
@@ -271,8 +271,8 @@ for _sid in arch_header arch_packages arch_components arch_www_base \
   fi
 done
 
-# CLAUDE — validate all 4 sections
-for _csid in claude_summary claude_ha_version claude_domain_table claude_ui_system; do
+# CLAUDE — validate all 5 sections
+for _csid in claude_summary claude_ha_version claude_domain_table claude_ui_system claude_structure; do
   _cmarker=$(printf '%s' "$_csid" | tr '[:lower:]' '[:upper:]' | sed 's/^CLAUDE_/CLAUDE:/')
   if ! validate_section "$WORK_DIR/CLAUDE.md" \
        "<!-- ${_cmarker}:START -->" "<!-- ${_cmarker}:END -->"; then

@@ -18,7 +18,9 @@
       "mcp__homeassistant__GetLiveContext",
       "WebFetch(domain:draculatheme.com)",
       "WebFetch(domain:marketplace.visualstudio.com)",
-      "WebFetch(domain:claude.com)"
+      "WebFetch(domain:claude.com)",
+      "mcp__homeassistant__GetDateTime",
+      "mcp__Claude_Preview__preview_start"
     ],
     "deny": [
       "Bash(git push --force:*)",

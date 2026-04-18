@@ -328,10 +328,10 @@ export const COMPONENT_REGISTRY = [
     name: 'Surface & Elevation',
     category: 'Layout',
     source: 'components.js',
-    description: 'Five background elevation tiers and five shadow depth levels. Tokens for layered UI composition.',
+    description: 'Abstract tokens rendered as physical layers. Three surface backgrounds, five elevation tiers, four shadow depths, and three overlay modes.',
     status: 'stable',
-    tags: ['5 elevation tiers', '5 shadow levels'],
-    variants: ['surfaces', 'shadows'],
+    tags: ['3 surfaces', '5 elevation tiers', '4 shadows'],
+    variants: [],
     demoFn: 'renderSurfaceDemo'
   },
 
